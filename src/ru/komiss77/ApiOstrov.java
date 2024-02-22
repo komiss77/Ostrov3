@@ -111,6 +111,7 @@ public class ApiOstrov {
      * переданное хоть один раз
      */
     public static void reachCustomStat(final Player p, final String customStatName, final int value) {
+      if (StatManager.DEBUG) Ostrov.log("reachCustomStat "+(p==null?"null":p.getName())+" stat="+customStatName+" val="+value);
         //sendMessage(p, Operation.ADD_CUSTOM_STAT, p.getName(), ammount, customStatName);
         final Oplayer op = PM.getOplayer(p);
         if (op!=null) MissionManager.onCustomStat(op, customStatName, value, true);

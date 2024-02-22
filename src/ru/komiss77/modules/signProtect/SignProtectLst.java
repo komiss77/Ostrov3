@@ -101,7 +101,7 @@ public class SignProtectLst implements Initiable, Listener {
             final Oplayer op = PM.getOplayer(pd.owner);
             if (op!=null) {
               int curr = 0;
-              if (op.mysqlData.containsKey("signProtect")) {
+              if (op.mysqlData.containsKey("signProtect") && !op.mysqlData.get("signProtect").isEmpty()) {
                 curr = Integer.parseInt(op.mysqlData.get("signProtect"));
                 curr--;
               }
@@ -182,7 +182,7 @@ public class SignProtectLst implements Initiable, Listener {
         if (pd.isValid() && pd.isOwner(e.getPlayer()) && e.getPlayer().isSneaking()) {
           final Oplayer op = PM.getOplayer(e.getPlayer());
           int curr = 0;
-          if (op.mysqlData.containsKey("signProtect")) {
+          if (op.mysqlData.containsKey("signProtect") && !op.mysqlData.get("signProtect").isEmpty()) {
             curr = Integer.parseInt(op.mysqlData.get("signProtect"));
             curr--;
           }
@@ -214,7 +214,7 @@ public class SignProtectLst implements Initiable, Listener {
               Sign s = (Sign) placed.getState();
               final Oplayer op = PM.getOplayer(e.getPlayer());
               int curr = 1;
-              if (op.mysqlData.containsKey("signProtect")) {
+              if (op.mysqlData.containsKey("signProtect") && !op.mysqlData.get("signProtect").isEmpty()) {
                 curr = Integer.parseInt(op.mysqlData.get("signProtect"));
                 curr++;
               }

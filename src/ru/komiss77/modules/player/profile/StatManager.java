@@ -20,14 +20,15 @@ import ru.komiss77.objects.Group;
 
 
 public class StatManager {
-    
+  public static boolean DEBUG;
+
     public static final EnumSet<Data> passportData = EnumSet.of( Data.PREFIX, Data.SUFFIX, Data.PHONE, Data.EMAIL, Data.FAMILY, Data.GENDER, Data.BIRTH, Data.LAND, 
             Data.CITY, Data.ABOUT, Data.DISCORD, Data.VK, Data.MARRY, Data.YOUTUBE) ;
     
 
 
     public static void addStat(final Player p, final Stat stat, int ammount) {
-//System.out.println("-addIntStat e_stat="+stat+"+"+ammount);
+      if (DEBUG) Ostrov.log("addStat "+(p==null?"null":p.getName())+" stat="+stat+" amm="+ammount);
         if (p==null || ammount<0) {
             Ostrov.log_warn("addStat ammount<0 для "+(p==null? "null":p.getName())+", stat="+stat.name()+", ammount="+ammount);
             return;
@@ -88,6 +89,7 @@ public class StatManager {
     
 
     public static void onCustomStat(final Player p, final Oplayer op, final String customStatName, final int ammount) {
+      if (DEBUG) Ostrov.log("addCustomStat "+(p==null?"null":p.getName())+" stat="+customStatName+" amm="+ammount);
          RewardLoni.onCustomStat(p, op, customStatName, ammount);
     }
     
