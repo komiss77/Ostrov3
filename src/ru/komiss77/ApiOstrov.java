@@ -24,6 +24,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -380,7 +381,11 @@ public class ApiOstrov {
     //ентити
 
     public static @Nullable LivingEntity lastDamager(final LivingEntity ent, final boolean owner) {
-      if (ent.getLastDamageCause() instanceof final EntityDamageByEntityEvent ev) {
+      return getDamager(ent.getLastDamageCause(), owner);
+    }
+
+    public static @Nullable LivingEntity getDamager(final EntityDamageEvent e, final boolean owner) {
+      if (e instanceof final EntityDamageByEntityEvent ev) {
         if (ev.getDamager() instanceof Projectile && ((Projectile) ev.getDamager()).getShooter() instanceof final LivingEntity le) {
           if (le instanceof final Tameable tm && owner) {
             return tm.getOwner() instanceof HumanEntity ? ((HumanEntity) tm.getOwner()) : null;
@@ -694,11 +699,21 @@ public class ApiOstrov {
           .orElse("");
     }
 
+    @Deprecated
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static String toString( final Collection array, final boolean commaspace) {
       if (array==null || array.isEmpty()) return "";
       return (String) array.stream()
         .map(Object::toString)
         .reduce( (t, u) -> t + (commaspace ? ", " : ",") + u)
+        .orElse("");
+    }
+
+    public static <E> String toString(final Collection<E> array, final String separator) {
+      if (array==null || array.isEmpty()) return "";
+      return array.stream()
+        .map(E::toString)
+        .reduce( (t, u) -> t + separator + u)
         .orElse("");
     }
 

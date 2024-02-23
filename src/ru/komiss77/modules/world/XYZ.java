@@ -26,13 +26,17 @@ public class XYZ implements Cloneable {
     
     @Slow
     public static XYZ fromString(final String asString) {
-        try {
-            final String[] split = asString.split(",");
-            return new XYZ (split[0], Integer.parseInt(split[1]), Integer.parseInt(split[2]), Integer.parseInt(split[3]));
-        } catch (NullPointerException | NumberFormatException | ArrayIndexOutOfBoundsException ex) {
-            Ostrov.log_err("XYZ fromString  ="+asString+" "+ex.getMessage());
-            return null;
-        }    
+      try {
+        final String[] split = asString.split(",");
+        return switch (split.length) {
+          case 3 -> new XYZ ("", Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
+          case 4 -> new XYZ (split[0], Integer.parseInt(split[1]), Integer.parseInt(split[2]), Integer.parseInt(split[3]));
+          default -> throw new ArrayIndexOutOfBoundsException("Unexpected length: " + split.length);
+        };
+      } catch (NullPointerException | NumberFormatException | ArrayIndexOutOfBoundsException ex) {
+        Ostrov.log_err("XYZ fromString  ="+asString+" "+ex.getMessage());
+        return null;
+      }
     }
     
     public XYZ(final Location loc) {
@@ -114,7 +118,7 @@ public class XYZ implements Cloneable {
     
     @Override
     public String toString() {
-        return (worldName==null ? "" : worldName+",") +x+","+y+","+z;
+        return (worldName==null ? "" : worldName+",")+x+","+y+","+z;
     }
     
     
@@ -137,7 +141,15 @@ public class XYZ implements Cloneable {
     
     @Override
     public XYZ clone() {
-        return new XYZ(worldName, x, y, z);
+      final XYZ cln;
+        try {
+          cln = (XYZ) super.clone();
+//          cln.x = x; cln.y = y; cln.z = z;
+          cln.worldName = worldName;
+          return cln;
+        } catch (CloneNotSupportedException e) {
+          return new XYZ(worldName, x, y, z);
+        }
     }
 
     public int getSLoc() { //координата в одном int для небольших значений, работает с '-'
