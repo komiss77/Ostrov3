@@ -5,7 +5,8 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.util.Vector;
- 
+import ru.komiss77.utils.FastMath;
+
 public class WXYZ extends XYZ {
 
 	public final World w;
@@ -92,26 +93,26 @@ public class WXYZ extends XYZ {
 	
 	@Override
 	public boolean equals(final Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof final WXYZ comp)) return false;
-        return comp.w.getUID().equals(w.getUID()) && comp.x==x && comp.y==y && comp.z==z;
+      if (this == obj) return true;
+      if (!(obj instanceof final WXYZ comp)) return false;
+      return comp.w.getUID().equals(w.getUID()) && comp.x==x && comp.y==y && comp.z==z;
 	}
 
   @Override
 	public WXYZ add(final int x, final int y, final int z) {
-        this.x += x; this.y += y; this.z += z;
-        return this;
+      this.x += x; this.y += y; this.z += z;
+      return this;
 	}
 	
 	@Override
 	public WXYZ add(final XYZ val) {
-        return add(val.x, val.y, val.z);
+      return add(val.x, val.y, val.z);
 	}
 	
 	@Override
 	public WXYZ times(final int m) {
-        this.x *= m; this.y *= m; this.z *= m;
-        return this;
+      this.x *= m; this.y *= m; this.z *= m;
+      return this;
 	}
     
   @Override
@@ -121,6 +122,6 @@ public class WXYZ extends XYZ {
   }
 
 	public int dist2DSq(final WXYZ at) {
-		final int dx = at.x - x, dz = at.z - z; return dx*dx + dz*dz;
+		return FastMath.square(at.x - x) + FastMath.square(at.z - z);
 	}
 }

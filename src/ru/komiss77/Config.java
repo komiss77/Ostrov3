@@ -16,8 +16,8 @@ public class Config {
 
     
     public static OstrovConfigManager manager;
-    
-    private static OstrovConfig config;
+
+  private static OstrovConfig config;
     private static OstrovConfig variable;
     
     //для PM
@@ -28,6 +28,7 @@ public class Config {
     //public static boolean nameTag = false;    
 
     //для ServerListener
+    public static boolean clear_old_ents;
     public static boolean block_nether_portal;
 //    public static boolean disable_weather; уже в gamerule есть
     public static boolean disable_blockspread;
@@ -96,6 +97,7 @@ public class Config {
 //        disable_weather = config.getBoolean("world.disable_weather");
         disable_blockspread = config.getBoolean("world.disable_blockspread");
         disable_ice_melt = config.getBoolean("world.disable_ice_melt");
+        clear_old_ents = config.getBoolean("world.clear_old_ents");
         
         set_gm = config.getBoolean("player.change_gamemode_on_join");
         gm_on_join = GameMode.valueOf(config.getString("player.gamemode_set_to") );
@@ -244,6 +246,7 @@ public static void loadConfigs () {
     config.addDefault("world.disable_weather", false, c2);
     config.addDefault("world.disable_blockspread", false);
     config.addDefault("world.disable_ice_melt", false);
+    config.addDefault("world.clear_old_ents", false);
     
     
     String[] c3 = {"---------", "system settings", "---------"}; 

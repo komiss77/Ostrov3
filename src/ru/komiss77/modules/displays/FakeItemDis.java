@@ -113,7 +113,7 @@ public class FakeItemDis extends BukkitRunnable {
 		this.scale = sc;
 		tds.setTransformation(new Transformation(new Vector3f(), new Quaternionf(),
 			new Vector3f(sc, sc, sc), new Quaternionf()));
-		ine.teleport(olc.clone().add(0d, -1d * scale - 0.1d, 0d));
+		ine.teleport(olc.clone().add(0d, -0.1d, 0d));
 		ine.setInteractionHeight(HGHT * sc);
 		ine.setInteractionWidth(WDTH * sc);
 		return this;
@@ -130,7 +130,7 @@ public class FakeItemDis extends BukkitRunnable {
 	
 	public void create() {
 		ine.setCustomNameVisible(showName);
-		ine.teleport(olc.clone().add(0d, -1d * scale - 0.1d, 0d));
+    ine.teleport(olc.clone().add(0d, -0.1d, 0d));
     pl.showEntity(Ostrov.instance, tds);
     pl.showEntity(Ostrov.instance, ine);
 		this.runTaskTimer(Ostrov.instance, 2, 1);
@@ -175,7 +175,7 @@ public class FakeItemDis extends BukkitRunnable {
       nls.setYaw((yaw - 360 * (yaw / 180)) * 0.7f);
       tds.teleportAsync(nls);
       ine.teleportAsync(new Location(nls.getWorld(), nls.getX(),
-        nls.getY() - 1d * scale, nls.getZ(), nls.getYaw(), nls.getPitch()));
+        nls.getY() - 0.1d, nls.getZ(), nls.getYaw(), nls.getPitch()));
 			
 			boolean look = false;
 			final double ln = Math.sqrt(Math.pow(dv.getX(), 2d) + Math.pow(dv.getZ(), 2d));

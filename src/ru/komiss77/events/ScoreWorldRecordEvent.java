@@ -4,7 +4,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import ru.komiss77.modules.scores.ScoreBoard;
-
+import ru.komiss77.modules.scores.ScoreDis;
 
 
 //@Deprecated
@@ -14,30 +14,32 @@ public final class ScoreWorldRecordEvent extends Event implements Cancellable {
 	private boolean cancel = false;
 	private final String name;
 	private final int amt;
+  private final ScoreDis display;
+
+  @Deprecated
 	private final ScoreBoard score;
 
-	/**
-	 * Constructor for the QuestCompleteEvent.
-	 *
-	 * @param player The player who completed.
-         * @param equipType
-	 * @param type The quest completed.
-	 * @param oldArmorPiece The ItemStack of the armor removed.
-	 * @param newArmorPiece The ItemStack of the armor added.
-	 */
-        //@Deprecated
+  @Deprecated
 	public ScoreWorldRecordEvent(final String name, final int amt, final ScoreBoard score) {
 		this.name = name;
 		this.amt = amt;
 		this.score = score;
+    this.display = null;
 	}
+
+  public ScoreWorldRecordEvent(final String name, final int amt, final ScoreDis score) {
+    this.name = name;
+    this.amt = amt;
+    this.score = null;
+    this.display = score;
+  }
 
 	/**
 	 * Gets a list of handlers handling this event.
 	 *
 	 * @return A list of handlers handling this event.
 	 */
-	public final static HandlerList getHandlerList() {
+	public static HandlerList getHandlerList() {
 		return handlers;
 	}
 
@@ -47,7 +49,7 @@ public final class ScoreWorldRecordEvent extends Event implements Cancellable {
 	 * @return A list of handlers handling this event.
 	 */
 	@Override
-	public final HandlerList getHandlers() {
+	public HandlerList getHandlers() {
 		return handlers;
 	}
 
@@ -56,7 +58,7 @@ public final class ScoreWorldRecordEvent extends Event implements Cancellable {
 	 *
 	 * @return An amount.
 	 */
-	public final int getAmount() {
+	public int getAmount() {
 		return amt;
 	}
 
@@ -65,7 +67,7 @@ public final class ScoreWorldRecordEvent extends Event implements Cancellable {
 	 *
 	 * @return A name.
 	 */
-	public final String getName() {
+	public String getName() {
 		return name;
 	}
 
@@ -75,7 +77,7 @@ public final class ScoreWorldRecordEvent extends Event implements Cancellable {
 	 * @param cancel If this event should be cancelled.
 	 */
         @Override
-	public final void setCancelled(final boolean cancel) {
+	public void setCancelled(final boolean cancel) {
 		this.cancel = cancel;
 	}
 
@@ -85,11 +87,16 @@ public final class ScoreWorldRecordEvent extends Event implements Cancellable {
 	 * @return If this event is cancelled
 	 */
         @Override
-	public final boolean isCancelled() {
+	public boolean isCancelled() {
 		return cancel;
 	}
 
-	public final ScoreBoard getScoreBoard() {
+  @Deprecated
+	public ScoreBoard getScoreBoard() {
 		return score;
 	}
+
+  public ScoreDis getScoreDis() {
+    return display;
+  }
 }

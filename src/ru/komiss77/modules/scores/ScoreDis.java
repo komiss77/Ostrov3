@@ -1,10 +1,5 @@
 package ru.komiss77.modules.scores;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.UUID;
-import javax.annotation.Nullable;
 import org.bukkit.Location;
 import org.bukkit.entity.Display.Billboard;
 import org.bukkit.entity.Entity;
@@ -21,8 +16,13 @@ import ru.komiss77.modules.world.WXYZ;
 import ru.komiss77.notes.ThreadSafe;
 import ru.komiss77.utils.TCUtils;
 
-@Deprecated
-public class ScoreBoard {
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.UUID;
+
+public class ScoreDis {
 
     protected UUID disp;
 
@@ -33,7 +33,7 @@ public class ScoreBoard {
     private final HashMap<String, Integer> stats = new HashMap<>();
     private final ArrayList<String> ranks = new ArrayList<>();
 
-    public ScoreBoard(final String name, final WXYZ loc, final int length, final boolean isAsc) {
+    public ScoreDis(final String name, final WXYZ loc, final int length, final boolean isAsc) {
         this.score = name;
         this.loc = loc;
         this.length = length;
@@ -42,7 +42,7 @@ public class ScoreBoard {
         lc.getChunk().load();
         lc.getChunk().setForceLoaded(true);
         final TextDisplay td = loc.w.spawn(lc, TextDisplay.class);
-        ScoreManager.scores.put(disp = modify(td), this);
+        ScoreManager.lists.put(disp = modify(td), this);
         reanimate(td);
     }
 
@@ -63,8 +63,8 @@ public class ScoreBoard {
         final TextDisplay td;
         if (dis == null || dis.getType() != EntityType.TEXT_DISPLAY) {
             td = loc.w.spawn(loc.getCenterLoc(), TextDisplay.class);
-            ScoreManager.scores.remove(disp);
-            ScoreManager.scores.put(disp = modify(td), this);
+            ScoreManager.lists.remove(disp);
+            ScoreManager.lists.put(disp = modify(td), this);
         } else {
             td = (TextDisplay) dis;
         }
@@ -191,13 +191,11 @@ public class ScoreBoard {
         return place <= ranks.size() && ranks.get(Math.max(1, place) - 1).equals(name);
     }
 
-    public @Nullable
-    Integer getAmt(final String name) {
+    public @Nullable Integer getAmt(final String name) {
         return stats.get(name);
     }
 
-    public @Nullable
-    Entity getEntity() {
+    public @Nullable Entity getEntity() {
         return loc.w.getEntity(disp);
     }
 
@@ -206,12 +204,12 @@ public class ScoreBoard {
         if (ent != null) {
             ent.remove();
         }
-        ScoreManager.scores.remove(disp);
+        ScoreManager.lists.remove(disp);
     }
 
     @Override
     public boolean equals(final Object o) {
-        return o instanceof ScoreBoard && ((ScoreBoard) o).score.equals(score);
+        return o instanceof ScoreDis && ((ScoreDis) o).score.equals(score);
     }
 
     @Override
