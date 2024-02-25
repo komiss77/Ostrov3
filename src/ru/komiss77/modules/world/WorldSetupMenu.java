@@ -239,7 +239,6 @@ public class WorldSetupMenu implements InventoryProvider {
                         .build(), e-> {
                             if (e.isLeftClick() && op.world_positions.containsKey(world.getName())) {
                                 final Location exit = ApiOstrov.locFromString(op.world_positions.get(world.getName()));
-//Ostrov.log("----- "+op.world_positions.get(world.getName()));
                                 ApiOstrov.teleportSave(p, exit, true);//p.teleport( world.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
                             } else {
                                 ApiOstrov.teleportSave(p, world.getSpawnLocation(), true);//p.teleport( world.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);

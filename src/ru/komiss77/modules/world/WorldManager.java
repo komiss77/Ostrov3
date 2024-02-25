@@ -36,7 +36,7 @@ public class WorldManager implements Initiable {
     public static boolean shapeRound = true;
     public static boolean dynmapEnable = true;
     public static String dynmapMessage;
-    public static String buildWorldName;
+    public static String buildWorldSuffix;
     private static int remountDelayTicks = 0;
     public static int fillAutosaveFrequency = 30;
     public static int fillMemoryTolerance = 500;
@@ -54,7 +54,7 @@ public class WorldManager implements Initiable {
         config.addDefault("dynmapBorderMessage", "Граница мира.");
         config.addDefault("fillAutosaveFrequency", 30);
         config.addDefault("fillMemoryTolerance", 500);
-        config.addDefault("buildWorldName", "build");
+        config.addDefault("buildWorldSuffix", "build");
         config.addDefault("autoload_worlds", Arrays.asList("some_world"));
         config.saveConfig();
         
@@ -75,7 +75,7 @@ public class WorldManager implements Initiable {
         dynmapMessage = config.getString("dynmapBorderMessage", "Граница мира.");
         fillAutosaveFrequency = config.getInt("fillAutosaveFrequency", 30);
         fillMemoryTolerance = config.getInt("fillMemoryTolerance", 500);
-        buildWorldName = config.getString("buildWorldName", "build");
+        buildWorldSuffix = config.getString("buildWorldSuffix", "build");
         
         final int worldEndWipeAt = Config.getVariable().getInt("worldEndMarkToWipe", 0);
         if (worldEndWipeAt>0 && worldEndWipeAt<ApiOstrov.currentTimeSec()) {
@@ -137,17 +137,13 @@ public class WorldManager implements Initiable {
             //Bukkit.dispatchCommand(Bukkit.getConsoleSender(), );
         }
     }
-    
-    
-    
-    
-    
 
-    
-    
-    
-    
 
+
+
+
+
+    @Deprecated
     public static void RestoreFillTask(String world, int fillDistance, int chunksPerRun, int tickFrequency, int x, int z, int length, int total, boolean forceLoad) {
         fillTask = new WorldFillTask(world);
 //Ostrov.log("===========RestoreFillTask valid?"+fillTask.valid());
@@ -156,6 +152,16 @@ public class WorldManager implements Initiable {
             int task = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Ostrov.instance, fillTask, 20, tickFrequency);
             fillTask.setTaskID(task);
         }
+    }
+
+    public static void RestoreFillTask(String world, int tickFrequency, int x, int z, int length, int total) {
+      fillTask = new WorldFillTask(world);
+  //Ostrov.log("===========RestoreFillTask valid?"+fillTask.valid());
+      if (fillTask.valid()) {
+        fillTask.continueProgress(x, z, length, total);
+        int task = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Ostrov.instance, fillTask, 20, tickFrequency);
+        fillTask.setTaskID(task);
+      }
     }
 
     public static void StopTrimTask() {
@@ -173,7 +179,7 @@ public class WorldManager implements Initiable {
         config.set("dynmapBorderMessage", dynmapMessage);
         config.set("fillAutosaveFrequency", fillAutosaveFrequency);
         config.set("fillMemoryTolerance", fillMemoryTolerance);
-        config.set("buildWorldName", buildWorldName);
+        config.set("buildWorldSuffix", buildWorldSuffix);
 
         if (storeFillTask && fillTask != null && fillTask.valid()) {
             config.set("fillTask.world", fillTask.worldName());
