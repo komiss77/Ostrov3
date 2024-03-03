@@ -1,13 +1,7 @@
 package ru.komiss77.utils;
 
-import java.util.*;
-import java.util.function.Consumer;
-import javax.annotation.Nullable;
-import org.bukkit.Bukkit;
-import org.bukkit.Color;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.OfflinePlayer;
+import net.kyori.adventure.text.Component;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
@@ -15,23 +9,19 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ArmorMeta;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.inventory.meta.*;
 import org.bukkit.inventory.meta.trim.ArmorTrim;
 import org.bukkit.inventory.meta.trim.TrimMaterial;
 import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
-import net.kyori.adventure.text.Component;
 import org.bukkit.potion.PotionType;
 import ru.komiss77.Ostrov;
 import ru.komiss77.utils.ItemUtils.Texture;
+
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.function.Consumer;
 
         //im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         //Validate.isTrue(item.getType() == Material.PLAYER_HEAD, "skullOwner() only applicable for skulls!", new Object[0]);
@@ -118,29 +108,58 @@ public class ItemBuilder {
     	meta.displayName(name);
     	return this;
     }
+
+    public ItemBuilder addLore(final String s) {
+      if (s==null) return this;
+      if (lore == null) lore = new ArrayList<>();
+      if (s.isEmpty()) lore.add(Component.text(""));
+      else lore.add(TCUtils.format(s));
+      return this;
+    }
+
+    public ItemBuilder addLore(final Collection<String> sc) {
+      if (sc==null || sc.isEmpty()) return this;
+      if (lore == null) lore = new ArrayList<>();
+      for (final String s : sc) lore.add(TCUtils.format(s));
+      return this;
+    }
+
+    public ItemBuilder addLore(final Component c) {
+      if (c==null) return this;
+      if (lore == null) lore = new ArrayList<>();
+      else lore.add(c);
+      return this;
+    }
+
+  public ItemBuilder addLore(final List<Component> lc) {
+    if (lc==null || lc.isEmpty()) return this;
+    if (lore == null) lore = new ArrayList<>();
+    lore.addAll(lc);
+    return this;
+  }
     
-    
+    @Deprecated
     public ItemBuilder addLore(Object o) {
-        if (o==null) return this;
-    	if (lore == null) lore = new ArrayList<>();
-        if (o instanceof String s) {
-            if (s.isEmpty()) lore.add(Component.text(""));
-            else lore.add(TCUtils.format(s));
-        } else if (o instanceof Component c) {
-            lore.add(c);
-        } else if (o instanceof Collection<?> c) {
-            for (Object x : c) {
-                addLore(x);
-            }
-        } else if (o instanceof String[] ss) {
-            for (final String s : ss) {
-                lore.add(TCUtils.format(s));
-            }
-        } else if (o instanceof Component[] cc) {
-            Collections.addAll(lore, cc);
-        }
-        //if (s.isEmpty()) lore.add(Component.text(""));
-        //else lore.add(TCUtils.format(s));
+      if (o==null) return this;
+      if (lore == null) lore = new ArrayList<>();
+      if (o instanceof String s) {
+          if (s.isEmpty()) lore.add(Component.text(""));
+          else lore.add(TCUtils.format(s));
+      } else if (o instanceof Component c) {
+          lore.add(c);
+      } else if (o instanceof Collection<?> c) {
+          for (Object x : c) {
+              addLore(x);
+          }
+      } else if (o instanceof String[] ss) {
+          for (final String s : ss) {
+              lore.add(TCUtils.format(s));
+          }
+      } else if (o instanceof Component[] cc) {
+          Collections.addAll(lore, cc);
+      }
+      //if (s.isEmpty()) lore.add(Component.text(""));
+      //else lore.add(TCUtils.format(s));
     	return this;
     }
     
@@ -286,7 +305,7 @@ public class ItemBuilder {
     public ItemBuilder setDurability(final int dur) {
     	final int mdr = item.getType().getMaxDurability();
     	if (meta instanceof Damageable) ((Damageable) meta).setDamage(dur < mdr ? mdr - dur : 0);
-        return this;
+      return this;
     }
 
    public <M extends ItemMeta> ItemBuilder applyCustomMeta(final Class<M> metaType, final Consumer<M> metaApplier) {
