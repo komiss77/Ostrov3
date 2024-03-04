@@ -33,6 +33,7 @@ import ru.komiss77.utils.PlayerInput;
 import ru.komiss77.utils.TCUtils;
 import ru.komiss77.utils.inventory.InputButton;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -59,7 +60,12 @@ public class ChatLst implements Listener {
     private static final ClickEvent DONATE_CLICK_URL;
 
     static {
-        NIK_COLOR = "§н|b";
+        NIK_COLOR = switch (Ostrov.calendar.get(Calendar.MONTH)) {
+          case 0, 1, 11 -> "§н|b";
+          case 2, 3, 4 -> "§о|a";
+          default -> "§с|3";
+          case 8, 9, 10 -> "§б|6";
+        };
         MSG_COLOR = NamedTextColor.GRAY;
         SUGGEST_MUTE_TOOLTIP_RU = TCUtils.format("§кКлик - выдать молчанку");
         //SUGGEST_BLACKLIST_TOOLTIP_RU = TCUtils.format("§кКлик - кинуть в ЧС");
@@ -72,10 +78,7 @@ public class ChatLst implements Listener {
         DONATE_CLICK_URL = ClickEvent.openUrl("http://www.ostrov77.ru/donate.html");
     }
 
-
-        
-        
-    // на HIGHEST проверяется мут и формируется сообщение для прокси.
+  // на HIGHEST проверяется мут и формируется сообщение для прокси.
     // локальной рассылкой с проверкой ЧС занимается каждая игра самостоятельно на приоритете ниже
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onChat(final AsyncChatEvent e) {
