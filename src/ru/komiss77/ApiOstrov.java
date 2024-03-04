@@ -710,11 +710,7 @@ public class ApiOstrov {
     @Deprecated
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static String toString( final Collection array, final boolean commaspace) {
-      if (array==null || array.isEmpty()) return "";
-      return (String) array.stream()
-        .map(Object::toString)
-        .reduce( (t, u) -> t + (commaspace ? ", " : ",") + u)
-        .orElse("");
+      return toString(array, commaspace ? ", " : ",");
     }
 
     public static <E> String toString(final Collection<E> array, final String separator) {

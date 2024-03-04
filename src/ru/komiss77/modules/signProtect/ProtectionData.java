@@ -5,14 +5,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.LocalDB;
-import ru.komiss77.Ostrov;
 import ru.komiss77.Timer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-class ProtectionData {
+public class ProtectionData {
   public int valid;
   public String owner;
   public List<String> users;
@@ -33,7 +31,7 @@ class ProtectionData {
     owner = data.substring(idx1+1, idx2);
     data = data.substring(idx2+1);
 //Ostrov.log("idx1="+idx1+" idx2="+idx2+" valid="+valid+" owner="+owner+" data="+data);
-    users = data.length() > 1 ? new ArrayList(List.of(data.split(","))) : new ArrayList<>(); // List.of(data.split(","))  для редактора - лист должен быть изменяемый!
+    users = data.length() > 1 ? new ArrayList<>(List.of(data.split(","))) : new ArrayList<>(); // List.of(data.split(","))  для редактора - лист должен быть изменяемый!
   }
 
   public boolean isValid() {
@@ -70,7 +68,7 @@ class ProtectionData {
 
   @Override
   public String toString() {
-    return valid + LocalDB.WORD_SPLIT + owner + LocalDB.LINE_SPLIT + ApiOstrov.toString(users,false);
+    return valid + LocalDB.WORD_SPLIT + owner + LocalDB.LINE_SPLIT + ApiOstrov.toString(users, ",");
   }
 
 }

@@ -31,7 +31,7 @@ public class ItemBuilder {
     
     
     private final ItemStack item;
-    private ItemMeta meta;
+    private @Nullable ItemMeta meta;
     private Color color;
     private List<Component> lore;
     private String skullOwnerUuid;
@@ -43,34 +43,37 @@ public class ItemBuilder {
    
     public ItemBuilder(final Material material) {
        item = new ItemStack(material);
-       meta = item.getItemMeta();
+       meta = null;
        lore = new ArrayList<>();
     }
    
 
     public ItemBuilder(final ItemStack from) {
         item = from==null ? new ItemStack(Material.AIR) : new ItemStack(from.getType(), from.getAmount());
-        meta = from.hasItemMeta() ? from.getItemMeta() : item.getItemMeta();
+        meta = from != null && from.hasItemMeta() ? from.getItemMeta() : null;
         lore = meta != null && meta.hasLore() ? meta.lore() : new ArrayList<>();
-        
     }
    
     
     public ItemBuilder persistentData(final String key, final String data) {
-        meta.getPersistentDataContainer().set(new NamespacedKey(Ostrov.instance, key), PersistentDataType.STRING, data);
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.getPersistentDataContainer().set(new NamespacedKey(Ostrov.instance, key), PersistentDataType.STRING, data);
+      return this;
     }   
     public ItemBuilder persistentData(final String key, final int data) {
-        meta.getPersistentDataContainer().set(new NamespacedKey(Ostrov.instance, key), PersistentDataType.INTEGER, data);
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.getPersistentDataContainer().set(new NamespacedKey(Ostrov.instance, key), PersistentDataType.INTEGER, data);
+      return this;
     }
     public ItemBuilder persistentData(final String data) {
-        meta.getPersistentDataContainer().set(ItemUtils.key, PersistentDataType.STRING, data);
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.getPersistentDataContainer().set(ItemUtils.key, PersistentDataType.STRING, data);
+      return this;
     }   
     public ItemBuilder persistentData(final int data) {
-        meta.getPersistentDataContainer().set(ItemUtils.key, PersistentDataType.INTEGER, data);
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.getPersistentDataContainer().set(ItemUtils.key, PersistentDataType.INTEGER, data);
+      return this;
     }
     
     
@@ -79,14 +82,14 @@ public class ItemBuilder {
     public ItemBuilder setType(final Material material) {
         if (material==null) return this;
         item.setType(material);
-        final ItemMeta oldMeta = meta.clone();
-        meta = item.getItemMeta();
-        if (oldMeta.hasDisplayName()) meta.displayName(oldMeta.displayName());
+        if (meta == null) return this;
+        meta = Bukkit.getItemFactory().asMetaFor(meta, material);
+        /*if (oldMeta.hasDisplayName()) meta.displayName(oldMeta.displayName());
         if (oldMeta.hasLore()) lore = oldMeta.lore();// meta.lore(oldMeta.lore());
         if (oldMeta.hasCustomModelData()) meta.setCustomModelData(oldMeta.getCustomModelData());
         if (oldMeta.hasEnchants()) {
-            oldMeta.getEnchants().keySet().stream().forEach( enc -> meta.addEnchant(enc, oldMeta.getEnchantLevel(enc), true) );
-        }
+            oldMeta.getEnchants().keySet().forEach(enc -> meta.addEnchant(enc, oldMeta.getEnchantLevel(enc), true) );
+        }*/
         return this;
     }
 
@@ -100,12 +103,14 @@ public class ItemBuilder {
     }
     
     public ItemBuilder name(@Nullable final String name) {
-    	meta.displayName(TCUtils.format(name));
+      if (meta == null) meta = item.getItemMeta();
+      meta.displayName(TCUtils.format(name));
     	return this;
     }
     
     public ItemBuilder name(@Nullable final Component name) {
-    	meta.displayName(name);
+      if (meta == null) meta = item.getItemMeta();
+      meta.displayName(name);
     	return this;
     }
 
@@ -228,15 +233,17 @@ public class ItemBuilder {
 
 
    public ItemBuilder addFlags(final ItemFlag... flags) {
-      meta.addItemFlags(flags);
-      return this;
+     if (meta == null) meta = item.getItemMeta();
+     meta.addItemFlags(flags);
+     return this;
    }
 
 
     public void setTrim(final TrimMaterial mat, final TrimPattern pat) {
-        if (meta instanceof ArmorMeta) {
-            ((ArmorMeta) meta).setTrim(new ArmorTrim(mat, pat));
-        }
+      if (meta == null) meta = item.getItemMeta();
+      if (meta instanceof ArmorMeta) {
+          ((ArmorMeta) meta).setTrim(new ArmorTrim(mat, pat));
+      }
     }
    
     public ItemBuilder addEnchant(final Enchantment enchantment) {
@@ -244,22 +251,25 @@ public class ItemBuilder {
     }
     
     public ItemBuilder addEnchant(final Enchantment enchantment, final int level) {
-        if (enchants==null) enchants = new HashMap<>();
-        enchants.put(enchantment, level);
-       return this;
+      if (enchants==null) enchants = new HashMap<>();
+      enchants.put(enchantment, level);
+      return this;
     }
-    
+
+    @Deprecated
     public ItemBuilder unsafeEnchantment(final Enchantment enchantment, final int level) {
-       item.addUnsafeEnchantment(enchantment, level);
-       return this;
+       return addEnchant(enchantment, level);
     }
    
+    @Deprecated
     public ItemBuilder clearEnchantment() {
-        final Iterator<Enchantment> iterator = this.item.getEnchantments().keySet().iterator();
-        while (iterator.hasNext()) {
-            item.removeEnchantment(iterator.next());
-        }
-        return this;
+      return clearEnchants();
+    }
+
+    public ItemBuilder clearEnchants() {
+      if (meta != null) meta.removeEnchantments();
+      enchants.clear();
+      return this;
     }
     
     
@@ -268,49 +278,57 @@ public class ItemBuilder {
     
 
     public ItemBuilder setUnbreakable(final boolean unbreakable) {
-       meta.setUnbreakable(true);
-       return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.setUnbreakable(true);
+      return this;
     }
     
     public ItemBuilder setItemFlag(final ItemFlag flag) {
-        meta.addItemFlags(new ItemFlag[] { flag });
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.addItemFlags(new ItemFlag[] { flag });
+      return this;
     }
     
     public ItemBuilder setAttribute(final Attribute attribute, final double amount, final Operation op) {
     	setAttribute(attribute, amount, op, item.getType().getEquipmentSlot());
-        return this;
+      return this;
     }
     
     public ItemBuilder setAttribute(final Attribute attribute, final double amount, final Operation op, @Nullable final EquipmentSlot slot) {
-        meta.addAttributeModifier(attribute, new AttributeModifier(UUID.randomUUID(), "atbuilder", amount, op, slot));
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.addAttributeModifier(attribute, new AttributeModifier(UUID.randomUUID(), "atbuilder", amount, op, slot));
+      return this;
     }
     
     public ItemBuilder removeAttribute(final Attribute attribute) {
-        meta.removeAttributeModifier(attribute);
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.removeAttributeModifier(attribute);
+      return this;
     }
     
     public ItemBuilder removeSlotAttribute() {
-        meta.removeAttributeModifier(item.getType().getEquipmentSlot());
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.removeAttributeModifier(item.getType().getEquipmentSlot());
+      return this;
     }
     
     public ItemBuilder setModelData(final int data) {
-        meta.setCustomModelData(data);
-        return this;
+      if (meta == null) meta = item.getItemMeta();
+      meta.setCustomModelData(data);
+      return this;
     }
     
     public ItemBuilder setDurability(final int dur) {
     	final int mdr = item.getType().getMaxDurability();
+      if (meta == null) meta = item.getItemMeta();
     	if (meta instanceof Damageable) ((Damageable) meta).setDamage(dur < mdr ? mdr - dur : 0);
       return this;
     }
 
-   public <M extends ItemMeta> ItemBuilder applyCustomMeta(final Class<M> metaType, final Consumer<M> metaApplier) {
+    public <M extends ItemMeta> ItemBuilder applyCustomMeta(final Class<M> metaType, final Consumer<M> metaApplier) {
+      if (meta == null) meta = item.getItemMeta();
       if (metaType.isInstance(meta)) {
-          metaApplier.accept(metaType.cast(meta));
+        metaApplier.accept(metaType.cast(meta));
       }
       return this;
     }
@@ -406,81 +424,78 @@ public class ItemBuilder {
     
     public ItemStack build() {
 
-        if (meta != null) meta.lore(lore.isEmpty() ? null : lore);
-        item.setItemMeta(meta);
+        if (!lore.isEmpty()) {
+          if (meta == null) meta = item.getItemMeta();
+          meta.lore(lore);
+        }
         
         switch (getType()) {
             
             case POTION, TIPPED_ARROW, LINGERING_POTION, SPLASH_POTION:
-                if (basePotionType!=null || customPotionEffects!=null) {
-                    final PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
-                    if (basePotionType!=null) potionMeta.setBasePotionType(basePotionType);
-                    if (customPotionEffects!=null && !customPotionEffects.isEmpty()) {
-                        for (PotionEffect customPotionEffect : customPotionEffects) {
-                            potionMeta.addCustomEffect(customPotionEffect,true);
-                        }
+              if (basePotionType!=null || customPotionEffects!=null) {
+                if (meta == null) meta = item.getItemMeta();
+                final PotionMeta potionMeta = (PotionMeta) meta;
+                if (basePotionType!=null) potionMeta.setBasePotionType(basePotionType);
+                if (customPotionEffects!=null && !customPotionEffects.isEmpty()) {
+                    for (final PotionEffect ef : customPotionEffects) {
+                        potionMeta.addCustomEffect(ef,true);
                     }
-                    if (color!=null) {
-                        potionMeta.setColor(color);
-                    }
-                    item.setItemMeta(potionMeta);
                 }
-                break;
+                if (color!=null) {
+                    potionMeta.setColor(color);
+                }
+              }
+              break;
             
             case PLAYER_HEAD:
-                final SkullMeta skullMeta = (SkullMeta)item.getItemMeta();
-                
-                if (skullOwnerUuid!=null && !skullOwnerUuid.isEmpty()) {
-                    final UUID uuid = UUID.fromString(skullOwnerUuid);
-                    final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-                    skullMeta.setOwningPlayer(offlinePlayer);
-                    item.setItemMeta(skullMeta);
-                }
+              if (meta == null) meta = item.getItemMeta();
+              final SkullMeta skullMeta = (SkullMeta) meta;
+              
+              if (skullOwnerUuid!=null && !skullOwnerUuid.isEmpty()) {
+                final UUID uuid = UUID.fromString(skullOwnerUuid);
+                final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+                skullMeta.setOwningPlayer(offlinePlayer);
+              }
 
-                if (skullTexture!=null && !skullTexture.isEmpty()) {
-                    //if (skullTexture.length()>72) { //определяяем зашифрованную ссылку
-                    //    final String decoded = new String(Base64.getDecoder().decode(skullTexture));
-                    //    skullTexture = decoded.substring("{\"textures\":{\"SKIN\":{\"url\":\"".length(), decoded.length() - "\"}}}".length());
-                   // }
-                   // com.destroystokyo.paper.profile.PlayerProfile profile = ItemUtils.getProfile(skullTexture);
-                   // skullMeta.setPlayerProfile(profile);
-                    item.setItemMeta(ItemUtils.setHeadTexture(skullMeta, skullTexture));
-                }
-                break;
+              if (skullTexture!=null && !skullTexture.isEmpty()) {
+                ItemUtils.setHeadTexture(skullMeta, skullTexture);
+              }
+              break;
             
             case LEATHER_BOOTS, LEATHER_CHESTPLATE, LEATHER_HELMET, 
             LEATHER_LEGGINGS, LEATHER_HORSE_ARMOR:
                 if (color!=null) {
-                    final LeatherArmorMeta leatherMeta = (LeatherArmorMeta) item.getItemMeta();
-                    leatherMeta.setColor(color);
-                    item.setItemMeta(leatherMeta);
+                  if (meta == null) meta = item.getItemMeta();
+                  final LeatherArmorMeta leatherMeta = (LeatherArmorMeta) meta;
+                  leatherMeta.setColor(color);
                 }
                 break;
             
             case ENCHANTED_BOOK://для книг  чары в storage
                 if (enchants!=null && !enchants.isEmpty()) {
-                    final EnchantmentStorageMeta enchantedBookMeta = (EnchantmentStorageMeta) item.getItemMeta();
-                    for (Enchantment enchant : enchants.keySet()) {    //ignoreLevelRestriction
-                        enchantedBookMeta.addStoredEnchant(enchant, enchants.get(enchant), false);
-                    }
-                    item.setItemMeta(enchantedBookMeta);
+                  if (meta == null) meta = item.getItemMeta();
+                  final EnchantmentStorageMeta enchantedBookMeta = (EnchantmentStorageMeta) meta;
+                  for (Enchantment enchant : enchants.keySet()) {    //ignoreLevelRestriction
+                      enchantedBookMeta.addStoredEnchant(enchant, enchants.get(enchant), false);
+                  }
                 }
                 return item;
             
             default: break; //для обычных предметов просто кидаем чары - а для дригих не кидаем????? не заслужили тип????
         }
 
-        if (meta != null && enchants!=null && !enchants.isEmpty()) {
-            for (Enchantment enchant : enchants.keySet()) {
-                try { //item.addEnchantment(enchant, enchants.get(enchant));
-                    meta.addEnchant(enchant, enchants.get(enchant), true);
-                } catch (IllegalArgumentException ex) {
-                    Ostrov.log_err("ItemBuilder: невозможно добавить чары "+enchant.getKey().getKey()+" к предмету "+item.getType().toString()+" : "+ex.getMessage());
-                }
-            }
-            item.setItemMeta(meta);
+        if (enchants!=null && !enchants.isEmpty()) {
+          if (meta == null) meta = item.getItemMeta();
+          for (final Enchantment en : enchants.keySet()) {
+              try {
+                  meta.addEnchant(en, enchants.get(en), true);
+              } catch (IllegalArgumentException ex) {
+                  Ostrov.log_err("ItemBuilder: невозможно добавить чары "+en.getKey().getKey()+" к предмету "+item.getType().toString()+" : "+ex.getMessage());
+              }
+          }
         }
 
-        return item;
-    }   
+      if (meta != null) item.setItemMeta(meta);
+      return item;
+    }
 }

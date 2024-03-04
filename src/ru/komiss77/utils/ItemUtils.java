@@ -868,19 +868,21 @@ public class ItemUtils {
 
           case "basepot":
           case "basepotiondata":
-            if (splittedParam.length == 4) {
+            if (splittedParam.length == 4 || splittedParam.length == 2) {
               switch (builder.getType()) {
                 case TIPPED_ARROW, POTION, LINGERING_POTION, SPLASH_POTION:
-                  PotionType potionType = null;
-                  try { //по ключу найдёт не все, например для SPEED key=minecraft:swiftness. Сначала ищем по енум обычные, потом по ключу кастомные
-                    potionType = PotionType.valueOf(splittedParam[1].toUpperCase());
+                  PotionType potionType = Registry.POTION.get(NamespacedKey.minecraft(splittedParam[1].toLowerCase()));
+                  if (potionType == null) {
+                    @SuppressWarnings("deprecation")
+                    final PotionType npt = PotionType.getByEffect(PotionEffectType.getByName(splittedParam[1]));
+                    potionType = npt;
+                  }
+                  /*try { //по ключу найдёт не все, например для SPEED key=minecraft:swiftness. Сначала ищем по енум обычные, потом по ключу кастомные
                   } catch (IllegalArgumentException ex) {
                     NamespacedKey key = NamespacedKey.minecraft(splittedParam[1].toLowerCase());
-                    potionType =  Registry.POTION.get(key);
-                  }
-//Ostrov.log("basepot key="+key);
-//Registry.POTION.forEach( pt-> Ostrov.log("pt="+pt+" key="+pt.getKey()));
-                  //final PotionType potionType = Registry.POTION.get(NamespacedKey.minecraft(splittedParam[1].toLowerCase()));
+                    potionType = Registry.POTION.get(key);
+                  }*/
+
                   if (potionType != null) {
                     builder.setBasePotionType(potionType);
                   } else {
@@ -901,19 +903,12 @@ public class ItemUtils {
             if (splittedParam.length == 4) {
               switch (builder.getType()) {
                 case TIPPED_ARROW, POTION, LINGERING_POTION, SPLASH_POTION:
-                  //PotionEffectType potionEffectType = null;
-                 // try { //по ключу найдёт не все, например для SPEED key=minecraft:swiftness. Сначала ищем по енум обычные, потом по ключу кастомные
-                    //potionEffectType = PotionEffectType.getByName(splittedParam[1].toUpperCase());
-                    //Iterator <PotionEffectType> pit = Registry.EFFECT.iterator();
-                    //while (pit.hasNext()) {
-                   //   potionEffectType = pit.next();
-                   //   if (potionEffectType.getName())
-                   // }
-                 // } catch (IllegalArgumentException ex) {
-                 //   NamespacedKey key = NamespacedKey.minecraft(splittedParam[1].toLowerCase());
-                 //   potionEffectType =  Registry.POTION_EFFECT_TYPE.get(key);
-                //  }
-                  final PotionEffectType potionEffectType = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(splittedParam[1]));
+                  PotionEffectType potionEffectType = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(splittedParam[1].toLowerCase()));
+                  if (potionEffectType == null) {
+                    @SuppressWarnings("deprecation")
+                    final PotionEffectType npe = PotionEffectType.getByName(splittedParam[1]);
+                    potionEffectType = npe;
+                  }
                   if (potionEffectType != null) {
                     if (ApiOstrov.isInteger(splittedParam[2]) && ApiOstrov.isInteger(splittedParam[2])) {
                       builder.addCustomPotionEffect(new PotionEffect(potionEffectType, Integer.parseInt(splittedParam[2].toLowerCase()), Integer.parseInt(splittedParam[3].toLowerCase())));

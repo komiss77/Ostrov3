@@ -14,7 +14,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.persistence.PersistentDataType;
 import ru.komiss77.ApiOstrov;
-import ru.komiss77.Ostrov;
 import ru.komiss77.version.Nms;
 
 import java.util.EnumSet;
@@ -58,9 +57,7 @@ public class SignProtect {
     if (block.getState() instanceof InventoryHolder) {
       Inventory inv = ((InventoryHolder) block.getState()).getInventory();
 //Ostrov.log("InventoryHolder    DoubleChestInventory?"+(inv instanceof DoubleChestInventory));
-      if (inv instanceof DoubleChestInventory) {
-        DoubleChestInventory doubleChest = (DoubleChestInventory) inv;
-
+      if (inv instanceof final DoubleChestInventory doubleChest) {
         Block left = doubleChest.getLeftSide().getLocation().getBlock();
         info = findProtectedSign(left);
         if (info!=null) return info;

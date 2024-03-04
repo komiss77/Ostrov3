@@ -1,8 +1,5 @@
 package ru.komiss77.modules.signProtect;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.function.Predicate;
 import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -15,7 +12,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -38,6 +35,9 @@ import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.utils.inventory.SmartInventory;
 
+import java.util.Collection;
+import java.util.function.Predicate;
+
 
 public class SignProtectLst implements Initiable, Listener {
 
@@ -48,16 +48,7 @@ public class SignProtectLst implements Initiable, Listener {
   public static boolean enable;
   public static final NamespacedKey key = new NamespacedKey(Ostrov.instance, "signProtect");
   public static final int LIMIT = 30;
-  private static Predicate<Block> predicate;
-
-  static {
-    predicate = new Predicate<Block>() {
-      @Override
-      public boolean test(Block b) {
-        return Tag.WALL_SIGNS.isTagged(b.getType());
-      }
-    };
-  }
+  private static final Predicate<Block> predicate = b -> Tag.WALL_SIGNS.isTagged(b.getType());
 
   public void reload() {
     onDisable();
@@ -226,7 +217,7 @@ public class SignProtectLst implements Initiable, Listener {
               SignProtect.updateSign(s, new ProtectionData(e.getPlayer().getName()));
             } else {
               //e.getPlayer().sendMessage("§6Защита уже установлена!");
-              ApiOstrov.sendActionBarDirect((Player) e.getPlayer(), "§6Защита уже установлена!");
+              ApiOstrov.sendActionBarDirect(e.getPlayer(), "§6Защита уже установлена!");
             }
           }
         }
@@ -281,22 +272,12 @@ public class SignProtectLst implements Initiable, Listener {
 
   @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
   public void onBlockExplodeEvent(BlockExplodeEvent e) {
-    for (Iterator<Block> it = e.blockList().iterator(); it.hasNext();) {
-      Block block = it.next();
-      if (isProtected(block)) {
-        it.remove();
-      }
-    }
+    e.blockList().removeIf(SignProtectLst::isProtected);
   }
 
   @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
   public void onEntityExplodeEvent(EntityExplodeEvent e) {
-    for (Iterator<Block> it = e.blockList().iterator(); it.hasNext();) {
-      Block block = it.next();
-      if (isProtected(block)) {
-        it.remove();
-      }
-    }
+    e.blockList().removeIf(SignProtectLst::isProtected);
   }
 
   @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -329,9 +310,9 @@ public class SignProtectLst implements Initiable, Listener {
     final Sign s = SignProtect.findBlockProtection(e.getLectern().getBlock());
     if (s!=null) {
       final ProtectionData pd = ProtectionData.of(s);
-      if (!pd.canUse((Player) e.getPlayer())) {
+      if (!pd.canUse(e.getPlayer())) {
         e.setCancelled(true);
-        ApiOstrov.sendActionBarDirect((Player) e.getPlayer(), "§eВы не можете взять книгу!");
+        ApiOstrov.sendActionBarDirect(e.getPlayer(), "§eВы не можете взять книгу!");
         e.setCancelled(true);
       }
     }
@@ -373,10 +354,7 @@ public class SignProtectLst implements Initiable, Listener {
     private static boolean isProtected (final Block b) {
       if (Tag.WALL_SIGNS.isTagged(b.getType()) ) {
         Sign s = (Sign) b.getState();
-        if (s.getPersistentDataContainer().has(key)) {
-          return true;
-        }
-        return false;
+        return s.getPersistentDataContainer().has(key);
       }
       if (SignProtect.lockables.contains(b.getType())) {
         return SignProtect.findBlockProtection(b) != null;

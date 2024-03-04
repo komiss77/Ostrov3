@@ -15,13 +15,10 @@ import ru.komiss77.utils.inventory.ClickableItem;
 import ru.komiss77.utils.inventory.InventoryContent;
 import ru.komiss77.utils.inventory.InventoryProvider;
 
-import java.util.Arrays;
-import java.util.List;
-
 
 public class AccesEdit implements InventoryProvider {
 
-  private static final ItemStack fill = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE).name("§8.").build();;
+  private static final ItemStack fill = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE).name("§8.").build();
 
 
   private final Sign sign;
