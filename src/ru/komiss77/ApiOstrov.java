@@ -1,13 +1,6 @@
 package ru.komiss77;
 
 
-import java.sql.Connection;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.stream.StreamSupport;
 import com.destroystokyo.paper.ClientOption;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -24,6 +17,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -46,6 +40,14 @@ import ru.komiss77.utils.LocationUtil;
 import ru.komiss77.utils.TCUtils;
 import ru.komiss77.utils.TeleportLoc;
 import ru.komiss77.version.Nms;
+
+import java.sql.Connection;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.StreamSupport;
 
 
 public class ApiOstrov {
@@ -112,10 +114,11 @@ public class ApiOstrov {
      */
     public static void reachCustomStat(final Player p, final String customStatName, final int value) {
       if (StatManager.DEBUG) Ostrov.log("reachCustomStat "+(p==null?"null":p.getName())+" stat="+customStatName+" val="+value);
-        //sendMessage(p, Operation.ADD_CUSTOM_STAT, p.getName(), ammount, customStatName);
-        final Oplayer op = PM.getOplayer(p);
-        if (op!=null) MissionManager.onCustomStat(op, customStatName, value, true);
+      //sendMessage(p, Operation.ADD_CUSTOM_STAT, p.getName(), ammount, customStatName);
+      final Oplayer op = PM.getOplayer(p);
+      if (op!=null) MissionManager.onCustomStat(op, customStatName, value, true);
     }
+
     public static void addExp(final Player p, final int ammount) {
         final Oplayer op = PM.getOplayer(p);//StatManager.addExp(PM.getOplayer(p), ammount);
         if (op!=null) op.addExp(p, ammount);
@@ -251,6 +254,12 @@ public class ApiOstrov {
             Ostrov.sync(()->teleportSave(p, feetLoc, buildSavePlace));
             return true;
         }
+
+//        if (!new PlayerTeleportEvent(p, p.getLocation(), feetLoc, PlayerTeleportEvent.TeleportCause.PLUGIN).callEvent()) {
+//          p.sendMessage(Ostrov.prefixWARN + "§cТелепорт был отменен!");
+//          return false;
+//        }
+
         if (p.getGameMode()==GameMode.CREATIVE || p.getGameMode()==GameMode.SPECTATOR) {
             p.teleport(feetLoc, PlayerTeleportEvent.TeleportCause.COMMAND);
             return true;
@@ -380,7 +389,11 @@ public class ApiOstrov {
     //ентити
 
     public static @Nullable LivingEntity lastDamager(final LivingEntity ent, final boolean owner) {
-      if (ent.getLastDamageCause() instanceof final EntityDamageByEntityEvent ev) {
+      return getDamager(ent.getLastDamageCause(), owner);
+    }
+
+    public static @Nullable LivingEntity getDamager(final EntityDamageEvent e, final boolean owner) {
+      if (e instanceof final EntityDamageByEntityEvent ev) {
         if (ev.getDamager() instanceof Projectile && ((Projectile) ev.getDamager()).getShooter() instanceof final LivingEntity le) {
           if (le instanceof final Tameable tm && owner) {
             return tm.getOwner() instanceof HumanEntity ? ((HumanEntity) tm.getOwner()) : null;
@@ -694,11 +707,17 @@ public class ApiOstrov {
           .orElse("");
     }
 
+    @Deprecated
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static String toString( final Collection array, final boolean commaspace) {
+      return toString(array, commaspace ? ", " : ",");
+    }
+
+    public static <E> String toString(final Collection<E> array, final String separator) {
       if (array==null || array.isEmpty()) return "";
-      return (String) array.stream()
-        .map(Object::toString)
-        .reduce( (t, u) -> t + (commaspace ? ", " : ",") + u)
+      return array.stream()
+        .map(E::toString)
+        .reduce( (t, u) -> t + separator + u)
         .orElse("");
     }
 

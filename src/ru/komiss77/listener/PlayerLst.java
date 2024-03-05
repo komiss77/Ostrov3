@@ -22,7 +22,6 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
@@ -147,9 +146,9 @@ public class PlayerLst implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void toggleSneak(final PlayerToggleSneakEvent e) {
-        if (!e.getPlayer().isInsideVehicle()) {
-            PM.getOplayer(e.getPlayer()).tag.visible(!e.isSneaking());
-        }
+      final Player p = e.getPlayer();
+      if (p.isInsideVehicle() || p.isFlying()) return;
+      PM.getOplayer(p).tag.visible(!e.isSneaking());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -390,8 +389,10 @@ public class PlayerLst implements Listener {
         final String world_to = e.getTo().getWorld().getName();
         
         if (!world_from.equals(world_to)) {
-          if (!ApiOstrov.isLocalBuilder(p, false) && world_to.endsWith(WorldManager.buildWorldName)) {
-            e.setCancelled(e.getCause() != TeleportCause.COMMAND);
+          if (!ApiOstrov.isLocalBuilder(p, false) && world_to.endsWith(WorldManager.buildWorldSuffix)) {
+            p.sendMessage(Ostrov.prefixWARN + "§cТебе не разрешено заходить на этот мир!");
+            e.setCancelled(true);
+            return;
           }
     		
           if (PvpCmd.no_damage_on_tp > 0) {

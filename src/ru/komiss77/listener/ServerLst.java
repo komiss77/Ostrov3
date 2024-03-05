@@ -1,37 +1,41 @@
  package ru.komiss77.listener;
 
-import org.bukkit.Bukkit;
-import org.bukkit.GameRule;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.entity.EntityType;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockFadeEvent;
-import org.bukkit.event.block.BlockGrowEvent;
-import org.bukkit.event.block.BlockSpreadEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerRegisterChannelEvent;
-import org.bukkit.event.server.PluginEnableEvent;
-import org.bukkit.event.server.ServerLoadEvent;
-import org.bukkit.event.world.PortalCreateEvent;
-import org.bukkit.event.world.WorldLoadEvent;
-import ru.komiss77.ApiOstrov;
-import ru.komiss77.Config;
-import ru.komiss77.Ostrov;
-import ru.komiss77.enums.Game;
-import ru.komiss77.enums.ServerType;
-import ru.komiss77.events.RestartWarningEvent;
-import ru.komiss77.hook.DynmapHook;
-import ru.komiss77.hook.MatrixLst;
-import ru.komiss77.hook.TradeSystemHook;
-import ru.komiss77.hook.WGhook;
-import ru.komiss77.modules.games.GM;
-import ru.komiss77.modules.world.WorldManager;
-import ru.komiss77.utils.TCUtils;
-import ru.komiss77.version.Nms;
+ import org.bukkit.Bukkit;
+ import org.bukkit.GameRule;
+ import org.bukkit.Material;
+ import org.bukkit.World;
+ import org.bukkit.entity.Entity;
+ import org.bukkit.entity.EntityType;
+ import org.bukkit.event.EventHandler;
+ import org.bukkit.event.EventPriority;
+ import org.bukkit.event.Listener;
+ import org.bukkit.event.block.BlockFadeEvent;
+ import org.bukkit.event.block.BlockGrowEvent;
+ import org.bukkit.event.block.BlockSpreadEvent;
+ import org.bukkit.event.entity.CreatureSpawnEvent;
+ import org.bukkit.event.entity.EntityDeathEvent;
+ import org.bukkit.event.entity.EntitySpawnEvent;
+ import org.bukkit.event.player.PlayerRegisterChannelEvent;
+ import org.bukkit.event.server.PluginEnableEvent;
+ import org.bukkit.event.server.ServerLoadEvent;
+ import org.bukkit.event.world.EntitiesLoadEvent;
+ import org.bukkit.event.world.EntitiesUnloadEvent;
+ import org.bukkit.event.world.PortalCreateEvent;
+ import org.bukkit.event.world.WorldLoadEvent;
+ import ru.komiss77.ApiOstrov;
+ import ru.komiss77.Config;
+ import ru.komiss77.Ostrov;
+ import ru.komiss77.enums.Game;
+ import ru.komiss77.enums.ServerType;
+ import ru.komiss77.events.RestartWarningEvent;
+ import ru.komiss77.hook.DynmapHook;
+ import ru.komiss77.hook.MatrixLst;
+ import ru.komiss77.hook.TradeSystemHook;
+ import ru.komiss77.hook.WGhook;
+ import ru.komiss77.modules.games.GM;
+ import ru.komiss77.modules.world.WorldManager;
+ import ru.komiss77.utils.TCUtils;
+ import ru.komiss77.version.Nms;
 
 
  public class ServerLst implements Listener {
@@ -87,25 +91,17 @@ import ru.komiss77.version.Nms;
                 Ostrov.log_ok ("§5Используем Matrix!");
             }
 
-            case "WorldGuard" -> {
-                WGhook.hook(e.getPlugin());
-            }
+            case "WorldGuard" -> WGhook.hook(e.getPlugin());
             
-            case "CrazyAdvancementsAPI" -> {
-            	Ostrov.advance = true;
-            }
+            case "CrazyAdvancementsAPI" -> Ostrov.advance = true;
                 
 //           case "HolographicDisplays" -> {
 //                Ostrov.hdHolo = true;
 //            }	
                 
-            case "dynmap" -> {
-                DynmapHook.hook(e.getPlugin());
-            }
+            case "dynmap" -> DynmapHook.hook(e.getPlugin());
             
-            case "TradeSystem" -> {
-                TradeSystemHook.hook(e.getPlugin());
-            }
+            case "TradeSystem" -> TradeSystemHook.hook(e.getPlugin());
         }
         
     }
@@ -163,6 +159,35 @@ import ru.komiss77.version.Nms;
 
 
     }
+
+
+
+
+
+     @EventHandler(priority = EventPriority.LOWEST)
+     public void onSpawn(final EntitySpawnEvent e) {
+       if (Config.clear_old_ents) {
+         e.getEntity().setPersistent(false);
+       }
+     }
+
+     @EventHandler(priority = EventPriority.LOWEST)
+     public void onBlockFade(final EntitiesLoadEvent e) {
+       if (Config.clear_old_ents) {
+         for (final Entity ent : e.getEntities()) {
+           if (!ent.isPersistent()) ent.remove();
+         }
+       }
+     }
+
+     @EventHandler(priority = EventPriority.LOWEST)
+     public void onBlockFade(final EntitiesUnloadEvent e) {
+       if (Config.clear_old_ents) {
+         for (final Entity ent : e.getEntities()) {
+           if (!ent.isPersistent()) ent.remove();
+         }
+       }
+     }
         
         
         

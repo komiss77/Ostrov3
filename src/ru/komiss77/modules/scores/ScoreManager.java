@@ -16,7 +16,10 @@ import ru.komiss77.Ostrov;
 
 public class ScoreManager implements Initiable, Listener {
 
+    @Deprecated
     protected static final HashMap<UUID, ScoreBoard> scores = new HashMap<>();
+
+    protected static final HashMap<UUID, ScoreDis> lists = new HashMap<>();
     protected static final NamespacedKey key = new NamespacedKey(Ostrov.instance, "score");
 
     public ScoreManager() {
@@ -45,17 +48,14 @@ public class ScoreManager implements Initiable, Listener {
         boolean fnd = false;
         for (final Entity ent : e.getEntities()) {
             if (ent.getPersistentDataContainer().has(key)) {
-                if (scores.containsKey(ent.getUniqueId())) {
-                    continue;
-                } else {
-                    ent.remove();
-                    fnd = true;
-                }
+                if (lists.containsKey(ent.getUniqueId())) continue;
+                ent.remove();
+                fnd = true;
             }
         }
 
         if (fnd) {
-            for (final ScoreBoard sb : scores.values()) {
+            for (final ScoreDis sb : lists.values()) {
                 sb.reanimate(sb.getEntity());
             }
         }

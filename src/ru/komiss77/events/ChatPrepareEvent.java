@@ -13,7 +13,7 @@ import ru.komiss77.modules.player.Oplayer;
 
 public class ChatPrepareEvent extends Event {
 
-    private static HandlerList handlers = new HandlerList();
+    private static final HandlerList handlers = new HandlerList();
     private final Player sender;
     private final Oplayer senderOp;
     private String msg;
@@ -21,6 +21,7 @@ public class ChatPrepareEvent extends Event {
     private Component senderGameInfo; //инфо, которое увидит отправитель (можно подставить другие кликЭвенты, например, создать остров а не пригласить
     private boolean sendProxy = true;
     private boolean showLocal = true;
+    private boolean showSelf = true;
     private boolean cancel = false;
     
     //список получателей. У кого отправитель в ЧС, уже отфильтрованы.
@@ -82,6 +83,14 @@ public class ChatPrepareEvent extends Event {
     public boolean showLocal () {
         return showLocal;
     }
+
+    public void showSelf (boolean show) {
+      showSelf = show;
+    }
+
+    public boolean showSelf () {
+    return showSelf;
+  }
     
     public String getMessage() {
         return msg;

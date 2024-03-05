@@ -378,6 +378,8 @@ public class Perm {
         }    
     }
 
-
-    
+    //пермы
+    public static boolean canColorChat(final Oplayer op) {
+      return op.hasGroup("hero") || op.hasGroup("supermoder");
+    }
 }
