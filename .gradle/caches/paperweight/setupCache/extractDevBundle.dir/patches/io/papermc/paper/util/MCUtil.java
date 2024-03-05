@@ -2,6 +2,7 @@ package io.papermc.paper.util;
 
 import com.destroystokyo.paper.profile.CraftPlayerProfile;
 import com.destroystokyo.paper.profile.PlayerProfile;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.FinePosition;
@@ -37,6 +38,7 @@ import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_20_R3.util.Waitable;
+import org.jetbrains.annotations.NotNull;
 import org.spigotmc.AsyncCatcher;
 
 import javax.annotation.Nonnull;
@@ -55,6 +57,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public final class MCUtil {
@@ -641,6 +644,29 @@ public final class MCUtil {
 
     public static int getTicketLevelFor(net.minecraft.world.level.chunk.ChunkStatus status) {
         return net.minecraft.server.level.ChunkMap.MAX_VIEW_DISTANCE + net.minecraft.world.level.chunk.ChunkStatus.getDistance(status);
+    }
+
+    @NotNull
+    public static <T> List<T> copyListAndAdd(@NotNull final List<T> original,
+                                             @NotNull final T newElement) {
+        return ImmutableList.<T>builderWithExpectedSize(original.size() + 1)
+            .addAll(original)
+            .add(newElement)
+            .build();
+    }
+
+    @NotNull
+    public static <T> List<T> copyListAndRemoveIf(@NotNull final List<T> original,
+                                                  @NotNull final Predicate<T> removalPredicate) {
+        final ImmutableList.Builder<T> builder = ImmutableList.builderWithExpectedSize(original.size());
+        for (int i = 0; i < original.size(); i++) {
+            final T value = original.get(i);
+            if (removalPredicate.test(value)) continue;
+
+            builder.add(value);
+        }
+
+        return builder.build();
     }
 
     @Nullable

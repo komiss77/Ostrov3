@@ -32,20 +32,32 @@ public class CraftMushroomCow extends CraftCow implements MushroomCow, io.paperm
         return ImmutableList.of();
     }
 
+    // Paper start - add overloads to use suspicious effect entry to mushroom cow and suspicious stew meta
     @Override
     public boolean addEffectToNextStew(PotionEffect potionEffect, boolean overwrite) {
         Preconditions.checkArgument(potionEffect != null, "PotionEffect cannot be null");
-        MobEffectInstance minecraftPotionEffect = CraftPotionUtil.fromBukkit(potionEffect);
-        if (!overwrite && this.hasEffectForNextStew(potionEffect.getType())) {
+        return addEffectToNextStew(io.papermc.paper.potion.SuspiciousEffectEntry.create(potionEffect.getType(), potionEffect.getDuration()), overwrite);
+    }
+
+    @Override
+    public boolean addEffectToNextStew(io.papermc.paper.potion.SuspiciousEffectEntry suspiciousEffectEntry, boolean overwrite) {
+        Preconditions.checkArgument(suspiciousEffectEntry != null, "SuspiciousEffectEntry cannot be null");
+        MobEffect minecraftPotionEffect = CraftPotionEffectType.bukkitToMinecraft(suspiciousEffectEntry.effect());
+        if (!overwrite && this.hasEffectForNextStew(suspiciousEffectEntry.effect())) {
             return false;
         }
+        SuspiciousEffectHolder.EffectEntry recordSuspiciousEffect = new SuspiciousEffectHolder.EffectEntry(minecraftPotionEffect, suspiciousEffectEntry.duration());
+        this.removeEffectFromNextStew(suspiciousEffectEntry.effect()); // Avoid duplicates of effects
+        // Paper start - fix modification of immutable stew effects list
         if (this.getHandle().stewEffects == null) {
-            this.getHandle().stewEffects = new ArrayList<>();
+            this.getHandle().stewEffects = List.of(recordSuspiciousEffect);
+        } else {
+            this.getHandle().stewEffects = io.papermc.paper.util.MCUtil.copyListAndAdd(this.getHandle().stewEffects, recordSuspiciousEffect);
         }
-        SuspiciousEffectHolder.EffectEntry recordSuspiciousEffect = new SuspiciousEffectHolder.EffectEntry(minecraftPotionEffect.getEffect(), minecraftPotionEffect.getDuration());
-        this.removeEffectFromNextStew(potionEffect.getType()); // Avoid duplicates of effects
-        return this.getHandle().stewEffects.add(recordSuspiciousEffect);
+        // Paper end - fix modification of immutable stew effects list
+        return true;
     }
+    // Paper end - add overloads to use suspicious effect entry to mushroom cow and suspicious stew meta
 
     @Override
     public boolean removeEffectFromNextStew(PotionEffectType potionEffectType) {
@@ -54,7 +66,21 @@ public class CraftMushroomCow extends CraftCow implements MushroomCow, io.paperm
             return false;
         }
         MobEffect minecraftPotionEffectType = CraftPotionEffectType.bukkitToMinecraft(potionEffectType);
-        return this.getHandle().stewEffects.removeIf(recordSuspiciousEffect -> recordSuspiciousEffect.effect().equals(minecraftPotionEffectType));
+        // Paper start - fix modification of immutable stew effects list
+        if (this.getHandle().stewEffects == null) return false;
+
+        final int oldSize = this.getHandle().stewEffects.size();
+        this.getHandle().stewEffects = io.papermc.paper.util.MCUtil.copyListAndRemoveIf(
+            this.getHandle().stewEffects, s -> java.util.Objects.equals(s.effect(), minecraftPotionEffectType)
+        );
+
+        final int newSize = this.getHandle().stewEffects.size();
+        if (newSize == 0) {
+            this.getHandle().stewEffects = null; // Null the empty list, mojang expect this
+        }
+
+        return oldSize != newSize; // Yield back if the size changed, implying an object was removed.
+        // Paper end - fix modification of immutable stew effects list
     }
 
     @Override

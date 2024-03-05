@@ -183,6 +183,8 @@ public class WorldConfiguration extends ConfigurationPart {
             public Reference2IntMap<MobCategory> spawnLimits = Util.make(new Reference2IntOpenHashMap<>(NaturalSpawner.SPAWNING_CATEGORIES.length), map -> Arrays.stream(NaturalSpawner.SPAWNING_CATEGORIES).forEach(mobCategory -> map.put(mobCategory, -1)));
             @MergeMap
             public Map<MobCategory, DespawnRange> despawnRanges = Arrays.stream(MobCategory.values()).collect(Collectors.toMap(Function.identity(), category -> new DespawnRange(category.getNoDespawnDistance(), category.getDespawnDistance())));
+            @MergeMap
+            public Reference2IntMap<MobCategory> ticksPerSpawn = Util.make(new Reference2IntOpenHashMap<>(NaturalSpawner.SPAWNING_CATEGORIES.length), map -> Arrays.stream(NaturalSpawner.SPAWNING_CATEGORIES).forEach(mobCategory -> map.put(mobCategory, -1)));
 
             @ConfigSerializable
             public record DespawnRange(@Required int soft, @Required int hard) {
@@ -412,6 +414,8 @@ public class WorldConfiguration extends ConfigurationPart {
         public boolean portalSearchVanillaDimensionScaling = true;
         public boolean disableTeleportationSuffocationCheck = false;
         public IntOr.Disabled netherCeilingVoidDamageHeight = IntOr.Disabled.DISABLED;
+        public int maxFluidTicks = 65536;
+        public int maxBlockTicks = 65536;
     }
 
     public Spawn spawn;
@@ -445,6 +449,7 @@ public class WorldConfiguration extends ConfigurationPart {
 
     public class UnsupportedSettings extends ConfigurationPart {
         public boolean fixInvulnerableEndCrystalExploit = true;
+        public boolean disableWorldTickingWhenEmpty = false;
     }
 
     public Hopper hopper;

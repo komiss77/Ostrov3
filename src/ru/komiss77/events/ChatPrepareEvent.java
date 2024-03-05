@@ -19,9 +19,7 @@ public class ChatPrepareEvent extends Event {
     private String msg;
     private Component viewerGameInfo; //инфо, которое увидят получатели
     private Component senderGameInfo; //инфо, которое увидит отправитель (можно подставить другие кликЭвенты, например, создать остров а не пригласить
-    private boolean sendProxy = true;
-    private boolean showLocal = true;
-    private boolean showSelf = true;
+    private boolean sendProxy = true, showLocal = true, showSelf = true;
     private boolean cancel = false;
     
     //список получателей. У кого отправитель в ЧС, уже отфильтрованы.

@@ -108,8 +108,12 @@
      }
  
      public static int getSelectionSize() {
-@@ -56,9 +117,31 @@
-         return !existingStack.isEmpty() && ItemStack.isSameItemSameTags(existingStack, stack) && existingStack.isStackable() && existingStack.getCount() < existingStack.getMaxStackSize() && existingStack.getCount() < this.getMaxStackSize();
+@@ -53,12 +114,34 @@
+     }
+ 
+     private boolean hasRemainingSpaceForItem(ItemStack existingStack, ItemStack stack) {
+-        return !existingStack.isEmpty() && ItemStack.isSameItemSameTags(existingStack, stack) && existingStack.isStackable() && existingStack.getCount() < existingStack.getMaxStackSize() && existingStack.getCount() < this.getMaxStackSize();
++        return !existingStack.isEmpty() && existingStack.isStackable() && existingStack.getCount() < existingStack.getMaxStackSize() && existingStack.getCount() < this.getMaxStackSize() && ItemStack.isSameItemSameTags(existingStack, stack); // Paper - check if itemstack is stackable first
      }
  
 +    // CraftBukkit start - Watch method above! :D

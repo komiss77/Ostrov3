@@ -34,7 +34,7 @@
      }
  
      protected EndPortalBlock(BlockBehaviour.Properties settings) {
-@@ -41,29 +47,35 @@
+@@ -41,29 +47,38 @@
  
      @Override
      public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
@@ -62,6 +62,9 @@
 +            // Paper start - move all of this logic into portal tick
 +            entity.portalWorld = ((ServerLevel)world);
 +            entity.portalBlock = pos.immutable();
++            if (io.papermc.paper.configuration.GlobalConfiguration.get().unsupportedSettings.allowUnsafeEndPortalTeleportation) {
++                entity.tickEndPortal();
++            }
 +            // Paper end - move all of this logic into portal tick
          }
  
