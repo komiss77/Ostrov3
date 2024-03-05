@@ -19,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Ostrov;
+import ru.komiss77.Perm;
 import ru.komiss77.Timer;
 import ru.komiss77.enums.Chanell;
 import ru.komiss77.enums.Data;
@@ -224,7 +225,7 @@ public class ChatLst implements Listener {
                     .append("\n§5Игровое время: ").append(ApiOstrov.secondToTime(senderOp.getStat(Stat.PLAY_TIME)))
                     .append("\n§fКлик - написать сообщение");
             }
-            ce.suffix =  " "+senderOp.getDataString(Data.SUFFIX);
+            ce.suffix = " "+senderOp.getDataString(Data.SUFFIX);
         }
         ce.playerTooltip = sb.toString();
         
@@ -252,8 +253,8 @@ public class ChatLst implements Listener {
     
     
     public static void process (final ChatPrepareEvent ce) {
-        
-        final boolean useColorCode = ce.getOplayer().isStaff; //ApiOstrov.isLocalBuilder(ce.getPlayer(), false);
+
+        final boolean useColorCode = Perm.canColorChat(ce.getOplayer());
         
         final TextComponent msgRU = TCUtils.format( useColorCode ?
                 ce.stripMsgRu.replace('&', '§') : //сообщение от билдеров возможно с цветами
@@ -343,31 +344,21 @@ public class ChatLst implements Listener {
         }*/
 
         final ServerType serverType = GM.GAME.type;
-        final String senderWorldName = ce.getPlayer().getWorld().getName();
+        final Player sender = ce.getPlayer();
+        final String senderWorldName = sender.getWorld().getName();
         
 //Ostrov.log_warn("sendProxy?"+ce.sendProxy()+" isLocalChat?"+senderOp.isLocalChat());
         //игра не отменила отправку на прокси - работаем по дефолту:
         //на всех кроме миниигр отправляем, 
         //а на минииграх отправляем если в мире лобби
         if (!ce.banned && !ce.muted && ce.sendProxy() && !ce.getOplayer().isLocalChat()) {
-            if (serverType!=ServerType.ARENAS || senderWorldName.equals("lobby")) {
-                final Component proxyResultRU;
-                final Component proxyResultEN;
-                //убрать лишние элементы, пускай ГЛОБАЛЬНЫЕ сообщения будут всегда в формате: [Значек]_<Префикс>_Имя_<Суффикс>_»_(cообщение)
-                //if (ce.getViewerGameInfo()!=null) {
-                //    proxyResultRU = GM.getLogo().append(ce.getViewerGameInfo()).append(bRU.build());//proxyResult = GM.getLogo().append(ce.getViewerGameInfo()).append(b.build());
-                //    proxyResultEN = GM.getLogo().append(ce.getViewerGameInfo()).append(bEN.build());//proxyResult = GM.getLogo().append(ce.getViewerGameInfo()).append(b.build());
-                //} else {
-                    proxyResultRU = GM.getLogo().append(bRU.build());//proxyResult = GM.getLogo().append(b.build());
-                    proxyResultEN = GM.getLogo().append(bEN.build());//proxyResult = GM.getLogo().append(b.build());
-                //}
-//sender.sendMessage("");sender.sendMessage(" -- на прокси уйдёт такое сообщение: ");sender.sendMessage(proxyResult);sender.sendMessage("");
-                final String gsonMsgRU = GsonComponentSerializer.gson().serialize(proxyResultRU);
-                final String gsonMsgEN = GsonComponentSerializer.gson().serialize(proxyResultEN);
-//SpigotChanellMsg.sendChat(ce.getPlayer(), gsonMsgRU, Chanell.CHAT);
-                SpigotChanellMsg.sendChat(ce.getPlayer(), gsonMsgRU, Chanell.CHAT_RU);
-                SpigotChanellMsg.sendChat(ce.getPlayer(), gsonMsgEN, Chanell.CHAT_EN);
-            }
+          final Component proxyResultRU = GM.getLogo().append(bRU.build());//proxyResult = GM.getLogo().append(b.build());
+          final Component proxyResultEN = GM.getLogo().append(bEN.build());//proxyResult = GM.getLogo().append(b.build());
+          //убрать лишние элементы, пускай ГЛОБАЛЬНЫЕ сообщения будут всегда в формате: [Значек]_<Префикс>_Имя_<Суффикс>_»_(cообщение)
+          final String gsonMsgRU = GsonComponentSerializer.gson().serialize(proxyResultRU);
+          final String gsonMsgEN = GsonComponentSerializer.gson().serialize(proxyResultEN);
+          SpigotChanellMsg.sendChat(sender, gsonMsgRU, Chanell.CHAT_RU);
+          SpigotChanellMsg.sendChat(sender, gsonMsgEN, Chanell.CHAT_EN);
         }
         
         
@@ -384,9 +375,9 @@ public class ChatLst implements Listener {
         if (ce.showLocal()) {
             
             //на миниигре подменяем сообщение, если отправитель зритель или в игре
-            if (serverType == ServerType.ARENAS && !ApiOstrov.isLocalBuilder(ce.getPlayer())) {
+            if (serverType == ServerType.ARENAS && !ApiOstrov.isLocalBuilder(sender)) {
 
-                if (ce.getPlayer().getGameMode()==GameMode.SPECTATOR) { //отправитель в ГМ3 - зритель
+                if (sender.getGameMode()==GameMode.SPECTATOR) { //отправитель в ГМ3 - зритель
 
                     resultRU = TCUtils.format("§8[Зритель] "+ce.senderName+" §7§o≫ §7")
                         .hoverEvent(HoverEvent.showText(TCUtils.format("§кКлик - кинуть в ЧС")))
@@ -455,22 +446,20 @@ public class ChatLst implements Listener {
           
             
             //если игра поставила отдельное инфо для отправителя, лепим с этим инфо
-            if (ce.getSenderGameInfo()==null) {
-                if (ce.getPlayer().getClientOption(ClientOption.LOCALE).equals("ru_ru")) {
-                    ce.getPlayer().sendMessage(viewerResultRU);
+            if (ce.showSelf()) {//если нет, режим сам скинет игроку что надо
+              if (ce.getSenderGameInfo()==null) {
+                if (sender.getClientOption(ClientOption.LOCALE).equals("ru_ru")) {
+                  sender.sendMessage(viewerResultRU);
                 } else {
-                    ce.getPlayer().sendMessage(viewerResultEN);
+                  sender.sendMessage(viewerResultEN);
                 }
-                //ce.getPlayer().sendMessage(viewerResult);
-            } else {
-                if (ce.getPlayer().getClientOption(ClientOption.LOCALE).equals("ru_ru")) {
-                    //ce.getPlayer().sendMessage(ce.getSenderGameInfo().append(resultRU));
-                    ce.getPlayer().sendMessage(GM.getLogo().append(ce.getSenderGameInfo()).append(resultRU));
+              } else {
+                if (sender.getClientOption(ClientOption.LOCALE).equals("ru_ru")) {
+                  sender.sendMessage(GM.getLogo().append(ce.getSenderGameInfo()).append(resultRU));
                 } else {
-                    //ce.getPlayer().sendMessage(ce.getSenderGameInfo().append(resultEN));
-                    ce.getPlayer().sendMessage(GM.getLogo().append(ce.getSenderGameInfo()).append(resultEN));
+                  sender.sendMessage(GM.getLogo().append(ce.getSenderGameInfo()).append(resultEN));
                 }
-                //ce.getPlayer().sendMessage(ce.getSenderGameInfo().append(result));
+              }
             }
             
             //отправить в консоль
