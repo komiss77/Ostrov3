@@ -1,11 +1,6 @@
 --- a/net/minecraft/server/players/StoredUserList.java
 +++ b/net/minecraft/server/players/StoredUserList.java
-@@ -1,3 +1,4 @@
-+// mc-dev import
- package net.minecraft.server.players;
- 
- import com.google.common.collect.Lists;
-@@ -15,18 +16,22 @@
+@@ -15,18 +15,22 @@
  import java.io.IOException;
  import java.nio.charset.StandardCharsets;
  import java.util.Collection;
@@ -29,7 +24,7 @@
  
      public StoredUserList(File file) {
          this.file = file;
-@@ -41,16 +46,19 @@
+@@ -41,16 +45,19 @@
  
          try {
              this.save();
@@ -53,7 +48,7 @@
      }
  
      public void remove(K key) {
-@@ -58,8 +66,8 @@
+@@ -58,8 +65,8 @@
  
          try {
              this.save();
@@ -64,7 +59,7 @@
          }
  
      }
-@@ -69,34 +77,23 @@
+@@ -69,34 +76,24 @@
      }
  
      public String[] getUserList() {
@@ -84,6 +79,7 @@
 -    protected boolean contains(K object) {
 -        return this.map.containsKey(this.getKeyForUser(object));
 +    protected boolean contains(K k0) {
++        this.removeExpired(); // CraftBukkit - SPIGOT-7589: Consistently remove expired entries to mirror .get(...)
 +        return this.map.containsKey(this.getKeyForUser(k0));
      }
  

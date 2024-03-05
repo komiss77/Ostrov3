@@ -30,16 +30,20 @@
      }
  
      @Override
-@@ -55,7 +57,7 @@
+@@ -55,7 +57,11 @@
  
      @Override
      public void onDisconnect(Component reason) {
 -        LOGGER.info("{} lost connection: {}", this.gameProfile, reason.getString());
++        // Paper start - Debugging
++        if (net.minecraft.server.MinecraftServer.getServer().isDebugging()) {
++            ServerConfigurationPacketListenerImpl.LOGGER.info("{} lost connection: {}, while in configuration phase {}", this.gameProfile, reason.getString(), currentTask != null ? currentTask.type().id() : "null");
++        } else // Paper end
 +        ServerConfigurationPacketListenerImpl.LOGGER.info("{} lost connection: {}", this.gameProfile, reason.getString());
          super.onDisconnect(reason);
      }
  
-@@ -66,10 +68,11 @@
+@@ -66,10 +72,11 @@
  
      public void startConfiguration() {
          this.send(new ClientboundCustomPayloadPacket(new BrandPayload(this.server.getServerModName())));
@@ -54,7 +58,7 @@
          this.addOptionalTasks();
          this.configurationTasks.add(new JoinWorldTask());
          this.startNextTask();
-@@ -81,14 +84,15 @@
+@@ -81,14 +88,15 @@
      }
  
      private void addOptionalTasks() {
@@ -72,7 +76,7 @@
      }
  
      @Override
-@@ -103,29 +107,37 @@
+@@ -103,29 +111,37 @@
      @Override
      public void handleConfigurationFinished(ServerboundFinishConfigurationPacket packet) {
          this.connection.suspendInboundAfterProtocolChange();
@@ -122,7 +126,7 @@
          }
  
      }
-@@ -139,19 +151,21 @@
+@@ -139,19 +155,21 @@
          if (this.currentTask != null) {
              throw new IllegalStateException("Task " + this.currentTask.type().id() + " has not finished yet");
          } else if (this.isAcceptingMessages()) {

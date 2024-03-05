@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
+import org.bukkit.event.entity.EntityRemoveEvent;
 
 public final class ChunkEntitySlices {
 
@@ -119,12 +120,12 @@ public final class ChunkEntitySlices {
                 continue;
             }
             if (entity.shouldBeSaved()) {
-                entity.setRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK);
+                entity.setRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK, EntityRemoveEvent.Cause.UNLOAD);
                 if (entity.isVehicle()) {
                     // we cannot assume that these entities are contained within this chunk, because entities can
                     // desync - so we need to remove them all
                     for (final Entity passenger : entity.getIndirectPassengers()) {
-                        passenger.setRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK);
+                        passenger.setRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK, EntityRemoveEvent.Cause.UNLOAD);
                     }
                 }
             }

@@ -81,7 +81,8 @@ public class GameInfo {
                 .addLore(game.description)
                 .addLore("")
                 .addLore(getState().displayColor+getState().name())
-                .addLore( hasLevel && hasReputation && gameOnline >=0 ? (op.eng?"§a⊳ Click - §сPLAY":"§a⊳ Клик - §сИГРАТЬ") : (op.eng?"§eNot available!":"§eНедоступна!"))
+                .addLore( hasLevel && hasReputation && gameOnline >=0 ? (op.eng?"§a⊳ Left Click - §сPLAY":"§a⊳ Левый Клик - §сИГРАТЬ") : (op.eng?"§eNot available!":"§eНедоступна!"))
+                .addLore( op.eng?"§a⊳ Right Click - §кARENAS":"§a⊳ Правый Клик - §кАРЕНЫ")
                 .addLore( gameOnline>=0 ? (op.eng?"§7Players: ":"§7Играют: ")+gameOnline : "" )
 //                    .addLore(  hasLevel ? (op.eng?"§7Required level : §6":"§7Требуемый уровень : §6") +game.level : (op.eng?"§cAvailable from level §e":"§cБудет доступна с уровня §e")+game.level)
 //                    .addLore(  hasReputation ? (op.eng?"§7Required reputation : §a>":"§7Требуемая репутация : §a>") +game.reputation : (op.eng?"§cAvailable with reputation §a>":"§cДоступна при репутации §a>")+game.reputation)
@@ -114,7 +115,11 @@ public class GameInfo {
 
 
 
-    public void update(final String serverName, final String arenaName, final GameState state, final int players, final String line0, final String line1, final String line2, final String line3, final String extra) {
+    public void update(final String serverName,
+                       final String arenaName,
+                       final GameState state,
+                       final int players,
+                       final String line0, final String line1, final String line2, final String line3) {
 //Bukkit.broadcastMessage("updateMulti server="+server+" arena="+arenaName); 
         ArenaInfo ai = getArena(serverName, arenaName);
         if (ai==null) {
@@ -133,20 +138,22 @@ public class GameInfo {
                 } else {
                     gameOnline = players;
                 }
-                ai.update(state, players, game.displayName, arenaName, players>=0 ? GameState.РАБОТАЕТ.displayColor+GameState.РАБОТАЕТ.name() : GameState.ВЫКЛЮЧЕНА.displayColor+GameState.ВЫКЛЮЧЕНА.name(), players>0 ? "§1"+players : "", extra);
+                ai.update(state, players,
+                  game.displayName,
+                  arenaName, players>=0 ? GameState.РАБОТАЕТ.displayColor+GameState.РАБОТАЕТ.name() : GameState.ВЫКЛЮЧЕНА.displayColor+GameState.ВЫКЛЮЧЕНА.name(), players>0 ? "§1"+players : "");
                 break;
                 
             case LOBBY:
                 gameOnline-=ai.players;
                 gameOnline+=players;
-                ai.update(state, players, game.displayName, arenaName, players>=0 ? GameState.РАБОТАЕТ.displayColor+GameState.РАБОТАЕТ.name() : GameState.ВЫКЛЮЧЕНА.displayColor+GameState.ВЫКЛЮЧЕНА.name(), players>0 ? "§1"+players : "", extra);
+                ai.update(state, players, game.displayName, arenaName, players>=0 ? GameState.РАБОТАЕТ.displayColor+GameState.РАБОТАЕТ.name() : GameState.ВЫКЛЮЧЕНА.displayColor+GameState.ВЫКЛЮЧЕНА.name(), players>0 ? "§1"+players : "");
                 break;
                 
             case ARENAS:
                 gameOnline-=ai.players;
                 if (gameOnline<0) gameOnline=0;
                 gameOnline+=players;
-                ai.update(state, players, line0, line1, line2, line3, extra);
+                ai.update(state, players, line0, line1, line2, line3);
                 break;
 			default:
 				break;

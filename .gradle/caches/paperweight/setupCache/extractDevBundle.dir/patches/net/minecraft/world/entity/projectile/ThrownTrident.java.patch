@@ -1,14 +1,19 @@
 --- a/net/minecraft/world/entity/projectile/ThrownTrident.java
 +++ b/net/minecraft/world/entity/projectile/ThrownTrident.java
-@@ -25,6 +25,7 @@
+@@ -23,8 +23,12 @@
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.phys.EntityHitResult;
  import net.minecraft.world.phys.Vec3;
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public class ThrownTrident extends AbstractArrow {
 +
      private static final EntityDataAccessor<Byte> ID_LOYALTY = SynchedEntityData.defineId(ThrownTrident.class, EntityDataSerializers.BYTE);
      private static final EntityDataAccessor<Boolean> ID_FOIL = SynchedEntityData.defineId(ThrownTrident.class, EntityDataSerializers.BOOLEAN);
      private static final ItemStack DEFAULT_ARROW_STACK = new ItemStack(Items.TRIDENT);
-@@ -32,20 +33,22 @@
+@@ -32,20 +36,22 @@
      public int clientSideReturnTridentTickCount;
  
      public ThrownTrident(EntityType<? extends ThrownTrident> type, Level world) {
@@ -36,7 +41,7 @@
      }
  
      @Override
-@@ -55,8 +58,9 @@
+@@ -55,24 +61,27 @@
          }
  
          Entity entity = this.getOwner();
@@ -48,8 +53,10 @@
              if (!this.isAcceptibleReturnOwner()) {
                  if (!this.level().isClientSide && this.pickup == AbstractArrow.Pickup.ALLOWED) {
                      this.spawnAtLocation(this.getPickupItem(), 0.1F);
-@@ -65,14 +69,16 @@
-                 this.discard();
+                 }
+ 
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.DROP); // CraftBukkit - add Bukkit remove cause
              } else {
                  this.setNoPhysics(true);
 -                Vec3 vec3 = entity.getEyePosition().subtract(this.position());
@@ -69,7 +76,7 @@
                  if (this.clientSideReturnTridentTickCount == 0) {
                      this.playSound(SoundEvents.TRIDENT_RETURN, 10.0F, 1.0F);
                  }
-@@ -86,16 +92,27 @@
+@@ -86,17 +95,28 @@
  
      private boolean isAcceptibleReturnOwner() {
          Entity entity = this.getOwner();
@@ -85,8 +92,8 @@
      public boolean isFoil() {
 -        return this.entityData.get(ID_FOIL);
 +        return (Boolean) this.entityData.get(ThrownTrident.ID_FOIL);
-+    }
-+
+     }
+ 
 +    // Paper start
 +    public void setFoil(boolean foil) {
 +        this.entityData.set(ThrownTrident.ID_FOIL, foil);
@@ -98,12 +105,13 @@
 +
 +    public void setLoyalty(byte loyalty) {
 +        this.entityData.set(ThrownTrident.ID_LOYALTY, loyalty);
-     }
++    }
 +    // Paper end
- 
++
      @Nullable
      @Override
-@@ -106,28 +123,34 @@
+     protected EntityHitResult findHitEntity(Vec3 currentPosition, Vec3 nextPosition) {
+@@ -106,28 +126,34 @@
      @Override
      protected void onHitEntity(EntityHitResult entityHitResult) {
          Entity entity = entityHitResult.getEntity();
@@ -150,7 +158,7 @@
              }
          } else if (entity.getType().is(EntityTypeTags.DEFLECTS_TRIDENTS)) {
              this.deflect();
-@@ -135,22 +158,25 @@
+@@ -135,22 +161,25 @@
          }
  
          this.setDeltaMovement(this.getDeltaMovement().multiply(-0.01D, -0.1D, -0.01D));
@@ -187,7 +195,7 @@
      }
  
      public boolean isChanneling() {
-@@ -179,7 +205,7 @@
+@@ -179,7 +208,7 @@
      public void readAdditionalSaveData(CompoundTag nbt) {
          super.readAdditionalSaveData(nbt);
          this.dealtDamage = nbt.getBoolean("DealtDamage");
@@ -196,7 +204,7 @@
      }
  
      @Override
-@@ -190,8 +216,9 @@
+@@ -190,8 +219,9 @@
  
      @Override
      public void tickDespawn() {

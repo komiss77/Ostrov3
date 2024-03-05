@@ -1,14 +1,19 @@
 --- a/net/minecraft/world/entity/animal/horse/TraderLlama.java
 +++ b/net/minecraft/world/entity/animal/horse/TraderLlama.java
-@@ -20,6 +20,7 @@
+@@ -18,8 +18,12 @@
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.Level;
  import net.minecraft.world.level.ServerLevelAccessor;
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public class TraderLlama extends Llama {
 +
      private int despawnDelay = 47999;
  
      public TraderLlama(EntityType<? extends TraderLlama> type, Level world) {
-@@ -34,7 +35,7 @@
+@@ -34,7 +38,7 @@
      @Nullable
      @Override
      protected Llama makeNewLlama() {
@@ -17,7 +22,7 @@
      }
  
      @Override
-@@ -66,6 +67,7 @@
+@@ -66,6 +70,7 @@
      @Override
      protected void doPlayerRide(Player player) {
          Entity entity = this.getLeashHolder();
@@ -25,7 +30,7 @@
          if (!(entity instanceof WanderingTrader)) {
              super.doPlayerRide(player);
          }
-@@ -82,7 +84,7 @@
+@@ -82,10 +87,10 @@
  
      private void maybeDespawn() {
          if (this.canDespawn()) {
@@ -33,8 +38,12 @@
 +            this.despawnDelay = this.isLeashedToWanderingTrader() ? ((WanderingTrader) this.getLeashHolder()).getDespawnDelay() - 1 : this.despawnDelay - 1;
              if (this.despawnDelay <= 0) {
                  this.dropLeash(true, false);
-                 this.discard();
-@@ -114,10 +116,11 @@
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+             }
+ 
+         }
+@@ -114,10 +119,11 @@
              entityData = new AgeableMob.AgeableMobGroupData(false);
          }
  
@@ -47,7 +56,7 @@
          private final Llama llama;
          private LivingEntity ownerLastHurtBy;
          private int timestamp;
-@@ -134,12 +137,15 @@
+@@ -134,12 +140,15 @@
                  return false;
              } else {
                  Entity entity = this.llama.getLeashHolder();
@@ -66,7 +75,7 @@
                      return i != this.timestamp && this.canAttack(this.ownerLastHurtBy, TargetingConditions.DEFAULT);
                  }
              }
-@@ -147,10 +153,11 @@
+@@ -147,10 +156,11 @@
  
          @Override
          public void start() {

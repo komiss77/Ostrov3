@@ -200,21 +200,6 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
             //одиночки сюда уже не дойдут
             ArenaInfo ai = gi.getArena(serverName, arg[1]);//null;
 
-            //if (game.type==ServerType.ONE_GAME) {
-
-                //ai = gi.arenas.get(0);
-
-            //} else if (game.type==ServerType.ARENAS || game.type==ServerType.LOBBY) {
-
-                //if (arg.length>=2) {
-                    //ai = gi.getArena(arg[0], arg[1]);
-                //} else {
-                //    ai = gi.arenas.get(0);
-                //}
-
-            //}
-
-
 
             if (ai==null) { //арены не определить - просто на серв
 
@@ -223,10 +208,10 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
 
             } else {
 
-                if (game.type!=ServerType.LOBBY && ai.server.equals(Ostrov.MOT_D)) {
-                    p.sendMessage("§6Вы и так уже на сервере с этой ареной!");
-                    return true;
-                }
+                //if (game.type!=ServerType.LOBBY && ai.server.equals(Ostrov.MOT_D)) {
+                //    p.sendMessage("§6Вы и так уже на сервере с этой ареной!");
+                //    return true;
+                //}
                 hasLevel =  op.getStat(Stat.LEVEL)>=ai.level;
                 hasReputation =  op.reputationCalc>=ai.reputation;
                 if (hasLevel && hasReputation) {

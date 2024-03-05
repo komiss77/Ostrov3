@@ -16,13 +16,14 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.Items;
  import net.minecraft.world.level.Level;
-@@ -45,9 +45,16 @@
+@@ -45,9 +45,17 @@
  import net.minecraft.world.phys.Vec3;
  import org.slf4j.Logger;
  
 +// CraftBukkit start
 +import org.bukkit.entity.Player;
 +import org.bukkit.entity.FishHook;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.player.PlayerFishEvent;
 +// CraftBukkit end
 +
@@ -34,7 +35,7 @@
      private boolean biting;
      public int outOfWaterTime;
      private static final int MAX_OUT_OF_WATER_TIME = 10;
-@@ -58,64 +65,86 @@
+@@ -58,64 +66,86 @@
      public int timeUntilLured;
      private int timeUntilHooked;
      private float fishAngle;
@@ -146,7 +147,7 @@
              }
          }
  
-@@ -124,22 +153,23 @@
+@@ -124,26 +154,27 @@
  
      @Override
      public boolean shouldRenderAtSqrDistance(double distance) {
@@ -167,16 +168,22 @@
          super.tick();
 -        Player player = this.getPlayerOwner();
 -        if (player == null) {
+-            this.discard();
+-        } else if (this.level().isClientSide || !this.shouldStopFishing(player)) {
 +        net.minecraft.world.entity.player.Player entityhuman = this.getPlayerOwner();
 +
 +        if (entityhuman == null) {
-             this.discard();
--        } else if (this.level().isClientSide || !this.shouldStopFishing(player)) {
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
 +        } else if (this.level().isClientSide || !this.shouldStopFishing(entityhuman)) {
              if (this.onGround()) {
                  ++this.life;
                  if (this.life >= 1200) {
-@@ -151,13 +181,15 @@
+-                    this.discard();
++                    this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+                     return;
+                 }
+             } else {
+@@ -151,13 +182,15 @@
              }
  
              float f = 0.0F;
@@ -197,7 +204,7 @@
              if (this.currentState == FishingHook.FishHookState.FLYING) {
                  if (this.hookedIn != null) {
                      this.setDeltaMovement(Vec3.ZERO);
-@@ -165,7 +197,7 @@
+@@ -165,7 +198,7 @@
                      return;
                  }
  
@@ -206,7 +213,7 @@
                      this.setDeltaMovement(this.getDeltaMovement().multiply(0.3D, 0.2D, 0.3D));
                      this.currentState = FishingHook.FishHookState.BOBBING;
                      return;
-@@ -178,7 +210,7 @@
+@@ -178,7 +211,7 @@
                          if (!this.hookedIn.isRemoved() && this.hookedIn.level().dimension() == this.level().dimension()) {
                              this.setPos(this.hookedIn.getX(), this.hookedIn.getY(0.8D), this.hookedIn.getZ());
                          } else {
@@ -215,7 +222,7 @@
                              this.currentState = FishingHook.FishHookState.FLYING;
                          }
                      }
-@@ -187,27 +219,28 @@
+@@ -187,27 +220,28 @@
                  }
  
                  if (this.currentState == FishingHook.FishHookState.BOBBING) {
@@ -253,7 +260,7 @@
                          }
                      } else {
                          this.outOfWaterTime = Math.min(10, this.outOfWaterTime + 1);
-@@ -215,7 +248,7 @@
+@@ -215,7 +249,7 @@
                  }
              }
  
@@ -262,7 +269,7 @@
                  this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.03D, 0.0D));
              }
  
-@@ -225,18 +258,20 @@
+@@ -225,28 +259,31 @@
                  this.setDeltaMovement(Vec3.ZERO);
              }
  
@@ -289,8 +296,10 @@
 +        if (!player.isRemoved() && player.isAlive() && (flag || flag1) && this.distanceToSqr((Entity) player) <= 1024.0D) {
              return false;
          } else {
-             this.discard();
-@@ -245,8 +280,9 @@
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+             return true;
+         }
      }
  
      private void checkCollision() {
@@ -302,7 +311,7 @@
      }
  
      @Override
-@@ -271,18 +307,19 @@
+@@ -271,18 +308,19 @@
  
      public void setHookedEntity(@Nullable Entity entity) {
          this.hookedIn = entity;
@@ -327,7 +336,7 @@
              --i;
          }
  
-@@ -291,107 +328,137 @@
+@@ -291,107 +329,137 @@
              if (this.nibble <= 0) {
                  this.timeUntilLured = 0;
                  this.timeUntilHooked = 0;
@@ -381,14 +390,14 @@
 +
 +                        worldserver.sendParticles(ParticleTypes.FISHING, d0, d1, d2, 0, (double) f4, 0.01D, (double) (-f3), 1.0D);
 +                        worldserver.sendParticles(ParticleTypes.FISHING, d0, d1, d2, 0, (double) (-f4), 0.01D, (double) f3, 1.0D);
-                     }
++                    }
 +                } else {
 +                    // CraftBukkit start
 +                    PlayerFishEvent playerFishEvent = new PlayerFishEvent((Player) this.getPlayerOwner().getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.BITE);
 +                    this.level().getCraftServer().getPluginManager().callEvent(playerFishEvent);
 +                    if (playerFishEvent.isCancelled()) {
 +                        return;
-+                    }
+                     }
 +                    // CraftBukkit end
 +                    this.playSound(SoundEvents.FISHING_BOBBER_SPLASH, 0.25F, 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F);
 +                    double d3 = this.getY() + 0.5D;
@@ -530,7 +539,7 @@
          } else {
              return FishingHook.OpenWaterType.ABOVE_WATER;
          }
-@@ -402,39 +469,82 @@
+@@ -402,39 +470,82 @@
      }
  
      @Override
@@ -636,7 +645,7 @@
                      }
                  }
  
-@@ -442,8 +552,25 @@
+@@ -442,10 +553,27 @@
              }
  
              if (this.onGround()) {
@@ -660,9 +669,12 @@
 +            }
 +            // CraftBukkit end
  
-             this.discard();
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
              return i;
-@@ -454,7 +581,7 @@
+         } else {
+             return 0;
+@@ -454,7 +582,7 @@
  
      @Override
      public void handleEntityEvent(byte status) {
@@ -671,7 +683,7 @@
              this.pullEntity(this.hookedIn);
          }
  
-@@ -462,10 +589,12 @@
+@@ -462,10 +590,12 @@
      }
  
      public void pullEntity(Entity entity) {
@@ -688,13 +700,21 @@
          }
      }
  
-@@ -476,13 +605,13 @@
+@@ -476,13 +606,20 @@
  
      @Override
      public void remove(Entity.RemovalReason reason) {
 -        this.updateOwnerInfo((FishingHook)null);
+-        super.remove(reason);
++        // CraftBukkit start - add Bukkit remove cause
++        this.remove(reason, null);
++    }
++
++    @Override
++    public void remove(Entity.RemovalReason entity_removalreason, EntityRemoveEvent.Cause cause) {
++        // CraftBukkit end
 +        this.updateOwnerInfo((FishingHook) null);
-         super.remove(reason);
++        super.remove(entity_removalreason, cause); // CraftBukkit - add Bukkit remove cause
      }
  
      @Override
@@ -704,7 +724,7 @@
      }
  
      @Override
-@@ -492,17 +621,19 @@
+@@ -492,17 +629,19 @@
      }
  
      private void updateOwnerInfo(@Nullable FishingHook fishingBobber) {
@@ -729,7 +749,7 @@
      }
  
      @Nullable
-@@ -518,6 +649,7 @@
+@@ -518,6 +657,7 @@
      @Override
      public Packet<ClientGamePacketListener> getAddEntityPacket() {
          Entity entity = this.getOwner();
@@ -737,7 +757,7 @@
          return new ClientboundAddEntityPacket(this, entity == null ? this.getId() : entity.getId());
      }
  
-@@ -526,21 +658,24 @@
+@@ -526,21 +666,24 @@
          super.recreateFromPacket(packet);
          if (this.getPlayerOwner() == null) {
              int i = packet.getData();

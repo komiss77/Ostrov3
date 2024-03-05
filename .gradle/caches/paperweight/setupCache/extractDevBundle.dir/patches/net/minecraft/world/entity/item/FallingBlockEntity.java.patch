@@ -20,12 +20,13 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.AnvilBlock;
  import net.minecraft.world.level.block.Block;
-@@ -46,21 +49,30 @@
+@@ -46,21 +49,31 @@
  import net.minecraft.world.phys.Vec3;
  import org.slf4j.Logger;
  
 +// CraftBukkit start;
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +// CraftBukkit end
 +
  public class FallingBlockEntity extends Entity {
@@ -54,7 +55,7 @@
      }
  
      public FallingBlockEntity(Level world, double x, double y, double z, BlockState block) {
-@@ -76,10 +88,18 @@
+@@ -76,10 +89,18 @@
      }
  
      public static FallingBlockEntity fall(Level world, BlockPos pos, BlockState state) {
@@ -77,7 +78,7 @@
      }
  
      @Override
-@@ -88,11 +108,11 @@
+@@ -88,11 +109,11 @@
      }
  
      public void setStartPos(BlockPos pos) {
@@ -91,7 +92,7 @@
      }
  
      @Override
-@@ -102,7 +122,7 @@
+@@ -102,7 +123,7 @@
  
      @Override
      protected void defineSynchedData() {
@@ -100,17 +101,12 @@
      }
  
      @Override
-@@ -112,90 +132,125 @@
- 
+@@ -113,89 +134,114 @@
      @Override
      public void tick() {
-+        // Paper start - fix sand duping
-+        if (this.isRemoved()) {
-+            return;
-+        }
-+        // Paper end - fix sand duping
          if (this.blockState.isAir()) {
-             this.discard();
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
          } else {
              Block block = this.blockState.getBlock();
 +
@@ -120,18 +116,13 @@
              }
  
              this.move(MoverType.SELF, this.getDeltaMovement());
-+            // Paper start - fix sand duping
-+            if (this.isRemoved()) {
-+                return;
-+            }
-+            // Paper end - fix sand duping
 +            // Paper start - Configurable falling blocks height nerf
 +            if (this.level().paperConfig().fixes.fallingBlockHeightNerf.test(v -> this.getY() > v)) {
 +                if (this.dropItem && this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
 +                    this.spawnAtLocation(block);
 +                }
 +
-+                this.discard();
++                this.discard(EntityRemoveEvent.Cause.OUT_OF_WORLD);
 +                return;
 +            }
 +            // Paper end - Configurable falling blocks height nerf
@@ -168,7 +159,8 @@
 +                            this.spawnAtLocation((ItemLike) block);
                          }
  
-                         this.discard();
+-                        this.discard();
++                        this.discard(EntityRemoveEvent.Cause.DROP); // CraftBukkit - add Bukkit remove cause
                      }
                  } else {
 -                    BlockState blockState = this.level().getBlockState(blockPos);
@@ -195,15 +187,16 @@
  
 -                                if (this.level().setBlock(blockPos, this.blockState, 3)) {
 -                                    ((ServerLevel)this.level()).getChunkSource().chunkMap.broadcast(this, new ClientboundBlockUpdatePacket(blockPos, this.level().getBlockState(blockPos)));
+-                                    this.discard();
 +                                // CraftBukkit start
 +                                if (!CraftEventFactory.callEntityChangeBlockEvent(this, blockposition, this.blockState)) {
-+                                    this.discard(); // SPIGOT-6586 called before the event in previous versions
++                                    this.discard(EntityRemoveEvent.Cause.DESPAWN); // SPIGOT-6586 called before the event in previous versions
 +                                    return;
 +                                }
 +                                // CraftBukkit end
 +                                if (this.level().setBlock(blockposition, this.blockState, 3)) {
 +                                    ((ServerLevel) this.level()).getChunkSource().chunkMap.broadcast(this, new ClientboundBlockUpdatePacket(blockposition, this.level().getBlockState(blockposition)));
-                                     this.discard();
++                                    this.discard(EntityRemoveEvent.Cause.DESPAWN);
                                      if (block instanceof Fallable) {
 -                                        ((Fallable)block).onLand(this.level(), blockPos, this.blockState, blockState, this);
 +                                        ((Fallable) block).onLand(this.level(), blockposition, this.blockState, iblockdata, this);
@@ -241,14 +234,16 @@
                                          }
                                      }
                                  } else if (this.dropItem && this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
-                                     this.discard();
+-                                    this.discard();
 -                                    this.callOnBrokenAfterFall(block, blockPos);
 -                                    this.spawnAtLocation(block);
++                                    this.discard(EntityRemoveEvent.Cause.DROP); // CraftBukkit - add Bukkit remove cause
 +                                    this.callOnBrokenAfterFall(block, blockposition);
 +                                    this.spawnAtLocation((ItemLike) block);
                                  }
                              } else {
-                                 this.discard();
+-                                this.discard();
++                                this.discard(EntityRemoveEvent.Cause.DROP); // CraftBukkit - add Bukkit remove cause
                                  if (this.dropItem && this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
 -                                    this.callOnBrokenAfterFall(block, blockPos);
 -                                    this.spawnAtLocation(block);
@@ -257,13 +252,14 @@
                                  }
                              }
                          } else {
-                             this.discard();
+-                            this.discard();
 -                            this.callOnBrokenAfterFall(block, blockPos);
++                            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
 +                            this.callOnBrokenAfterFall(block, blockposition);
                          }
                      }
                  }
-@@ -207,7 +262,7 @@
+@@ -207,7 +253,7 @@
  
      public void callOnBrokenAfterFall(Block block, BlockPos pos) {
          if (block instanceof Fallable) {
@@ -272,7 +268,7 @@
          }
  
      }
-@@ -218,31 +273,37 @@
+@@ -218,31 +264,37 @@
              return false;
          } else {
              int i = Mth.ceil(fallDistance - 1.0F);
@@ -325,7 +321,7 @@
                      }
                  }
  
-@@ -264,6 +325,7 @@
+@@ -264,6 +316,7 @@
          }
  
          nbt.putBoolean("CancelDrop", this.cancelDrop);
@@ -333,7 +329,7 @@
      }
  
      @Override
-@@ -282,7 +344,7 @@
+@@ -282,7 +335,7 @@
              this.dropItem = nbt.getBoolean("DropItem");
          }
  
@@ -342,7 +338,7 @@
              this.blockData = nbt.getCompound("TileEntityData").copy();
          }
  
-@@ -291,6 +353,11 @@
+@@ -291,6 +344,11 @@
              this.blockState = Blocks.SAND.defaultBlockState();
          }
  
@@ -354,7 +350,7 @@
      }
  
      public void setHurtsEntities(float fallHurtAmount, int fallHurtMax) {
-@@ -311,7 +378,7 @@
+@@ -311,7 +369,7 @@
      @Override
      public void fillCrashReportCategory(CrashReportCategory section) {
          super.fillCrashReportCategory(section);
@@ -363,7 +359,7 @@
      }
  
      public BlockState getBlockState() {
-@@ -338,10 +405,11 @@
+@@ -338,10 +396,11 @@
          super.recreateFromPacket(packet);
          this.blockState = Block.stateById(packet.getData());
          this.blocksBuilding = true;

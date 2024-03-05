@@ -8,7 +8,7 @@
  import java.util.List;
  import javax.annotation.Nullable;
  import net.minecraft.core.BlockPos;
-@@ -39,20 +40,33 @@
+@@ -39,20 +40,34 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.Level;
@@ -39,6 +39,7 @@
 +import org.bukkit.craftbukkit.v1_20_R3.block.CraftBlock;
 +import org.bukkit.event.entity.EntityExplodeEvent;
 +import org.bukkit.event.entity.EntityRegainHealthEvent;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +// CraftBukkit end
 +
  public class EnderDragon extends Mob implements Enemy {
@@ -46,7 +47,7 @@
      private static final Logger LOGGER = LogUtils.getLogger();
      public static final EntityDataAccessor<Integer> DATA_PHASE = SynchedEntityData.defineId(EnderDragon.class, EntityDataSerializers.INT);
      private static final TargetingConditions CRYSTAL_DESTROY_TARGETING = TargetingConditions.forCombat().range(64.0D);
-@@ -81,16 +95,26 @@
+@@ -81,16 +96,26 @@
      public EndCrystal nearestCrystal;
      @Nullable
      private EndDragonFight dragonFight;
@@ -79,7 +80,7 @@
          this.head = new EnderDragonPart(this, "head", 1.0F, 1.0F);
          this.neck = new EnderDragonPart(this, "neck", 3.0F, 3.0F);
          this.body = new EnderDragonPart(this, "body", 5.0F, 3.0F);
-@@ -104,6 +128,7 @@
+@@ -104,6 +129,7 @@
          this.noPhysics = true;
          this.noCulling = true;
          this.phaseManager = new EnderDragonPhaseManager(this);
@@ -87,7 +88,7 @@
      }
  
      public void setDragonFight(EndDragonFight fight) {
-@@ -122,11 +147,25 @@
+@@ -122,11 +148,25 @@
          return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 200.0D);
      }
  
@@ -116,7 +117,7 @@
      }
  
      @Override
-@@ -140,7 +179,7 @@
+@@ -140,7 +180,7 @@
      @Override
      protected void defineSynchedData() {
          super.defineSynchedData();
@@ -125,7 +126,7 @@
      }
  
      public double[] getLatencyPos(int segmentNumber, float tickDelta) {
-@@ -149,17 +188,18 @@
+@@ -149,17 +189,18 @@
          }
  
          tickDelta = 1.0F - tickDelta;
@@ -155,7 +156,7 @@
      }
  
      @Override
-@@ -174,33 +214,40 @@
+@@ -174,33 +215,40 @@
          }
  
          if (this.dragonFight == null) {
@@ -211,7 +212,7 @@
              }
  
              this.setYRot(Mth.wrapDegrees(this.getYRot()));
-@@ -208,9 +255,9 @@
+@@ -208,9 +256,9 @@
                  this.flapTime = 0.5F;
              } else {
                  if (this.posPointer < 0) {
@@ -224,7 +225,7 @@
                      }
                  }
  
-@@ -218,8 +265,12 @@
+@@ -218,8 +266,12 @@
                      this.posPointer = 0;
                  }
  
@@ -238,7 +239,7 @@
                  if (this.level().isClientSide) {
                      if (this.lerpSteps > 0) {
                          this.lerpPositionAndRotationStep(this.lerpSteps, this.lerpX, this.lerpY, this.lerpZ, this.lerpYRot, this.lerpXRot);
-@@ -228,103 +279,115 @@
+@@ -228,103 +280,115 @@
  
                      this.phaseManager.getCurrentPhase().doClientTick();
                  } else {
@@ -420,7 +421,7 @@
                  }
  
                  if (!this.level().isClientSide) {
-@@ -334,13 +397,13 @@
+@@ -334,13 +398,13 @@
                      }
                  }
  
@@ -441,7 +442,7 @@
                  }
  
              }
-@@ -355,9 +418,10 @@
+@@ -355,9 +419,10 @@
          if (this.phaseManager.getCurrentPhase().isSitting()) {
              return -1.0F;
          } else {
@@ -455,7 +456,7 @@
          }
      }
  
-@@ -366,39 +430,53 @@
+@@ -366,39 +431,53 @@
              if (this.nearestCrystal.isRemoved()) {
                  this.nearestCrystal = null;
              } else if (this.tickCount % 10 == 0 && this.getHealth() < this.getMaxHealth()) {
@@ -526,7 +527,7 @@
                      entity.hurt(this.damageSources().mobAttack(this), 5.0F);
                      this.doEnchantDamageEffects(this, entity);
                  }
-@@ -408,7 +486,11 @@
+@@ -408,7 +487,11 @@
      }
  
      private void hurt(List<Entity> entities) {
@@ -539,7 +540,7 @@
              if (entity instanceof LivingEntity) {
                  entity.hurt(this.damageSources().mobAttack(this), 10.0F);
                  this.doEnchantDamageEffects(this, entity);
-@@ -418,7 +500,7 @@
+@@ -418,7 +501,7 @@
      }
  
      private float rotWrap(double yawDegrees) {
@@ -548,7 +549,7 @@
      }
  
      private boolean checkWalls(AABB box) {
-@@ -426,33 +508,92 @@
+@@ -426,33 +509,92 @@
          int j = Mth.floor(box.minY);
          int k = Mth.floor(box.minZ);
          int l = Mth.floor(box.maxX);
@@ -658,7 +659,7 @@
      }
  
      public boolean hurt(EnderDragonPart part, DamageSource source, float amount) {
-@@ -468,7 +609,8 @@
+@@ -468,7 +610,8 @@
                  return false;
              } else {
                  if (source.getEntity() instanceof Player || source.is(DamageTypeTags.ALWAYS_HURTS_ENDER_DRAGONS)) {
@@ -668,7 +669,7 @@
                      this.reallyHurt(source, amount);
                      if (this.isDeadOrDying() && !this.phaseManager.getCurrentPhase().isSitting()) {
                          this.setHealth(1.0F);
-@@ -476,7 +618,7 @@
+@@ -476,7 +619,7 @@
                      }
  
                      if (this.phaseManager.getCurrentPhase().isSitting()) {
@@ -677,10 +678,11 @@
                          if (this.sittingDamageReceived > 0.25F * this.getMaxHealth()) {
                              this.sittingDamageReceived = 0.0F;
                              this.phaseManager.setPhase(EnderDragonPhase.TAKEOFF);
-@@ -500,6 +642,15 @@
+@@ -500,7 +643,16 @@
  
      @Override
      public void kill() {
+-        this.remove(Entity.RemovalReason.KILLED);
 +        // Paper start - Fire entity death event
 +        this.silentDeath = true;
 +        org.bukkit.event.entity.EntityDeathEvent deathEvent = org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory.callEntityDeathEvent(this);
@@ -690,10 +692,11 @@
 +        }
 +        // Paper end - Fire entity death event
 +
-         this.remove(Entity.RemovalReason.KILLED);
++        this.remove(Entity.RemovalReason.KILLED, EntityRemoveEvent.Cause.DEATH); // CraftBukkit - add Bukkit remove cause
          this.gameEvent(GameEvent.ENTITY_DIE);
          if (this.dragonFight != null) {
-@@ -509,6 +660,21 @@
+             this.dragonFight.updateDragon(this);
+@@ -509,6 +661,21 @@
  
      }
  
@@ -715,7 +718,7 @@
      @Override
      protected void tickDeath() {
          if (this.dragonFight != null) {
-@@ -518,31 +684,56 @@
+@@ -518,38 +685,63 @@
          ++this.dragonDeathTime;
          if (this.dragonDeathTime >= 180 && this.dragonDeathTime <= 200) {
              float f = (this.random.nextFloat() - 0.5F) * 8.0F;
@@ -784,7 +787,15 @@
              }
  
              if (this.dragonFight != null) {
-@@ -557,26 +748,32 @@
+                 this.dragonFight.setDragonKilled(this);
+             }
+ 
+-            this.remove(Entity.RemovalReason.KILLED);
++            this.remove(Entity.RemovalReason.KILLED, EntityRemoveEvent.Cause.DEATH); // CraftBukkit - add Bukkit remove cause
+             this.gameEvent(GameEvent.ENTITY_DIE);
+         }
+ 
+@@ -557,26 +749,32 @@
  
      public int findClosestNode() {
          if (this.nodes[0] == null) {
@@ -831,7 +842,7 @@
              }
  
              this.nodeAdjacency[0] = 6146;
-@@ -611,18 +808,20 @@
+@@ -611,18 +809,20 @@
      public int findClosestNode(double x, double y, double z) {
          float f = 10000.0F;
          int i = 0;
@@ -861,7 +872,7 @@
                  }
              }
          }
-@@ -632,96 +831,118 @@
+@@ -632,96 +832,118 @@
  
      @Nullable
      public Path findPath(int from, int to, @Nullable Node pathNode) {
@@ -1035,7 +1046,7 @@
          }
  
          return new Path(list, new BlockPos(node.x, node.y, node.z), true);
-@@ -732,6 +953,7 @@
+@@ -732,6 +954,7 @@
          super.addAdditionalSaveData(nbt);
          nbt.putInt("DragonPhase", this.phaseManager.getCurrentPhase().getPhase().getId());
          nbt.putInt("DragonDeathTime", this.dragonDeathTime);
@@ -1043,7 +1054,7 @@
      }
  
      @Override
-@@ -745,11 +967,15 @@
+@@ -745,11 +968,15 @@
              this.dragonDeathTime = nbt.getInt("DragonDeathTime");
          }
  
@@ -1061,7 +1072,7 @@
  
      public EnderDragonPart[] getSubEntities() {
          return this.subEntities;
-@@ -781,73 +1007,81 @@
+@@ -781,73 +1008,81 @@
      }
  
      public float getHeadPartYOffset(int segmentOffset, double[] segment1, double[] segment2) {
@@ -1181,7 +1192,7 @@
          }
  
          super.onSyncedDataUpdated(data);
-@@ -880,10 +1114,10 @@
+@@ -880,10 +1115,10 @@
      @Override
      public void recreateFromPacket(ClientboundAddEntityPacket packet) {
          super.recreateFromPacket(packet);

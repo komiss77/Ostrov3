@@ -7,7 +7,7 @@
  import javax.annotation.Nullable;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
-@@ -43,20 +44,27 @@
+@@ -43,20 +44,28 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.Items;
  import net.minecraft.world.item.crafting.Ingredient;
@@ -20,6 +20,7 @@
  
 +// CraftBukkit start
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +// CraftBukkit end
 +
  public class Pig extends Animal implements ItemSteerable, Saddleable {
@@ -36,7 +37,7 @@
      }
  
      @Override
-@@ -65,7 +73,7 @@
+@@ -65,7 +74,7 @@
          this.goalSelector.addGoal(1, new PanicGoal(this, 1.25D));
          this.goalSelector.addGoal(3, new BreedGoal(this, 1.0D));
          this.goalSelector.addGoal(4, new TemptGoal(this, 1.2D, Ingredient.of(Items.CARROT_ON_A_STICK), false));
@@ -45,7 +46,7 @@
          this.goalSelector.addGoal(5, new FollowParentGoal(this, 1.1D));
          this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.0D));
          this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
-@@ -80,11 +88,13 @@
+@@ -80,11 +89,13 @@
      @Override
      public LivingEntity getControllingPassenger() {
          if (this.isSaddled()) {
@@ -64,7 +65,7 @@
                  }
              }
          }
-@@ -94,7 +104,7 @@
+@@ -94,7 +105,7 @@
  
      @Override
      public void onSyncedDataUpdated(EntityDataAccessor<?> data) {
@@ -73,7 +74,7 @@
              this.steering.onSynced();
          }
  
-@@ -104,8 +114,8 @@
+@@ -104,8 +115,8 @@
      @Override
      protected void defineSynchedData() {
          super.defineSynchedData();
@@ -84,7 +85,7 @@
      }
  
      @Override
-@@ -142,20 +152,23 @@
+@@ -142,20 +153,23 @@
  
      @Override
      public InteractionResult mobInteract(Player player, InteractionHand hand) {
@@ -115,7 +116,7 @@
              }
          }
      }
-@@ -169,7 +182,7 @@
+@@ -169,7 +183,7 @@
      protected void dropEquipment() {
          super.dropEquipment();
          if (this.isSaddled()) {
@@ -124,7 +125,7 @@
          }
  
      }
-@@ -183,32 +196,41 @@
+@@ -183,32 +197,41 @@
      public void equipSaddle(@Nullable SoundSource sound) {
          this.steering.setSaddle(true);
          if (sound != null) {
@@ -182,7 +183,7 @@
                          }
                      }
                  }
-@@ -221,19 +243,26 @@
+@@ -221,20 +244,27 @@
      @Override
      public void thunderHit(ServerLevel world, LightningBolt lightning) {
          if (world.getDifficulty() != Difficulty.PEACEFUL) {
@@ -208,6 +209,7 @@
  
 -                zombifiedPiglin.setPersistenceRequired();
 -                world.addFreshEntity(zombifiedPiglin);
+-                this.discard();
 +                entitypigzombie.setPersistenceRequired();
 +                // CraftBukkit start
 +                if (CraftEventFactory.callPigZapEvent(this, lightning, entitypigzombie).isCancelled()) {
@@ -216,10 +218,11 @@
 +                // CraftBukkit - added a reason for spawning this creature
 +                world.addFreshEntity(entitypigzombie, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.LIGHTNING);
 +                // CraftBukkit end
-                 this.discard();
++                this.discard(EntityRemoveEvent.Cause.TRANSFORMATION); // CraftBukkit - add Bukkit remove cause
              } else {
                  super.thunderHit(world, lightning);
-@@ -259,7 +288,7 @@
+             }
+@@ -259,7 +289,7 @@
  
      @Override
      protected float getRiddenSpeed(Player controllingPlayer) {
@@ -228,7 +231,7 @@
      }
  
      @Override
-@@ -269,18 +298,18 @@
+@@ -269,18 +299,18 @@
  
      @Nullable
      @Override

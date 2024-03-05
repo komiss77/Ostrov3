@@ -18,7 +18,7 @@
  import net.minecraft.world.entity.ai.memory.MemoryModuleType;
  import net.minecraft.world.entity.ai.sensing.Sensor;
  import net.minecraft.world.entity.ai.util.LandRandomPos;
-@@ -72,8 +73,15 @@
+@@ -72,8 +73,16 @@
  import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
  import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
  import net.minecraft.world.phys.Vec3;
@@ -26,6 +26,7 @@
 +import java.util.stream.Collectors;
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
 +import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.entity.PiglinBarterEvent;
 +// CraftBukkit end
  
@@ -34,7 +35,7 @@
      public static final int REPELLENT_DETECTION_RANGE_HORIZONTAL = 8;
      public static final int REPELLENT_DETECTION_RANGE_VERTICAL = 4;
      public static final Item BARTERING_ITEM = Items.GOLD_INGOT;
-@@ -111,14 +119,16 @@
+@@ -111,14 +120,16 @@
      private static final float SPEED_MULTIPLIER_WHEN_DANCING = 0.6F;
      private static final float SPEED_MULTIPLIER_WHEN_IDLING = 0.6F;
  
@@ -58,7 +59,7 @@
          brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
          brain.setDefaultActivity(Activity.IDLE);
          brain.useDefaultActivity();
-@@ -126,28 +136,29 @@
+@@ -126,28 +137,29 @@
      }
  
      protected static void initMemories(Piglin piglin, RandomSource random) {
@@ -98,7 +99,7 @@
      }
  
      private static void initAdmireItemActivity(Brain<Piglin> brain) {
-@@ -155,13 +166,14 @@
+@@ -155,13 +167,14 @@
      }
  
      private static void initRetreatActivity(Brain<Piglin> brain) {
@@ -116,7 +117,7 @@
      }
  
      private static ImmutableList<Pair<OneShot<LivingEntity>, Integer>> createLookBehaviors() {
-@@ -169,7 +181,7 @@
+@@ -169,7 +182,7 @@
      }
  
      private static RunOne<LivingEntity> createIdleLookBehaviors() {
@@ -125,7 +126,7 @@
      }
  
      private static RunOne<Piglin> createIdleMovementBehaviors() {
-@@ -181,32 +193,37 @@
+@@ -181,32 +194,37 @@
      }
  
      private static BehaviorControl<Piglin> babyAvoidNemesis() {
@@ -176,7 +177,7 @@
      }
  
      private static boolean isBabyRidingBaby(Piglin piglin) {
-@@ -214,139 +231,168 @@
+@@ -214,139 +232,168 @@
              return false;
          } else {
              Entity entity = piglin.getVehicle();
@@ -201,9 +202,10 @@
 +            // Paper end - EntityPickupItemEvent fixes
              piglin.take(drop, drop.getItem().getCount());
 -            itemStack = drop.getItem();
-+            itemstack = drop.getItem();
-             drop.discard();
+-            drop.discard();
 -        } else {
++            itemstack = drop.getItem();
++            drop.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
 +        } else if (!org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory.callEntityPickupItemEvent(piglin, drop, drop.getItem().getCount() - 1, false).isCancelled()) {
 +            piglin.onItemPickup(drop); // Paper - EntityPickupItemEvent fixes; moved from Piglin#pickUpItem - call prior to item entity modification
              piglin.take(drop, 1);
@@ -252,11 +254,12 @@
 -        ItemStack itemStack = stack.getItem();
 -        ItemStack itemStack2 = itemStack.split(1);
 -        if (itemStack.isEmpty()) {
+-            stack.discard();
 +        ItemStack itemstack = stack.getItem();
 +        ItemStack itemstack1 = itemstack.split(1);
 +
 +        if (itemstack.isEmpty()) {
-             stack.discard();
++            stack.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
          } else {
 -            stack.setItem(itemStack);
 +            stack.setItem(itemstack);
@@ -397,7 +400,7 @@
      }
  
      protected static boolean wantsToPickup(Piglin piglin, ItemStack stack) {
-@@ -354,100 +400,112 @@
+@@ -354,100 +401,112 @@
              return false;
          } else if (stack.is(ItemTags.PIGLIN_REPELLENTS)) {
              return false;
@@ -555,7 +558,7 @@
              return InteractionResult.CONSUME;
          } else {
              return InteractionResult.PASS;
-@@ -455,40 +513,41 @@
+@@ -455,40 +514,41 @@
      }
  
      protected static boolean canAdmire(Piglin piglin, ItemStack nearbyItems) {
@@ -614,7 +617,7 @@
              }
          }
      }
-@@ -498,11 +557,11 @@
+@@ -498,11 +558,11 @@
              if (Sensor.isEntityAttackableIgnoringLineOfSight(piglin, target)) {
                  if (!BehaviorUtils.isOtherTargetMuchFurtherAwayThanCurrentAttackTarget(piglin, target, 4.0D)) {
                      if (target.getType() == EntityType.PLAYER && piglin.level().getGameRules().getBoolean(GameRules.RULE_UNIVERSAL_ANGER)) {
@@ -630,7 +633,7 @@
                      }
  
                  }
-@@ -512,50 +571,45 @@
+@@ -512,50 +572,45 @@
  
      public static Optional<SoundEvent> getSoundForCurrentActivity(Piglin piglin) {
          return piglin.getBrain().getActiveNonCoreActivity().map((activity) -> {
@@ -702,7 +705,7 @@
      }
  
      private static void stopWalking(Piglin piglin) {
-@@ -564,24 +618,25 @@
+@@ -564,24 +619,25 @@
      }
  
      private static BehaviorControl<LivingEntity> babySometimesRideBabyHoglin() {
@@ -738,7 +741,7 @@
              });
          });
      }
-@@ -591,7 +646,7 @@
+@@ -591,7 +647,7 @@
              piglin.getBrain().eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
              piglin.getBrain().setMemoryWithExpiry(MemoryModuleType.ANGRY_AT, target.getUUID(), 600L);
              if (target.getType() == EntityType.HOGLIN && piglin.canHunt()) {
@@ -747,7 +750,7 @@
              }
  
              if (target.getType() == EntityType.PLAYER && piglin.level().getGameRules().getBoolean(GameRules.RULE_UNIVERSAL_ANGER)) {
-@@ -602,20 +657,22 @@
+@@ -602,20 +658,22 @@
      }
  
      private static void setAngerTargetToNearestTargetablePlayerIfFound(AbstractPiglin piglin, LivingEntity player) {
@@ -777,7 +780,7 @@
          }
      }
  
-@@ -632,44 +689,42 @@
+@@ -632,44 +690,42 @@
      }
  
      private static void broadcastRetreat(Piglin piglin, LivingEntity target) {
@@ -842,7 +845,7 @@
          return j > i;
      }
  
-@@ -677,12 +732,12 @@
+@@ -677,12 +733,12 @@
          piglin.getBrain().eraseMemory(MemoryModuleType.ANGRY_AT);
          piglin.getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
          piglin.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
@@ -858,7 +861,7 @@
      }
  
      private static void eat(Piglin piglin) {
-@@ -690,8 +745,9 @@
+@@ -690,8 +746,9 @@
      }
  
      private static Vec3 getRandomNearbyPos(Piglin piglin) {
@@ -870,7 +873,7 @@
      }
  
      private static boolean hasEatenRecently(Piglin piglin) {
-@@ -714,8 +770,14 @@
+@@ -714,8 +771,14 @@
          return entity.getBrain().hasMemoryValue(MemoryModuleType.ADMIRING_ITEM);
      }
  
@@ -886,7 +889,7 @@
      }
  
      private static boolean isFood(ItemStack stack) {
-@@ -731,7 +793,7 @@
+@@ -731,7 +794,7 @@
      }
  
      private static boolean doesntSeeAnyPlayerHoldingLovedItem(LivingEntity piglin) {
@@ -895,7 +898,7 @@
      }
  
      public static boolean isPlayerHoldingLovedItem(LivingEntity target) {
-@@ -751,7 +813,7 @@
+@@ -751,7 +814,7 @@
      }
  
      private static boolean isNotHoldingLovedItemInOffHand(Piglin piglin) {

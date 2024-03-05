@@ -47,6 +47,8 @@ import ru.komiss77.utils.TCUtils;
 public final class GM {   
     
     private static final OstrovConfig gameSigns;
+
+    @Deprecated //на одном ядре может быть несколько игр, надо придумать что-то другое
     public static final Game GAME; //не передвигать! не переименовывать!!!! другие плагины берут напрямую!
     private static Component chatLogo; //не передвигать! не переименовывать!!!! другие плагины берут напрямую!
     private static final EnumMap<Game, GameInfo> games; //  game (аркаим даария bw01 bb01 sg02), gameInfo (арены)
@@ -128,7 +130,13 @@ public final class GM {
                     
                     if (gi.game.type==ServerType.ONE_GAME) {
                         
-                        gi.update(rs.getString("name"), rs.getString("motd"), rs.getInt("online")>=0 ? GameState.РАБОТАЕТ : GameState.ВЫКЛЮЧЕНА, rs.getInt("online"), null, null, null, null, "");
+                        gi.update(
+                          rs.getString("name"),
+                          rs.getString("motd"),
+                          rs.getInt("online")>=0 ? GameState.РАБОТАЕТ : GameState.ВЫКЛЮЧЕНА,
+                          rs.getInt("online"),
+                          null, null, null, null
+                        );
                     
                     } else if (gi.game.type==ServerType.LOBBY) {
                         
@@ -137,7 +145,13 @@ public final class GM {
                             ai = new ArenaInfo(gi, rs.getString("name"), rs.getString("motd"), 0, 0, Material.matchMaterial(Game.LOBBY.mat));
                             gi.arenas.put(ai.slot, ai);
                         }
-                        gi.update(rs.getString("name"), rs.getString("motd"), rs.getInt("online")>=0 ? GameState.РАБОТАЕТ : GameState.ВЫКЛЮЧЕНА, rs.getInt("online"), null, null, null, null, "");
+                        gi.update(
+                          rs.getString("name"),
+                          rs.getString("motd"),
+                          rs.getInt("online")>=0 ? GameState.РАБОТАЕТ : GameState.ВЫКЛЮЧЕНА,
+                          rs.getInt("online"),
+                          null, null, null, null
+                        );
 
                     }
                 }
@@ -184,8 +198,7 @@ public final class GM {
                             rs.getString("line0"),
                             rs.getString("line1"),
                             rs.getString("line2"),
-                            rs.getString("line3"),
-                            rs.getString("extra")
+                            rs.getString("line3")
                         );
 
                     }
@@ -199,9 +212,6 @@ public final class GM {
             rs = stmt.executeQuery( " SELECT `rus`, `eng`  FROM `lang` WHERE  `stamp` >= "+Lang.updateStamp );
             Lang.updateBase(rs);
             rs.close();
-            
-            //stmt.close();
-//System.out.println("loadArenaInfo 6");                                    
 
             if (fromStamp==0) {
                 int a=0;
@@ -227,25 +237,193 @@ public final class GM {
         }*/
 
 
-     }    
-    
-    
-    
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+     }
 
-    static void updateSigns(final ArenaInfo ai) {
+
+
+
+
+
+  //может быть async!!
+  public static void sendArenaData (
+    final Game game,
+    final String arenaName,
+    final GameState state,
+    final int players,
+    final String line0,
+    final String line1,
+    final String line2,
+    final String line3
+  ) {
+
+    if (game.type==ServerType.ARENAS) {  //на миниигре вызываем локальные эвент для табличек этого сервера! (с банжи не получит)
+      //если игры с острова не прогрузились, но локальные арены уже шлют данные -
+      //создать локальныю запись, чтобы могли стартовать таблички
+      GameInfo gi = games.get(game);
+      if (gi==null) {
+        gi = new GameInfo(game);
+        games.put(game, gi);
+      }
+      gi.update(Ostrov.MOT_D, arenaName, state, players, line0, line1, line2, line3);
+    }
+
+    if (Bukkit.getOnlinePlayers().isEmpty() || state==GameState.ОЖИДАНИЕ) { //async
+      //плодит соединения!! передел на простой запрос
+      if (Bukkit.isPrimaryThread()) {
+        Ostrov.async(()-> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 0);
+      } else {
+        writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
+      }
+
+    } else if (state==GameState.ВЫКЛЮЧЕНА || state==GameState.ПЕРЕЗАПУСК) { //sync!!
+
+      if (Bukkit.isPrimaryThread()) {
+        writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
+      } else {
+        Ostrov.sync( ()-> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 0);
+      }
+
+    } else {
+
+      SpigotChanellMsg.sendMessage(Bukkit.getOnlinePlayers().stream().findAny().get(),
+        Operation.GAME_INFO_TO_BUNGEE,
+        Ostrov.MOT_D,
+        state.tag, players, 0,
+        arenaName, line0, line1, line2, line3, game.name() );
+
+    }
+  }
+
+
+  private static void writeArenaStateToMySql (final Game game, final String arenaName, final GameState state, final int players, final String line0, final String line1, final String line2, final String line3) {
+    if (!OstrovDB.useOstrovData) return;
+    final Connection conn = OstrovDB.getConnection();
+    if (conn==null) {
+      Ostrov.log_warn("writeThisServerStateToOstrovDB - нет соединения с БД!");
+      return;
+    }
+
+    try {
+      PreparedStatement pst = conn.prepareStatement("INSERT INTO "+Table.ARENAS.table_name
+        +" (id, server, game, arenaName, state, line0, line1, line2, line3, players, stamp)"
+        +" VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) ON DUPLICATE KEY UPDATE "
+        + "state=VALUES(state), line0=VALUES(line0), line1=VALUES(line1), line2=VALUES(line2), line3=VALUES(line3),"
+        + "players=VALUES(players), stamp=VALUES(stamp) ;");
+
+      pst.setInt(1, (Ostrov.MOT_D+arenaName).hashCode());
+      pst.setString(2, Ostrov.MOT_D);
+      pst.setString(3, game.name());//Game.fromServerName(Ostrov.MOT_D).name());
+      pst.setString(4, arenaName);
+      pst.setString(5, state.toString());
+      pst.setString(6, line0);
+      pst.setString(7, line1);
+      pst.setString(8, line2);
+      pst.setString(9, line3);
+      pst.setInt(10, players);
+      pst.setInt(11, ApiOstrov.currentTimeSec()+1 ); //для  надёжности, пусть прогрузит 2 раза
+
+      pst.executeUpdate();
+      pst.close();
+
+    } catch (SQLException e) {
+      Ostrov.log_err("§cGM writeArenaStateToMySql error - "+e.getMessage());
+      //e.printStackTrace();
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  private static GameInfo getGameInfo(final String serverName) {
+    final Game game = Game.fromServerName(serverName);
+
+    if (game==null || game==Game.GLOBAL) {
+      Ostrov.log_warn("GameManager onGameData : нет игры для сервера "+serverName);
+      return null;
+    }
+
+    if (!games.containsKey(game)) {
+      switch (game.type) {
+
+        case ONE_GAME, LOBBY, ARENAS -> games.put(game, new GameInfo(game ));
+        default -> {
+          return null;
+        }
+      }
+
+    }
+    return games.get(game);
+    //gi.update(serverName, arenaName, state, players, line0, line1, line2, line3, extra, mat);
+
+  }
+
+
+
+
+
+
+
+
+  public static GameInfo getGameInfo(final Game game) {
+    if (game==null) return null;
+    return games.get(game);
+  }
+/*
+  public static Collection<ArenaInfo> getArenas(final Game game) { //аркаим даария bw01 bb01 sg02
+    if (games.containsKey(game)) return games.get(game).arenas.values();
+    else return Collections.emptyList();//new ArrayList<>();
+  }
+
+  public static List<String> getArenasNames(final Game game) {  //аркаим даария bw01 bb01 sg02
+    final List<String> list = new ArrayList<>();
+    if (games.containsKey(game)) {
+      for (final ArenaInfo ai : games.get(game).arenas.values()) {
+        list.add(ai.arenaName);
+      }
+    }
+    return list;
+  }*/
+
+  public static Collection<GameInfo> getGames() {
+    return games.values();
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  static void updateSigns(final ArenaInfo ai) {
         if (Bukkit.isPrimaryThread()) {
             updateSign(ai);
         } else {
@@ -283,8 +461,6 @@ public final class GM {
 
 
     public static void OnWorldsLoadDone () {
-//System.out.println("---------------loadGameSign");
-//System.out.println("---------------loadGameSign games="+games.keySet());
         signs.clear();
 
         if (gameSigns.getConfigurationSection("signs") !=null)   {
@@ -335,8 +511,6 @@ public final class GM {
                     }
 
                     ai = gi.getArena(serverName, arenaName);
-//System.out.println("Arenas:");
-//gi.getArenaNames().forEach(System.out::print);
                 }
 
                 signs.put(loc_string, new GameSign(loc, serverName, arenaName));
@@ -345,325 +519,8 @@ public final class GM {
                     updateSigns(ai);
                 }
 
-//System.out.println("createSign "+loc_string+" ai="+ai.server+":"+ai.arenaName+" line0="+ai.line0);
 
             }
-        }
-    }
-
-
-
-  //  static class GmListener implements Listener {   
-
-
-        // ================== Таблички ====================
-        //вызывается из таймера каждую секунду пока один раз не вернёт true
-        //прогружать из loadArenaInfo не получится - может не быть соединения с БД
-        //в games что-то будет или после загрузки из БД, или если локальная игра отправида данные арен
-        //public static void loadGameSign() {
-      //  @EventHandler (priority = EventPriority.HIGHEST)
-        //public static void OnWorldLoadDone (final WorldsLoadCompleteEvent e) {
-       //     GM.OnWorldsLoadDone();
-      //  }
-
-        
-        
-
-     /*   @EventHandler (priority = EventPriority.HIGH, ignoreCancelled = true)
-        public void onSignCreate(final SignChangeEvent e) {
-
-            if (TCUtils.toString(e.line(0)).equalsIgnoreCase("bs")) {
-                final Player p = e.getPlayer();
-
-                if (!ApiOstrov.isLocalBuilder(p, true)) return;
-
-                final String serverName = TCUtils.toString(e.line(1));
-                if (serverName.isEmpty()) {
-                    e.line(3, TCUtils.format("§4Ошибка!"));
-                    p.sendMessage( "§4Строка 2 - сервер " );
-                    return;
-                }
-
-                final Game game = Game.fromServerName(serverName);
-                final GameInfo gi = games.get(game);
-                if (gi==null) {
-                    e.line(3, TCUtils.format("§4Ошибка!"));
-                    p.sendMessage( "§4Нет игры для сервера "+serverName );
-                    return;
-                }
-
-                if (!allBungeeServersName.contains(serverName)) {
-                    e.line(3, TCUtils.format("§4Ошибка!"));
-                    p.sendMessage( "§4строка 2 - §fсервер. Доступные:" );
-                    p.sendMessage( "§e"+ApiOstrov.listToString(allBungeeServersName, ",") );
-                    return;
-                }
-
-
-                final String arenaName = TCUtils.toString(e.line(2));
-                if (game.type==ServerType.ARENAS && arenaName.isEmpty()) {
-                    e.line(3, TCUtils.format("§4Ошибка!"));
-                    p.sendMessage( "§аДля сервера с аренами §bстрока 2 §f- название арены с учётом регистра." ); 
-                    p.sendMessage( "§аНайдены арены для сервера "+serverName+" :" ); 
-                    p.sendMessage( "§e"+ApiOstrov.listToString(gi.getArenaNames(serverName), ",") );
-                    return;
-                }
-
-
-                final String locAsString = ApiOstrov.stringFromLoc(e.getBlock().getLocation());
-
-                signs.put( locAsString, new GameSign(e.getBlock().getLocation(), serverName, arenaName));
-                //добав в инфоб обновить
-                final ArenaInfo ai = gi.getArena(serverName, arenaName);
-                if (ai!=null) {
-                    ai.signs.add(locAsString);
-                    e.line(0, TCUtils.format(ai.line0));
-                    e.line(1, TCUtils.format(ai.line1));
-                    e.line(2, TCUtils.format(ai.line2));
-                    e.line(3, TCUtils.format(ai.line3));
-                }
-                gameSigns.set("signs."+locAsString+".server", serverName);
-                gameSigns.set("signs."+locAsString+".arena", arenaName);
-                gameSigns.saveConfig();
-
-                if (arenaName.isEmpty()) {
-                    e.getPlayer().sendMessage( "§6табличка для сервера §b" +  serverName+"§6 создана на локации "+ locAsString );
-                } else {
-                    e.getPlayer().sendMessage( "§6табличка для сервера §b" +  serverName +" §6и арены §b"+arenaName+"§6 создана на локации "+ locAsString );
-                }
-
-            }
-        }*/        
-
-
-        // ======================================
-
-
-
-
-   /// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-
-
-
-
-
-
-    
-    private static GameInfo getGameInfo(final String serverName) {
-        final Game game = Game.fromServerName(serverName);
-        
-        if (game==null || game==Game.GLOBAL) {
-            Ostrov.log_warn("GameManager onGameData : нет игры для сервера "+serverName);
-            return null;
-        }
-        
-        if (!games.containsKey(game)) {
-            switch (game.type) {
-
-                case ONE_GAME, LOBBY, ARENAS -> games.put(game, new GameInfo(game ));
-                default -> {
-                    return null;
-                }
-            }
-
-        }
-        return games.get(game);
-        //gi.update(serverName, arenaName, state, players, line0, line1, line2, line3, extra, mat);
-        
-    }
-    
-
-    
-    
-    
-    
-
-
-    public static GameInfo getGameInfo(final Game game) {
-        if (game==null) return null;
-        return games.get(game);
-        //return servers.get(serverName.substring(0, 2)); - substring не катит, может быть arcaim daaria
-    }
-    
-
-    
-    public static Collection<ArenaInfo> getArenas(final Game game) { //аркаим даария bw01 bb01 sg02
-        if (games.containsKey(game)) return games.get(game).arenas.values();
-        else return Collections.emptyList();//new ArrayList<>();
-    }
-    
-    public static List<String> getArenasNames(final Game game) {  //аркаим даария bw01 bb01 sg02
-//System.out.println("getArenasNames "+game);
-        final List<String> list = new ArrayList<>();
-        //for (final GameInfo gi : games.values()) {
-            if (games.containsKey(game)) {
-//System.out.println("si server="+si.server+" arenas="+ApiOstrov.listToString(si.getArenas()," "));
-                for (final ArenaInfo ai : games.get(game).arenas.values()) {
-                    list.add(ai.arenaName);
-                }
-            }
-        //}
-        return list;
-    }
-    
-    public static Collection<GameInfo> getGames() {
-        return games.values();
-    }
-
-    //public static boolean hasGames() {
-    //    return !games.isEmpty();
-    //}
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-     
-    
-    
-    
-    
-    
-    
-    //может быть async!!
-    public static void sendArenaData (
-            final String arenaName,
-            final GameState state,
-            final int players,
-            final String line0,
-            final String line1,
-            final String line2,
-            final String line3,
-            final String extra
-        ) {
-        
-        if (GAME.type==ServerType.ARENAS) {  //на миниигре вызываем локальные эвент для табличек этого сервера! (с банжи не получит)
-            //если игры с острова не прогрузились, но локальные арены уже шлют данные -
-            //создать локальныю запись, чтобы могли стартовать таблички
-            if (!games.containsKey(GAME)) {
-                games.put(GAME, new GameInfo(GAME));
-            }
-            games.get(GAME).update(Ostrov.MOT_D, arenaName, state, players, line0, line1, line2, line3, extra);
-            //эвент GameInfoUpdateEvent вызывается м GameInfo
-        }
-        
-        if (Bukkit.getOnlinePlayers().isEmpty() || state==GameState.ОЖИДАНИЕ) { //async
-            //плодит соединения!! передел на простой запрос
-            if (Bukkit.isPrimaryThread()) {
-                Ostrov.async(()-> writeArenaStateToMySql(arenaName, state, players, line0, line1, line2, line3, extra), 0);
-            } else {
-                writeArenaStateToMySql(arenaName, state, players, line0, line1, line2, line3, extra);
-            }
-            
-        } else if (state==GameState.ВЫКЛЮЧЕНА || state==GameState.ПЕРЕЗАПУСК) { //sync!!
-            
-            if (Bukkit.isPrimaryThread()) {
-                writeArenaStateToMySql(arenaName, state, players, line0, line1, line2, line3, extra);
-            } else {
-                Ostrov.sync( ()-> writeArenaStateToMySql(arenaName, state, players, line0, line1, line2, line3, extra), 0);
-            }
-            
-        } else {
-
-            SpigotChanellMsg.sendMessage(Bukkit.getOnlinePlayers().stream().findAny().get(), Operation.GAME_INFO_TO_BUNGEE, Ostrov.MOT_D, state.tag, players, 0, arenaName, line0, line1, line2, line3, extra );
-            
-        }
-    } 
-  
-    
-    private static void writeArenaStateToMySql (final String arenaName, final GameState state, final int players, final String line0, final String line1, final String line2, final String line3, final String extra ) {
-        if (!OstrovDB.useOstrovData) return;
-        final Connection conn = OstrovDB.getConnection();
-        if (conn==null) {
-            Ostrov.log_warn("writeThisServerStateToOstrovDB - нет соединения с БД!");
-            return;
-        }
-//UPDATE `arenas` SET `line0` = 'sd' WHERE `arenaName` = 'vvv'; 
-//записывать только изменённые! запрос формировать как??
-        try {
-
-            //PreparedStatement pst = conn.prepareStatement("UPDATE "+Table.ARENAS.table_name+" SET `state`='"+String.valueOf(state)+"', `line0`='"+line0+"', `line1`='"+line1+"', `line2`='"+line2+"', `line3`='"+line3+"', `extra`='"+extra+"', `players`='"+players+"' WHERE `id`='"+arenaName+":"+this_server_name+"'; ");
-            PreparedStatement pst = conn.prepareStatement("INSERT INTO "+Table.ARENAS.table_name
-                +" (id, server, game, arenaName, state, line0, line1, line2, line3, extra, players, stamp)"
-                +" VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) ON DUPLICATE KEY UPDATE "
-                + "state=VALUES(state), line0=VALUES(line0), line1=VALUES(line1), line2=VALUES(line2), line3=VALUES(line3), extra=VALUES(extra), "
-                + "players=VALUES(players), stamp=VALUES(stamp) ;");
-
-            pst.setInt(1, (Ostrov.MOT_D+arenaName).hashCode());
-            pst.setString(2, Ostrov.MOT_D);
-            pst.setString(3, Game.fromServerName(Ostrov.MOT_D).name());
-            pst.setString(4, arenaName);
-            pst.setString(5, state.toString());
-            pst.setString(6, line0);
-            pst.setString(7, line1);
-            pst.setString(8, line2);
-            pst.setString(9, line3);
-            pst.setString(10, extra);
-            pst.setInt(11, players);
-            pst.setInt(12, ApiOstrov.currentTimeSec()+1 ); //для  надёжности, пусть прогрузит 2 раза
-
-            pst.executeUpdate();
-            
-            
-//System.out.println("----------------- writeArenaStateToMySql res="+pst.executeUpdate());   
-                                
-                                
-            //int res = pst.executeUpdate();
-            pst.close();
-            
-           /* if (res==0) {
-                pst = conn.prepareStatement("INSERT INTO "+Table.ARENAS.table_name
-                +" (`id`,`server`,`game`,`arenaName`,`state`,`line0`,`line1`,`line2`,`line3`,`extra`,`players`,`stamp` ) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) " );
-            
-        
-            pst.setString(1, arenaName+":"+this_server_name);
-            pst.setString(2, GM.this_server_name);
-            pst.setString(3, Game.fromServerName(this_server_name).name());
-            pst.setString(4, arenaName);
-            pst.setString(5, state.toString());
-            pst.setString(6, line0);
-            pst.setString(7, line1);
-            pst.setString(8, line2);
-            pst.setString(9, line3);
-            pst.setString(10, extra);
-            pst.setInt(11, players);
-            pst.setInt(12, ApiOstrov.currentTimeSec()+1 ); //для  надёжности, пусть прогрузит 2 раза
-
-            pst.executeUpdate();
-            pst.close();   
-        }*/
-
-
-        } catch (SQLException e) {
-            Ostrov.log_err("§cSM writeArenaStateToMySql error - "+e.getMessage());
-            //e.printStackTrace();
         }
     }
 
@@ -722,50 +579,6 @@ public final class GM {
     }
     
     
-    
 
-
-  
-    
-    
-      
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-  
-
-    
-    
     
 }

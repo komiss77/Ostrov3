@@ -8,7 +8,7 @@
  import net.minecraft.world.Containers;
  import net.minecraft.world.InteractionHand;
  import net.minecraft.world.InteractionResult;
-@@ -16,19 +17,84 @@
+@@ -16,19 +17,85 @@
  import net.minecraft.world.inventory.AbstractContainerMenu;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.Level;
@@ -17,6 +17,7 @@
 +import org.bukkit.Location;
 +import org.bukkit.craftbukkit.v1_20_R3.entity.CraftHumanEntity;
 +import org.bukkit.entity.HumanEntity;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.inventory.InventoryHolder;
 +// CraftBukkit end
  
@@ -94,7 +95,7 @@
      }
  
      @Override
-@@ -63,8 +129,7 @@
+@@ -63,8 +130,7 @@
      }
  
      @Override
@@ -104,16 +105,27 @@
  
      @Override
      public boolean stillValid(Player player) {
-@@ -74,7 +139,7 @@
+@@ -73,22 +139,31 @@
+ 
      @Override
      public void remove(Entity.RemovalReason reason) {
-         if (!this.level().isClientSide && reason.shouldDestroy()) {
+-        if (!this.level().isClientSide && reason.shouldDestroy()) {
 -            Containers.dropContents(this.level(), this, this);
++        // CraftBukkit start - add Bukkit remove cause
++        this.remove(reason, null);
++    }
++
++    @Override
++    public void remove(Entity.RemovalReason entity_removalreason, EntityRemoveEvent.Cause cause) {
++        // CraftBukkit end
++        if (!this.level().isClientSide && entity_removalreason.shouldDestroy()) {
 +            Containers.dropContents(this.level(), (Entity) this, (Container) this);
          }
  
-         super.remove(reason);
-@@ -83,12 +148,14 @@
+-        super.remove(reason);
++        super.remove(entity_removalreason, cause); // CraftBukkit - add Bukkit remove cause
+     }
+ 
      @Override
      protected void addAdditionalSaveData(CompoundTag nbt) {
          super.addAdditionalSaveData(nbt);
@@ -128,7 +140,7 @@
          this.readChestVehicleSaveData(nbt);
      }
  
-@@ -100,16 +167,18 @@
+@@ -100,16 +175,18 @@
      @Override
      protected void applyNaturalSlowdown() {
          float f = 0.98F;

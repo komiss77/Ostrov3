@@ -1,14 +1,19 @@
 --- a/net/minecraft/world/entity/projectile/LlamaSpit.java
 +++ b/net/minecraft/world/entity/projectile/LlamaSpit.java
-@@ -15,6 +15,7 @@
+@@ -13,8 +13,12 @@
+ import net.minecraft.world.phys.EntityHitResult;
+ import net.minecraft.world.phys.HitResult;
  import net.minecraft.world.phys.Vec3;
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public class LlamaSpit extends Projectile {
 +
      public LlamaSpit(EntityType<? extends LlamaSpit> type, Level world) {
          super(type, world);
      }
-@@ -22,41 +23,47 @@
+@@ -22,41 +26,47 @@
      public LlamaSpit(Level world, Llama owner) {
          this(EntityType.LLAMA_SPIT, world);
          this.setOwner(owner);
@@ -40,9 +45,11 @@
 +        float f1 = 0.06F;
 +
          if (this.level().getBlockStates(this.getBoundingBox()).noneMatch(BlockBehaviour.BlockStateBase::isAir)) {
-             this.discard();
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
          } else if (this.isInWaterOrBubble()) {
-             this.discard();
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
          } else {
 -            this.setDeltaMovement(vec3.scale((double)0.99F));
 +            this.setDeltaMovement(vec3d.scale(0.9900000095367432D));
@@ -71,7 +78,14 @@
          }
  
      }
-@@ -71,21 +78,21 @@
+@@ -65,27 +75,27 @@
+     protected void onHitBlock(BlockHitResult blockHitResult) {
+         super.onHitBlock(blockHitResult);
+         if (!this.level().isClientSide) {
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
+         }
+ 
      }
  
      @Override

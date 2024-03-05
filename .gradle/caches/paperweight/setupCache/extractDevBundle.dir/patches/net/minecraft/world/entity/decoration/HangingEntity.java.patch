@@ -12,7 +12,7 @@
  import net.minecraft.world.damagesource.DamageSource;
  import net.minecraft.world.entity.Entity;
  import net.minecraft.world.entity.EntityType;
-@@ -25,18 +20,31 @@
+@@ -25,18 +20,32 @@
  import net.minecraft.world.phys.Vec3;
  import org.apache.commons.lang3.Validate;
  import org.slf4j.Logger;
@@ -24,6 +24,7 @@
 +import net.minecraft.tags.DamageTypeTags;
 +import net.minecraft.util.Mth;
 +import org.bukkit.entity.Hanging;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 +import org.bukkit.event.hanging.HangingBreakEvent;
 +// CraftBukkit end
@@ -46,7 +47,7 @@
      }
  
      protected HangingEntity(EntityType<? extends HangingEntity> type, Level world, BlockPos pos) {
-@@ -45,50 +53,64 @@
+@@ -45,50 +54,64 @@
      }
  
      @Override
@@ -138,7 +139,7 @@
          return i % 32 == 0 ? 0.5D : 0.0D;
      }
  
-@@ -96,11 +118,29 @@
+@@ -96,11 +119,29 @@
      public void tick() {
          if (!this.level().isClientSide) {
              this.checkBelowWorld();
@@ -146,6 +147,8 @@
 +            if (this.checkInterval++ == this.level().spigotConfig.hangingTickFrequency) { // Spigot
                  this.checkInterval = 0;
                  if (!this.isRemoved() && !this.survives()) {
+-                    this.discard();
+-                    this.dropItem((Entity)null);
 +                    // CraftBukkit start - fire break events
 +                    BlockState material = this.level().getBlockState(this.blockPosition());
 +                    HangingBreakEvent.RemoveCause cause;
@@ -164,13 +167,12 @@
 +                        return;
 +                    }
 +                    // CraftBukkit end
-                     this.discard();
--                    this.dropItem((Entity)null);
++                    this.discard(EntityRemoveEvent.Cause.DROP); // CraftBukkit - add Bukkit remove cause
 +                    this.dropItem((Entity) null);
                  }
              }
          }
-@@ -108,28 +148,30 @@
+@@ -108,28 +149,30 @@
      }
  
      public boolean survives() {
@@ -213,7 +215,7 @@
          }
      }
  
-@@ -140,8 +182,10 @@
+@@ -140,8 +183,10 @@
  
      @Override
      public boolean skipAttackInteraction(Entity attacker) {
@@ -226,7 +228,7 @@
          } else {
              return false;
          }
-@@ -158,6 +202,22 @@
+@@ -158,6 +203,22 @@
              return false;
          } else {
              if (!this.isRemoved() && !this.level().isClientSide) {
@@ -249,7 +251,7 @@
                  this.kill();
                  this.markHurt();
                  this.dropItem(source.getEntity());
-@@ -170,36 +230,59 @@
+@@ -170,36 +231,59 @@
      @Override
      public void move(MoverType movementType, Vec3 movement) {
          if (!this.level().isClientSide && !this.isRemoved() && movement.lengthSqr() > 0.0D) {
@@ -320,7 +322,7 @@
          }
      }
  
-@@ -213,10 +296,11 @@
+@@ -213,10 +297,11 @@
  
      @Override
      public ItemEntity spawnAtLocation(ItemStack stack, float yOffset) {
@@ -336,7 +338,7 @@
      }
  
      @Override
-@@ -251,6 +335,7 @@
+@@ -251,6 +336,7 @@
          }
  
          float f = Mth.wrapDegrees(this.getYRot());
@@ -344,7 +346,7 @@
          switch (rotation) {
              case CLOCKWISE_180:
                  return f + 180.0F;
-@@ -269,10 +354,8 @@
+@@ -269,10 +355,8 @@
      }
  
      @Override

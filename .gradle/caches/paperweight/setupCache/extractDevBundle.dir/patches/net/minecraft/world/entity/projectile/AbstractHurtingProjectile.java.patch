@@ -1,10 +1,13 @@
 --- a/net/minecraft/world/entity/projectile/AbstractHurtingProjectile.java
 +++ b/net/minecraft/world/entity/projectile/AbstractHurtingProjectile.java
-@@ -16,11 +16,15 @@
+@@ -16,11 +16,18 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.phys.HitResult;
  import net.minecraft.world.phys.Vec3;
-+import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory; // CraftBukkit
++// CraftBukkit start
++import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public abstract class AbstractHurtingProjectile extends Projectile {
 +
@@ -16,7 +19,7 @@
  
      protected AbstractHurtingProjectile(EntityType<? extends AbstractHurtingProjectile> type, Level world) {
          super(type, world);
-@@ -35,11 +39,18 @@
+@@ -35,11 +42,18 @@
          this(type, world);
          this.moveTo(x, y, z, this.getYRot(), this.getXRot());
          this.reapplyPosition();
@@ -40,7 +43,7 @@
          }
  
      }
-@@ -51,18 +62,18 @@
+@@ -51,18 +65,18 @@
      }
  
      @Override
@@ -66,14 +69,14 @@
      }
  
      protected ClipContext.Block getClipType() {
-@@ -72,44 +83,56 @@
+@@ -72,44 +86,56 @@
      @Override
      public void tick() {
          Entity entity = this.getOwner();
 -        if (this.level().isClientSide || (entity == null || !entity.isRemoved()) && this.level().hasChunkAt(this.blockPosition())) {
 +
 +        if (!this.level().isClientSide && (entity != null && entity.isRemoved() || !this.level().hasChunkAt(this.blockPosition()))) {
-+            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
 +        } else {
              super.tick();
              if (this.shouldBurn()) {
@@ -144,7 +147,7 @@
          }
      }
  
-@@ -145,11 +168,12 @@
+@@ -145,11 +171,12 @@
      public void readAdditionalSaveData(CompoundTag nbt) {
          super.readAdditionalSaveData(nbt);
          if (nbt.contains("power", 9)) {
@@ -162,7 +165,7 @@
              }
          }
  
-@@ -172,13 +196,20 @@
+@@ -172,13 +199,20 @@
          } else {
              this.markHurt();
              Entity entity = source.getEntity();
@@ -188,7 +191,7 @@
                      this.setOwner(entity);
                  }
  
-@@ -198,20 +229,22 @@
+@@ -198,20 +232,22 @@
      public Packet<ClientGamePacketListener> getAddEntityPacket() {
          Entity entity = this.getOwner();
          int i = entity == null ? 0 : entity.getId();

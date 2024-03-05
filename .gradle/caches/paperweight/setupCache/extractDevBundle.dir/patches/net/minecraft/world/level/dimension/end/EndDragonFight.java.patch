@@ -169,7 +169,7 @@
 -                enderDragon.discard();
 +            if (!flag && this.level.paperConfig().entities.behavior.shouldRemoveDragon) { // Paper - Toggle for removing existing dragon
 +                EndDragonFight.LOGGER.info("But we didn't have a portal, let's remove it.");
-+                entityenderdragon.discard();
++                entityenderdragon.discard(null); // CraftBukkit - add Bukkit remove cause
                  this.dragonUUID = null;
              }
          }

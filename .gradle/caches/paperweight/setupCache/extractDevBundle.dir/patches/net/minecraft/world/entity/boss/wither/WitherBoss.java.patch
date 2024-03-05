@@ -18,7 +18,7 @@
  import net.minecraft.tags.BlockTags;
  import net.minecraft.tags.DamageTypeTags;
  import net.minecraft.util.Mth;
-@@ -50,15 +39,37 @@
+@@ -50,15 +39,38 @@
  import net.minecraft.world.entity.projectile.WitherSkull;
  import net.minecraft.world.item.Items;
  import net.minecraft.world.level.GameRules;
@@ -43,6 +43,7 @@
  import net.minecraft.world.phys.Vec3;
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
 +import org.bukkit.event.entity.EntityRegainHealthEvent;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.entity.EntityTargetEvent;
 +import org.bukkit.event.entity.ExplosionPrimeEvent;
 +// CraftBukkit end
@@ -57,7 +58,7 @@
      private static final EntityDataAccessor<Integer> DATA_ID_INV = SynchedEntityData.defineId(WitherBoss.class, EntityDataSerializers.INT);
      private static final int INVULNERABLE_TICKS = 220;
      private final float[] xRotHeads = new float[2];
-@@ -68,14 +79,20 @@
+@@ -68,14 +80,20 @@
      private final int[] nextHeadUpdate = new int[2];
      private final int[] idleHeadUpdates = new int[2];
      private int destroyBlocksTick;
@@ -82,7 +83,7 @@
          this.moveControl = new FlyingMoveControl(this, 10, false);
          this.setHealth(this.getMaxHealth());
          this.xpReward = 50;
-@@ -83,11 +100,12 @@
+@@ -83,11 +101,12 @@
  
      @Override
      protected PathNavigation createNavigation(Level world) {
@@ -100,7 +101,7 @@
      }
  
      @Override
-@@ -97,17 +115,17 @@
+@@ -97,17 +116,17 @@
          this.goalSelector.addGoal(5, new WaterAvoidingRandomFlyingGoal(this, 1.0D));
          this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
          this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
@@ -124,7 +125,7 @@
      }
  
      @Override
-@@ -149,76 +167,88 @@
+@@ -149,76 +168,88 @@
  
      @Override
      public void aiStep() {
@@ -254,7 +255,7 @@
              }
          }
  
-@@ -226,57 +256,94 @@
+@@ -226,57 +257,94 @@
  
      @Override
      protected void customServerAiStep() {
@@ -378,7 +379,7 @@
                          }
                      }
                  }
-@@ -291,34 +358,40 @@
+@@ -291,34 +359,40 @@
              if (this.destroyBlocksTick > 0) {
                  --this.destroyBlocksTick;
                  if (this.destroyBlocksTick == 0 && this.level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
@@ -436,7 +437,7 @@
              }
  
              this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
-@@ -336,8 +409,7 @@
+@@ -336,8 +410,7 @@
      }
  
      @Override
@@ -446,7 +447,7 @@
  
      @Override
      public void startSeenByPlayer(ServerPlayer player) {
-@@ -355,9 +427,10 @@
+@@ -355,9 +428,10 @@
          if (headIndex <= 0) {
              return this.getX();
          } else {
@@ -460,7 +461,7 @@
          }
      }
  
-@@ -369,48 +442,51 @@
+@@ -369,48 +443,51 @@
          if (headIndex <= 0) {
              return this.getZ();
          } else {
@@ -534,7 +535,7 @@
      }
  
      @Override
-@@ -426,22 +502,24 @@
+@@ -426,22 +503,24 @@
              if (this.getInvulnerableTicks() > 0 && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
                  return false;
              } else {
@@ -563,7 +564,7 @@
                          this.idleHeadUpdates[i] += 3;
                      }
  
-@@ -456,9 +534,10 @@
+@@ -456,9 +535,10 @@
      @Override
      protected void dropCustomDeathLoot(DamageSource source, int lootingMultiplier, boolean allowDrops) {
          super.dropCustomDeathLoot(source, lootingMultiplier, allowDrops);
@@ -577,7 +578,16 @@
          }
  
      }
-@@ -478,7 +557,7 @@
+@@ -466,7 +546,7 @@
+     @Override
+     public void checkDespawn() {
+         if (this.level().getDifficulty() == Difficulty.PEACEFUL && this.shouldDespawnInPeaceful()) {
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+         } else {
+             this.noActionTime = 0;
+         }
+@@ -478,7 +558,7 @@
      }
  
      public static AttributeSupplier.Builder createAttributes() {
@@ -586,7 +596,7 @@
      }
  
      public float getHeadYRot(int headIndex) {
-@@ -490,19 +569,19 @@
+@@ -490,19 +570,19 @@
      }
  
      public int getInvulnerableTicks() {
@@ -610,7 +620,7 @@
      }
  
      @Override
-@@ -522,15 +601,16 @@
+@@ -522,15 +602,16 @@
  
      @Override
      public boolean canChangeDimensions() {

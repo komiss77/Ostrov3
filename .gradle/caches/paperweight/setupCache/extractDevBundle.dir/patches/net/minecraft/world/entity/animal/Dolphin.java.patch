@@ -1,12 +1,13 @@
 --- a/net/minecraft/world/entity/animal/Dolphin.java
 +++ b/net/minecraft/world/entity/animal/Dolphin.java
-@@ -60,16 +60,27 @@
+@@ -60,16 +60,28 @@
  import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.pathfinder.PathComputationType;
  import net.minecraft.world.phys.Vec3;
 +// CraftBukkit start
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
 +import org.bukkit.event.entity.EntityPotionEffectEvent;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +// CraftBukkit end
  
  public class Dolphin extends WaterAnimal {
@@ -30,7 +31,7 @@
      };
  
      public Dolphin(EntityType<? extends Dolphin> type, Level world) {
-@@ -88,39 +99,38 @@
+@@ -88,39 +100,38 @@
      }
  
      @Override
@@ -80,7 +81,7 @@
      }
  
      @Override
-@@ -138,6 +148,7 @@
+@@ -138,6 +149,7 @@
          int i = nbt.getInt("TreasurePosX");
          int j = nbt.getInt("TreasurePosY");
          int k = nbt.getInt("TreasurePosZ");
@@ -88,7 +89,7 @@
          this.setTreasurePos(new BlockPos(i, j, k));
          super.readAdditionalSaveData(nbt);
          this.setGotFish(nbt.getBoolean("GotFish"));
-@@ -154,15 +165,15 @@
+@@ -154,15 +166,15 @@
          this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
          this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 6.0F));
          this.goalSelector.addGoal(5, new DolphinJumpGoal(this, 10));
@@ -107,7 +108,7 @@
      }
  
      @Override
-@@ -172,18 +183,19 @@
+@@ -172,18 +184,19 @@
  
      @Override
      public boolean doHurtTarget(Entity target) {
@@ -131,7 +132,7 @@
      }
  
      @Override
-@@ -213,23 +225,27 @@
+@@ -213,24 +226,28 @@
  
      @Override
      public boolean canTakeItem(ItemStack stack) {
@@ -165,11 +166,13 @@
 +                this.setItemSlot(EquipmentSlot.MAINHAND, itemstack);
                  this.setGuaranteedDrop(EquipmentSlot.MAINHAND);
 -                this.take(item, itemStack.getCount());
+-                item.discard();
 +                this.take(item, itemstack.getCount());
-                 item.discard();
++                item.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
              }
          }
-@@ -251,7 +267,7 @@
+ 
+@@ -251,7 +268,7 @@
                  }
  
                  if (this.onGround()) {
@@ -178,7 +181,7 @@
                      this.setYRot(this.random.nextFloat() * 360.0F);
                      this.setOnGround(false);
                      this.hasImpulse = true;
-@@ -259,14 +275,14 @@
+@@ -259,14 +276,14 @@
              }
  
              if (this.level().isClientSide && this.isInWater() && this.getDeltaMovement().lengthSqr() > 0.03D) {
@@ -200,7 +203,7 @@
                  }
              }
  
-@@ -284,26 +300,28 @@
+@@ -284,26 +301,28 @@
      }
  
      private void addParticlesAroundSelf(ParticleOptions parameters) {
@@ -237,7 +240,7 @@
              }
  
              return InteractionResult.sidedSuccess(this.level().isClientSide);
-@@ -340,8 +358,9 @@
+@@ -340,8 +359,9 @@
      }
  
      protected boolean closeToNextPos() {
@@ -249,7 +252,7 @@
      }
  
      @Override
-@@ -364,7 +383,8 @@
+@@ -364,7 +384,8 @@
          return true;
      }
  
@@ -259,7 +262,7 @@
          private final Dolphin dolphin;
          private boolean stuck;
  
-@@ -385,21 +405,24 @@
+@@ -385,21 +406,24 @@
  
          @Override
          public boolean canContinueToUse() {
@@ -292,7 +295,7 @@
                  } else {
                      this.stuck = true;
                  }
-@@ -408,8 +431,9 @@
+@@ -408,8 +432,9 @@
  
          @Override
          public void stop() {
@@ -304,7 +307,7 @@
                  this.dolphin.setGotFish(false);
              }
  
-@@ -417,37 +441,41 @@
+@@ -417,37 +442,41 @@
  
          @Override
          public void tick() {
@@ -361,7 +364,7 @@
          private final Dolphin dolphin;
          private final double speedModifier;
          @Nullable
-@@ -462,21 +490,17 @@
+@@ -462,21 +491,17 @@
          @Override
          public boolean canUse() {
              this.player = this.dolphin.level().getNearestPlayer(Dolphin.SWIM_WITH_PLAYER_TARGETING, this.dolphin);
@@ -386,7 +389,7 @@
          }
  
          @Override
-@@ -487,29 +511,33 @@
+@@ -487,29 +512,33 @@
  
          @Override
          public void tick() {
@@ -425,7 +428,7 @@
                  return !list.isEmpty() || !Dolphin.this.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty();
              }
          }
-@@ -517,8 +545,9 @@
+@@ -517,8 +546,9 @@
          @Override
          public void start() {
              List<ItemEntity> list = Dolphin.this.level().getEntitiesOfClass(ItemEntity.class, Dolphin.this.getBoundingBox().inflate(8.0D, 8.0D, 8.0D), Dolphin.ALLOWED_ITEMS);
@@ -436,7 +439,7 @@
                  Dolphin.this.playSound(SoundEvents.DOLPHIN_PLAY, 1.0F, 1.0F);
              }
  
-@@ -527,9 +556,10 @@
+@@ -527,9 +557,10 @@
  
          @Override
          public void stop() {
@@ -450,7 +453,7 @@
                  Dolphin.this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                  this.cooldown = Dolphin.this.tickCount + Dolphin.this.random.nextInt(100);
              }
-@@ -539,27 +569,30 @@
+@@ -539,27 +570,30 @@
          @Override
          public void tick() {
              List<ItemEntity> list = Dolphin.this.level().getEntitiesOfClass(ItemEntity.class, Dolphin.this.getBoundingBox().inflate(8.0D, 8.0D, 8.0D), Dolphin.ALLOWED_ITEMS);

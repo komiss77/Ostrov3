@@ -1,6 +1,6 @@
 --- a/net/minecraft/world/entity/projectile/ThrownEgg.java
 +++ b/net/minecraft/world/entity/projectile/ThrownEgg.java
-@@ -1,36 +1,42 @@
+@@ -1,36 +1,43 @@
  package net.minecraft.world.entity.projectile;
  
 -import net.minecraft.core.particles.ItemParticleOption;
@@ -21,6 +21,7 @@
 +import org.bukkit.entity.Ageable;
 +import org.bukkit.entity.EntityType;
 +import org.bukkit.entity.Player;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.player.PlayerEggThrowEvent;
 +// CraftBukkit end
  
@@ -54,7 +55,7 @@
              }
          }
  
-@@ -46,23 +52,59 @@
+@@ -46,24 +53,60 @@
      protected void onHit(HitResult hitResult) {
          super.onHit(hitResult);
          if (!this.level().isClientSide) {
@@ -120,7 +121,9 @@
              }
  
 -            this.level().broadcastEntityEvent(this, (byte)3);
+-            this.discard();
 +            this.level().broadcastEntityEvent(this, (byte) 3);
-             this.discard();
++            this.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
          }
  
+     }

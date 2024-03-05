@@ -8,15 +8,20 @@
  import java.util.OptionalInt;
  import javax.annotation.Nullable;
  import net.minecraft.core.BlockPos;
-@@ -27,6 +29,7 @@
+@@ -25,8 +27,12 @@
+ import net.minecraft.world.phys.EntityHitResult;
+ import net.minecraft.world.phys.HitResult;
  import net.minecraft.world.phys.Vec3;
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public class FireworkRocketEntity extends Projectile implements ItemSupplier {
 +
      public static final EntityDataAccessor<ItemStack> DATA_ID_FIREWORKS_ITEM = SynchedEntityData.defineId(FireworkRocketEntity.class, EntityDataSerializers.ITEM_STACK);
      public static final EntityDataAccessor<OptionalInt> DATA_ATTACHED_TO_TARGET = SynchedEntityData.defineId(FireworkRocketEntity.class, EntityDataSerializers.OPTIONAL_UNSIGNED_INT);
      public static final EntityDataAccessor<Boolean> DATA_SHOT_AT_ANGLE = SynchedEntityData.defineId(FireworkRocketEntity.class, EntityDataSerializers.BOOLEAN);
-@@ -34,6 +37,7 @@
+@@ -34,6 +40,7 @@
      public int lifetime;
      @Nullable
      public LivingEntity attachedToEntity;
@@ -24,7 +29,7 @@
  
      public FireworkRocketEntity(EntityType<? extends FireworkRocketEntity> type, Level world) {
          super(type, world);
-@@ -44,8 +48,9 @@
+@@ -44,8 +51,9 @@
          this.life = 0;
          this.setPos(x, y, z);
          int i = 1;
@@ -35,7 +40,7 @@
              i += stack.getOrCreateTagElement("Fireworks").getByte("Flight");
          }
  
-@@ -60,13 +65,13 @@
+@@ -60,13 +68,13 @@
  
      public FireworkRocketEntity(Level world, ItemStack stack, LivingEntity shooter) {
          this(world, shooter, shooter.getX(), shooter.getY(), shooter.getZ(), stack);
@@ -51,7 +56,7 @@
      }
  
      public FireworkRocketEntity(Level world, ItemStack stack, Entity entity, double x, double y, double z, boolean shotAtAngle) {
-@@ -74,11 +79,27 @@
+@@ -74,11 +82,27 @@
          this.setOwner(entity);
      }
  
@@ -82,7 +87,7 @@
      }
  
      @Override
-@@ -94,53 +115,58 @@
+@@ -94,53 +118,58 @@
      @Override
      public void tick() {
          super.tick();
@@ -161,7 +166,7 @@
          }
  
          ++this.life;
-@@ -149,13 +175,17 @@
+@@ -149,77 +178,98 @@
          }
  
          if (!this.level().isClientSide && this.life > this.lifetime) {
@@ -180,8 +185,11 @@
 +        this.level().broadcastEntityEvent(this, (byte) 17);
          this.gameEvent(GameEvent.EXPLODE, this.getOwner());
          this.dealExplosionDamage();
-         this.discard();
-@@ -165,61 +195,78 @@
+-        this.discard();
++        this.discard(EntityRemoveEvent.Cause.EXPLODE); // CraftBukkit - add Bukkit remove cause
+     }
+ 
+     @Override
      protected void onHitEntity(EntityHitResult entityHitResult) {
          super.onHitEntity(entityHitResult);
          if (!this.level().isClientSide) {
@@ -287,7 +295,7 @@
                      }
                  }
              }
-@@ -228,25 +275,26 @@
+@@ -228,25 +278,26 @@
      }
  
      private boolean isAttachedToEntity() {
@@ -321,7 +329,7 @@
              }
          }
  
-@@ -258,12 +306,18 @@
+@@ -258,12 +309,18 @@
          super.addAdditionalSaveData(nbt);
          nbt.putInt("Life", this.life);
          nbt.putInt("LifeTime", this.lifetime);
@@ -344,7 +352,7 @@
      }
  
      @Override
-@@ -271,21 +325,27 @@
+@@ -271,21 +328,27 @@
          super.readAdditionalSaveData(nbt);
          this.life = nbt.getInt("Life");
          this.lifetime = nbt.getInt("LifeTime");

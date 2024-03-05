@@ -993,11 +993,11 @@
 +                boolean needsRemoval = false;
 +                net.minecraft.server.dedicated.DedicatedServer server = world.getCraftServer().getServer();
 +                if (!server.areNpcsEnabled() && entity instanceof net.minecraft.world.entity.npc.Npc) {
-+                    entity.discard();
++                    entity.discard(null); // CraftBukkit - add Bukkit remove cause
 +                    needsRemoval = true;
 +                }
 +                if (!server.isSpawningAnimals() && (entity instanceof net.minecraft.world.entity.animal.Animal || entity instanceof net.minecraft.world.entity.animal.WaterAnimal)) {
-+                    entity.discard();
++                    entity.discard(null); // CraftBukkit - add Bukkit remove cause
 +                    needsRemoval = true;
 +                }
 +                checkDupeUUID(world, entity); // Paper - duplicate uuid resolving
@@ -1082,7 +1082,7 @@
 +            && Objects.equals(other.getEncodeId(), entity.getEncodeId())
 +            && entity.getBukkitEntity().getLocation().distance(other.getBukkitEntity().getLocation()) < level.paperConfig().entities.spawning.duplicateUuid.safeRegenDeleteRange
 +        ) {
-+            entity.discard();
++            entity.discard(null);
 +            return true;
 +        }
 +        if (!other.isRemoved()) {
@@ -1100,7 +1100,7 @@
 -        });
 -        return completableFuture2;
 +                case DELETE: {
-+                    entity.discard();
++                    entity.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DISCARD);
 +                    return true;
 +                }
 +                default:

@@ -21,7 +21,7 @@
  import net.minecraft.network.chat.ClickEvent;
  import net.minecraft.network.chat.Component;
  import net.minecraft.network.chat.MutableComponent;
-@@ -107,10 +111,21 @@
+@@ -107,10 +111,22 @@
  import net.minecraft.world.phys.Vec3;
  import net.minecraft.world.scores.PlayerTeam;
  import net.minecraft.world.scores.Scoreboard;
@@ -35,6 +35,7 @@
 +import org.bukkit.event.entity.EntityCombustByEntityEvent;
 +import org.bukkit.event.entity.EntityExhaustionEvent;
 +import org.bukkit.event.entity.EntityKnockbackEvent;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.player.PlayerDropItemEvent;
 +import org.bukkit.event.player.PlayerVelocityEvent;
 +// CraftBukkit end
@@ -44,7 +45,7 @@
      private static final Logger LOGGER = LogUtils.getLogger();
      public static final int MAX_NAME_LENGTH = 16;
      public static final HumanoidArm DEFAULT_MAIN_HAND = HumanoidArm.RIGHT;
-@@ -124,7 +139,8 @@
+@@ -124,7 +140,8 @@
      public static final float SWIMMING_BB_HEIGHT = 0.6F;
      public static final float DEFAULT_EYE_HEIGHT = 1.62F;
      public static final EntityDimensions STANDING_DIMENSIONS = EntityDimensions.scalable(0.6F, 1.8F);
@@ -54,7 +55,7 @@
      private static final EntityDataAccessor<Float> DATA_PLAYER_ABSORPTION_ID = SynchedEntityData.defineId(Player.class, EntityDataSerializers.FLOAT);
      private static final EntityDataAccessor<Integer> DATA_SCORE_ID = SynchedEntityData.defineId(Player.class, EntityDataSerializers.INT);
      public static final EntityDataAccessor<Byte> DATA_PLAYER_MODE_CUSTOMISATION = SynchedEntityData.defineId(Player.class, EntityDataSerializers.BYTE);
-@@ -133,10 +149,10 @@
+@@ -133,10 +150,10 @@
      protected static final EntityDataAccessor<CompoundTag> DATA_SHOULDER_RIGHT = SynchedEntityData.defineId(Player.class, EntityDataSerializers.COMPOUND_TAG);
      private long timeEntitySatOnShoulder;
      private final Inventory inventory = new Inventory(this);
@@ -67,7 +68,7 @@
      protected int jumpTriggerTime;
      public float oBob;
      public float bob;
-@@ -158,20 +174,35 @@
+@@ -158,20 +175,35 @@
      private int lastLevelUpTime;
      public GameProfile gameProfile;
      private boolean reducedDebugInfo;
@@ -108,7 +109,7 @@
          this.rotOffs = 180.0F;
      }
  
-@@ -183,24 +214,25 @@
+@@ -183,24 +215,25 @@
          } else if (this.mayBuild()) {
              return false;
          } else {
@@ -143,7 +144,7 @@
      }
  
      @Override
-@@ -216,6 +248,13 @@
+@@ -216,6 +249,13 @@
  
          if (this.isSleeping()) {
              ++this.sleepCounter;
@@ -157,7 +158,7 @@
              if (this.sleepCounter > 100) {
                  this.sleepCounter = 100;
              }
-@@ -233,7 +272,7 @@
+@@ -233,7 +273,7 @@
          this.updateIsUnderwater();
          super.tick();
          if (!this.level().isClientSide && this.containerMenu != null && !this.containerMenu.stillValid(this)) {
@@ -166,7 +167,7 @@
              this.containerMenu = this.inventoryMenu;
          }
  
-@@ -256,20 +295,22 @@
+@@ -256,20 +296,22 @@
          }
  
          int i = 29999999;
@@ -197,7 +198,7 @@
          }
  
          this.turtleHelmetTick();
-@@ -300,9 +341,10 @@
+@@ -300,9 +342,10 @@
      }
  
      private void turtleHelmetTick() {
@@ -211,7 +212,7 @@
          }
  
      }
-@@ -315,74 +357,77 @@
+@@ -315,74 +358,77 @@
          this.xCloakO = this.xCloak;
          this.yCloakO = this.yCloak;
          this.zCloakO = this.zCloak;
@@ -315,7 +316,7 @@
          }
      }
  
-@@ -420,8 +465,7 @@
+@@ -420,8 +466,7 @@
          this.level().playSound(this, this.getX(), this.getY(), this.getZ(), sound, this.getSoundSource(), volume, pitch);
      }
  
@@ -325,7 +326,7 @@
  
      @Override
      public SoundSource getSoundSource() {
-@@ -450,28 +494,46 @@
+@@ -450,28 +495,46 @@
      }
  
      private void addParticlesAroundSelf(ParticleOptions parameters) {
@@ -381,7 +382,7 @@
              super.rideTick();
              this.oBob = this.bob;
              this.bob = 0.0F;
-@@ -493,7 +555,8 @@
+@@ -493,7 +556,8 @@
  
          if (this.level().getDifficulty() == Difficulty.PEACEFUL && this.level().getGameRules().getBoolean(GameRules.RULE_NATURAL_REGENERATION)) {
              if (this.getHealth() < this.getMaxHealth() && this.tickCount % 20 == 0) {
@@ -391,7 +392,7 @@
              }
  
              if (this.foodData.needsFood() && this.tickCount % 10 == 0) {
-@@ -504,42 +567,48 @@
+@@ -504,42 +568,48 @@
          this.inventory.tick();
          this.oBob = this.bob;
          super.aiStep();
@@ -454,7 +455,7 @@
              this.removeEntitiesOnShoulder();
          }
  
-@@ -547,12 +616,13 @@
+@@ -547,12 +617,13 @@
  
      private void playShoulderEntityAmbientSound(@Nullable CompoundTag entityNbt) {
          if (entityNbt != null && (!entityNbt.contains("Silent") || !entityNbt.getBoolean("Silent")) && this.level().random.nextInt(200) == 0) {
@@ -473,7 +474,7 @@
                  }
  
              });
-@@ -565,16 +635,17 @@
+@@ -565,16 +636,17 @@
      }
  
      public int getScore() {
@@ -495,7 +496,7 @@
      }
  
      public void startAutoSpinAttack(int riptideTicks) {
-@@ -595,7 +666,7 @@
+@@ -595,7 +667,7 @@
          }
  
          if (damageSource != null) {
@@ -504,7 +505,7 @@
          } else {
              this.setDeltaMovement(0.0D, 0.1D, 0.0D);
          }
-@@ -619,9 +690,10 @@
+@@ -619,9 +691,10 @@
      }
  
      protected void destroyVanishingCursedItems() {
@@ -518,7 +519,7 @@
                  this.inventory.removeItemNoUpdate(i);
              }
          }
-@@ -645,71 +717,126 @@
+@@ -645,71 +718,126 @@
  
      @Nullable
      public ItemEntity drop(ItemStack stack, boolean throwRandomly, boolean retainOwnership) {
@@ -674,7 +675,7 @@
          }
  
          if (this.isEyeInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(this)) {
-@@ -731,8 +858,9 @@
+@@ -731,8 +859,9 @@
      public void readAdditionalSaveData(CompoundTag nbt) {
          super.readAdditionalSaveData(nbt);
          this.setUUID(this.gameProfile.getId());
@@ -686,7 +687,7 @@
          this.inventory.selected = nbt.getInt("SelectedItemSlot");
          this.sleepCounter = nbt.getShort("SleepTimer");
          this.experienceProgress = nbt.getFloat("XpP");
-@@ -746,7 +874,7 @@
+@@ -746,7 +875,7 @@
          this.setScore(nbt.getInt("Score"));
          this.foodData.readAdditionalSaveData(nbt);
          this.abilities.loadSaveData(nbt);
@@ -695,7 +696,7 @@
          if (nbt.contains("EnderItems", 9)) {
              this.enderChestInventory.fromTag(nbt.getList("EnderItems", 10));
          }
-@@ -760,7 +888,11 @@
+@@ -760,7 +889,11 @@
          }
  
          if (nbt.contains("LastDeathLocation", 10)) {
@@ -708,7 +709,7 @@
          }
  
      }
-@@ -771,7 +903,7 @@
+@@ -771,7 +904,7 @@
          NbtUtils.addCurrentDataVersion(nbt);
          nbt.put("Inventory", this.inventory.save(new ListTag()));
          nbt.putInt("SelectedItemSlot", this.inventory.selected);
@@ -717,7 +718,7 @@
          nbt.putFloat("XpP", this.experienceProgress);
          nbt.putInt("XpLevel", this.experienceLevel);
          nbt.putInt("XpTotal", this.totalExperience);
-@@ -788,28 +920,20 @@
+@@ -788,28 +921,20 @@
              nbt.put("ShoulderEntityRight", this.getShoulderEntityRight());
          }
  
@@ -755,7 +756,7 @@
      }
  
      @Override
-@@ -824,12 +948,12 @@
+@@ -824,12 +949,12 @@
                  return false;
              } else {
                  if (!this.level().isClientSide) {
@@ -770,7 +771,7 @@
                      }
  
                      if (this.level().getDifficulty() == Difficulty.EASY) {
-@@ -841,7 +965,13 @@
+@@ -841,7 +966,13 @@
                      }
                  }
  
@@ -785,7 +786,7 @@
              }
          }
      }
-@@ -850,7 +980,7 @@
+@@ -850,7 +981,7 @@
      protected void blockUsingShield(LivingEntity attacker) {
          super.blockUsingShield(attacker);
          if (attacker.canDisableShield()) {
@@ -794,7 +795,7 @@
          }
  
      }
-@@ -861,13 +991,29 @@
+@@ -861,13 +992,29 @@
      }
  
      public boolean canHarmPlayer(Player player) {
@@ -819,17 +820,17 @@
 +            if (team == null || team.allowFriendlyFire()) {
 +                return true;
 +            }
-         }
++        }
 +
 +        if (this instanceof ServerPlayer) {
 +            return !team.hasPlayer(((ServerPlayer) this).getBukkitEntity());
-+        }
+         }
 +        return !team.hasPlayer(this.level().getCraftServer().getOfflinePlayer(this.getScoreboardName()));
 +        // CraftBukkit end
      }
  
      @Override
-@@ -889,12 +1035,13 @@
+@@ -889,12 +1036,13 @@
  
              if (amount >= 3.0F) {
                  int i = 1 + Mth.floor(amount);
@@ -847,7 +848,7 @@
                          this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                      } else {
                          this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
-@@ -908,29 +1055,38 @@
+@@ -908,29 +1056,38 @@
          }
      }
  
@@ -901,7 +902,7 @@
      }
  
      @Override
-@@ -942,65 +1098,59 @@
+@@ -942,65 +1099,59 @@
          return false;
      }
  
@@ -992,7 +993,7 @@
                      }
                  }
  
-@@ -1016,13 +1166,19 @@
+@@ -1016,13 +1167,19 @@
  
      @Override
      public void removeVehicle() {
@@ -1014,7 +1015,7 @@
      }
  
      @Override
-@@ -1033,200 +1189,268 @@
+@@ -1033,200 +1190,268 @@
      @Override
      protected Vec3 maybeBackOffFromEdge(Vec3 movement, MoverType type) {
          if (!this.abilities.flying && movement.y <= 0.0D && (type == MoverType.SELF || type == MoverType.PLAYER) && this.isStayingOnGroundSurface() && this.isAboveGround()) {
@@ -1387,7 +1388,7 @@
                      }
                  }
  
-@@ -1239,37 +1463,52 @@
+@@ -1239,41 +1464,63 @@
          this.attack(target);
      }
  
@@ -1452,7 +1453,19 @@
  
      @Override
      public void remove(Entity.RemovalReason reason) {
-@@ -1297,15 +1536,20 @@
+-        super.remove(reason);
++        // CraftBukkit start - add Bukkit remove cause
++        this.remove(reason, null);
++    }
++
++    @Override
++    public void remove(Entity.RemovalReason entity_removalreason, EntityRemoveEvent.Cause cause) {
++        super.remove(entity_removalreason, cause);
++        // CraftBukkit end
+         this.inventoryMenu.removed(this);
+         if (this.containerMenu != null && this.hasContainerOpen()) {
+             this.doCloseContainer();
+@@ -1297,15 +1544,20 @@
          return this.abilities;
      }
  
@@ -1476,7 +1489,7 @@
          this.sleepCounter = 0;
          return Either.right(Unit.INSTANCE);
      }
-@@ -1313,7 +1557,7 @@
+@@ -1313,7 +1565,7 @@
      public void stopSleepInBed(boolean skipSleepTimer, boolean updateSleepingPlayers) {
          super.stopSleeping();
          if (this.level() instanceof ServerLevel && updateSleepingPlayers) {
@@ -1485,7 +1498,7 @@
          }
  
          this.sleepCounter = skipSleepTimer ? 0 : 100;
-@@ -1325,24 +1569,27 @@
+@@ -1325,24 +1577,27 @@
      }
  
      public static Optional<Vec3> findRespawnPositionAndUseSpawnBlock(ServerLevel world, BlockPos pos, float angle, boolean forced, boolean alive) {
@@ -1522,7 +1535,7 @@
          }
      }
  
-@@ -1354,8 +1601,7 @@
+@@ -1354,8 +1609,7 @@
          return this.sleepCounter;
      }
  
@@ -1532,7 +1545,7 @@
  
      public void awardStat(ResourceLocation stat) {
          this.awardStat(Stats.CUSTOM.get(stat));
-@@ -1369,21 +1615,17 @@
+@@ -1369,21 +1623,17 @@
          this.awardStat(stat, 1);
      }
  
@@ -1558,7 +1571,7 @@
  
      public int resetRecipes(Collection<RecipeHolder<?>> recipes) {
          return 0;
-@@ -1394,31 +1636,40 @@
+@@ -1394,31 +1644,40 @@
          super.jumpFromGround();
          this.awardStat(Stats.JUMP);
          if (this.isSprinting()) {
@@ -1610,7 +1623,7 @@
          } else {
              super.travel(movementInput);
          }
-@@ -1441,16 +1692,16 @@
+@@ -1441,16 +1700,16 @@
  
      @Override
      public float getSpeed() {
@@ -1630,7 +1643,7 @@
              }
  
              return super.causeFallDamage(fallDistance, damageMultiplier, damageSource);
-@@ -1459,8 +1710,9 @@
+@@ -1459,8 +1718,9 @@
  
      public boolean tryToStartFallFlying() {
          if (!this.onGround() && !this.isFallFlying() && !this.isInWater() && !this.hasEffect(MobEffects.LEVITATION)) {
@@ -1642,7 +1655,7 @@
                  this.startFallFlying();
                  return true;
              }
-@@ -1470,12 +1722,24 @@
+@@ -1470,12 +1730,24 @@
      }
  
      public void startFallFlying() {
@@ -1668,7 +1681,7 @@
      }
  
      @Override
-@@ -1492,13 +1756,15 @@
+@@ -1492,13 +1764,15 @@
              this.waterSwimSound();
              this.playMuffledStepSound(state);
          } else {
@@ -1690,7 +1703,7 @@
                  }
              } else {
                  super.playStepSound(pos, state);
-@@ -1528,24 +1794,25 @@
+@@ -1528,24 +1802,25 @@
  
      public void giveExperiencePoints(int experience) {
          this.increaseScore(experience);
@@ -1723,7 +1736,7 @@
          }
  
      }
-@@ -1573,26 +1840,42 @@
+@@ -1573,26 +1848,42 @@
              this.totalExperience = 0;
          }
  
@@ -1774,7 +1787,7 @@
              }
  
          }
-@@ -1622,9 +1905,10 @@
+@@ -1622,9 +1913,10 @@
          if (this.abilities.mayBuild) {
              return true;
          } else {
@@ -1788,7 +1801,7 @@
          }
      }
  
-@@ -1632,6 +1916,7 @@
+@@ -1632,6 +1924,7 @@
      public int getExperienceReward() {
          if (!this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY) && !this.isSpectator()) {
              int i = this.experienceLevel * 7;
@@ -1796,7 +1809,7 @@
              return i > 100 ? 100 : i;
          } else {
              return 0;
-@@ -1650,11 +1935,10 @@
+@@ -1650,11 +1943,10 @@
  
      @Override
      protected Entity.MovementEmission getMovementEmission() {
@@ -1810,7 +1823,7 @@
  
      @Override
      public Component getName() {
-@@ -1667,13 +1951,7 @@
+@@ -1667,13 +1959,7 @@
  
      @Override
      public ItemStack getItemBySlot(EquipmentSlot slot) {
@@ -1825,7 +1838,7 @@
      }
  
      @Override
-@@ -1683,13 +1961,20 @@
+@@ -1683,13 +1969,20 @@
  
      @Override
      public void setItemSlot(EquipmentSlot slot, ItemStack stack) {
@@ -1853,7 +1866,7 @@
          }
  
      }
-@@ -1700,7 +1985,7 @@
+@@ -1700,7 +1993,7 @@
  
      @Override
      public Iterable<ItemStack> getHandSlots() {
@@ -1862,7 +1875,7 @@
      }
  
      @Override
-@@ -1728,27 +2013,57 @@
+@@ -1728,27 +2021,57 @@
  
      public void removeEntitiesOnShoulder() {
          if (this.timeEntitySatOnShoulder + 20L < this.level().getGameTime()) {
@@ -1929,7 +1942,7 @@
  
      @Override
      public abstract boolean isSpectator();
-@@ -1776,14 +2091,16 @@
+@@ -1776,14 +2099,16 @@
  
      @Override
      public Component getDisplayName() {
@@ -1951,7 +1964,7 @@
          });
      }
  
-@@ -1808,16 +2125,16 @@
+@@ -1808,16 +2133,16 @@
  
      @Override
      protected void internalSetAbsorptionAmount(float absorptionAmount) {
@@ -1971,7 +1984,7 @@
      }
  
      @Override
-@@ -1825,8 +2142,9 @@
+@@ -1825,8 +2150,9 @@
          if (mappedIndex >= 0 && mappedIndex < this.inventory.items.size()) {
              return SlotAccess.forContainer(this.inventory, mappedIndex);
          } else {
@@ -1983,7 +1996,7 @@
          }
      }
  
-@@ -1845,35 +2163,35 @@
+@@ -1845,35 +2171,35 @@
  
      @Override
      public HumanoidArm getMainArm() {
@@ -2027,7 +2040,7 @@
      }
  
      public void resetAttackStrengthTicker() {
-@@ -1890,7 +2208,7 @@
+@@ -1890,7 +2216,7 @@
      }
  
      public float getLuck() {
@@ -2036,7 +2049,7 @@
      }
  
      public boolean canUseGameMasterBlocks() {
-@@ -1899,13 +2217,14 @@
+@@ -1899,13 +2225,14 @@
  
      @Override
      public boolean canTakeItem(ItemStack stack) {
@@ -2054,7 +2067,7 @@
      }
  
      @Override
-@@ -1913,22 +2232,35 @@
+@@ -1913,22 +2240,35 @@
          return ImmutableList.of(Pose.STANDING, Pose.CROUCHING, Pose.SWIMMING);
      }
  
@@ -2099,7 +2112,7 @@
                      }
                  }
  
-@@ -1941,9 +2273,9 @@
+@@ -1941,9 +2281,9 @@
      public ItemStack eat(Level world, ItemStack stack) {
          this.getFoodData().eat(stack.getItem(), stack);
          this.awardStat(Stats.ITEM_USED.get(stack.getItem()));
@@ -2111,7 +2124,7 @@
          }
  
          return super.eat(world, stack);
-@@ -1956,32 +2288,38 @@
+@@ -1956,32 +2296,38 @@
  
      @Override
      public Vec3 getRopeHoldPosition(float delta) {
@@ -2168,7 +2181,7 @@
          }
      }
  
-@@ -2025,17 +2363,27 @@
+@@ -2025,17 +2371,27 @@
  
      @Override
      protected float getFlyingSpeed() {
@@ -2204,7 +2217,7 @@
      }
  
      public static float getPickRange(boolean creative) {
-@@ -2043,12 +2391,8 @@
+@@ -2043,12 +2399,8 @@
      }
  
      public static enum BedSleepingProblem {
@@ -2219,7 +2232,7 @@
  
          @Nullable
          private final Component message;
-@@ -2057,8 +2401,8 @@
+@@ -2057,8 +2409,8 @@
              this.message = null;
          }
  

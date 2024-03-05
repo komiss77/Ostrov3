@@ -22,7 +22,7 @@
  import java.util.function.Consumer;
  import java.util.stream.Collectors;
  import java.util.stream.Stream;
-@@ -25,24 +29,28 @@
+@@ -25,24 +29,29 @@
  import net.minecraft.util.CsvOutput;
  import net.minecraft.util.VisibleForDebug;
  import net.minecraft.world.entity.Entity;
@@ -32,6 +32,7 @@
 +// CraftBukkit start
 +import net.minecraft.world.level.chunk.storage.EntityStorage;
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +// CraftBukkit end
  
  public class PersistentEntitySectionManager<T extends EntityAccess> implements AutoCloseable {
@@ -56,7 +57,7 @@
          this.sectionStorage = new EntitySectionStorage<>(entityClass, this.chunkVisibility);
          this.chunkVisibility.defaultReturnValue(Visibility.HIDDEN);
          this.chunkLoadStatuses.defaultReturnValue(PersistentEntitySectionManager.ChunkLoadStatus.FRESH);
-@@ -51,6 +59,16 @@
+@@ -51,6 +60,16 @@
          this.entityGetter = new LevelEntityGetterAdapter<>(this.visibleEntityStorage, this.sectionStorage);
      }
  
@@ -73,7 +74,7 @@
      void removeSectionIfEmpty(long sectionPos, EntitySection<T> section) {
          if (section.isEmpty()) {
              this.sectionStorage.remove(sectionPos);
-@@ -59,8 +77,9 @@
+@@ -59,8 +78,9 @@
      }
  
      private boolean addEntityUuid(T entity) {
@@ -84,7 +85,7 @@
              return false;
          } else {
              return true;
-@@ -72,18 +91,33 @@
+@@ -72,18 +92,33 @@
      }
  
      private boolean addEntity(T entity, boolean existing) {
@@ -123,7 +124,7 @@
              if (visibility.isAccessible()) {
                  this.startTracking(entity);
              }
-@@ -101,76 +135,84 @@
+@@ -101,76 +136,84 @@
      }
  
      public void addLegacyChunkEntities(Stream<T> entities) {
@@ -236,7 +237,7 @@
                  }).forEach(this::startTicking);
              }
  
-@@ -178,52 +220,71 @@
+@@ -178,52 +221,71 @@
      }
  
      public void ensureChunkQueuedForLoad(long chunkPos) {
@@ -327,7 +328,13 @@
              return false;
          } else {
              this.chunkLoadStatuses.remove(chunkPos);
-@@ -237,46 +298,58 @@
+@@ -232,51 +294,63 @@
+     }
+ 
+     private void unloadEntity(EntityAccess entity) {
+-        entity.setRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK);
++        entity.setRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK, EntityRemoveEvent.Cause.UNLOAD); // CraftBukkit - add Bukkit remove cause
+         entity.setLevelCallback(EntityInLevelCallback.NULL);
      }
  
      private void processUnloads() {
@@ -402,7 +409,7 @@
                  });
              }
  
-@@ -284,14 +357,16 @@
+@@ -284,14 +358,16 @@
      }
  
      public void saveAll() {
@@ -424,7 +431,7 @@
                  });
              });
          }
-@@ -299,9 +374,16 @@
+@@ -299,9 +375,16 @@
          this.permanentStorage.flush(true);
      }
  
@@ -443,7 +450,7 @@
          this.permanentStorage.close();
      }
  
-@@ -314,11 +396,11 @@
+@@ -314,11 +397,11 @@
      }
  
      public boolean canPositionTick(BlockPos pos) {
@@ -457,7 +464,7 @@
      }
  
      public boolean areEntitiesLoaded(long chunkPos) {
-@@ -326,16 +408,19 @@
+@@ -326,16 +409,19 @@
      }
  
      public void dumpSections(Writer writer) throws IOException {
@@ -486,7 +493,7 @@
                      }
                  }
  
-@@ -345,7 +430,9 @@
+@@ -345,7 +431,9 @@
  
      @VisibleForDebug
      public String gatherStats() {
@@ -497,7 +504,7 @@
      }
  
      @VisibleForDebug
-@@ -353,63 +440,78 @@
+@@ -353,63 +441,78 @@
          return this.visibleEntityStorage.count();
      }
  
@@ -603,7 +610,7 @@
                      PersistentEntitySectionManager.this.callbacks.onSectionChange(this.entity);
                  }
  
-@@ -418,11 +520,13 @@
+@@ -418,11 +521,13 @@
  
          @Override
          public void onRemove(Entity.RemovalReason reason) {
@@ -618,7 +625,7 @@
              if (visibility.isTicking()) {
                  PersistentEntitySectionManager.this.stopTicking(this.entity);
              }
-@@ -436,14 +540,8 @@
+@@ -436,14 +541,8 @@
              }
  
              PersistentEntitySectionManager.this.knownUuids.remove(this.entity.getUUID());

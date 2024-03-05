@@ -82,7 +82,7 @@
      protected final NeighborUpdater neighborUpdater;
      private final List<TickingBlockEntity> pendingBlockEntityTickers = Lists.newArrayList();
      private boolean tickingBlockEntities;
-@@ -114,26 +144,103 @@
+@@ -114,26 +144,112 @@
      private final DamageSources damageSources;
      private long subTickCount;
  
@@ -156,6 +156,15 @@
 +        return this.getChunkIfLoaded(chunkX, chunkZ) != null;
 +    }
 +    // Paper end - Use getChunkIfLoadedImmediately
++    // Paper start - per world ticks per spawn
++    private int getTicksPerSpawn(SpawnCategory spawnCategory) {
++        final int perWorld = this.paperConfig().entities.spawning.ticksPerSpawn.getInt(CraftSpawnCategory.toNMS(spawnCategory));
++        if (perWorld >= 0) {
++            return perWorld;
++        }
++        return this.getCraftServer().getTicksPerSpawns(spawnCategory);
++    }
++    // Paper end
 +
 +    public abstract ResourceKey<LevelStem> getTypeKey();
 +
@@ -168,7 +177,7 @@
 +        // CraftBukkit Ticks things
 +        for (SpawnCategory spawnCategory : SpawnCategory.values()) {
 +            if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
-+                this.ticksPerSpawnCategory.put(spawnCategory, (long) this.getCraftServer().getTicksPerSpawns(spawnCategory));
++                this.ticksPerSpawnCategory.put(spawnCategory, this.getTicksPerSpawn(spawnCategory)); // Paper
 +            }
 +        }
 +
@@ -198,7 +207,7 @@
                  }
              };
          } else {
-@@ -141,14 +248,458 @@
+@@ -141,13 +257,457 @@
          }
  
          this.thread = Thread.currentThread();
@@ -257,8 +266,8 @@
 +        this.minSection = io.papermc.paper.util.WorldUtil.getMinSection(this);
 +        this.maxSection = io.papermc.paper.util.WorldUtil.getMaxSection(this);
 +        // Paper end - optimise collisions
-+    }
-+
+     }
+ 
 +    // Paper start - Cancel hit for vanished players
 +    // ret true if no collision
 +    public final boolean checkEntityCollision(BlockState data, Entity source, net.minecraft.world.phys.shapes.CollisionContext voxelshapedcollision,
@@ -464,9 +473,9 @@
 +                normalizedCurrZ += normalizedDiffZ;
 +            }
 +        }
-     }
- 
-     @Override
++    }
++
++    @Override
 +    public final net.minecraft.world.phys.BlockHitResult clip(final ClipContext clipContext) {
 +        // can only do this in this class, as not everything that implements BlockGetter can retrieve chunks
 +        return fastClip(clipContext.getFrom(), clipContext.getTo(), this, clipContext);
@@ -658,11 +667,10 @@
 +        return java.util.Optional.ofNullable(selected);
 +    }
 +    // Paper end - optimise collisions
-+    @Override
+     @Override
      public boolean isClientSide() {
          return this.isClientSide;
-     }
-@@ -159,128 +710,404 @@
+@@ -159,128 +719,404 @@
          return null;
      }
  
@@ -961,7 +969,7 @@
  
 -                    this.onBlockStateChange(pos, blockState, blockState2);
 +                    this.onBlockStateChange(blockposition, iblockdata1, iblockdata2);
-                 }
++                }
 +                */
 +
 +                // CraftBukkit start
@@ -974,7 +982,7 @@
 +                        Level.lastPhysicsProblem = new BlockPos(pos);
 +                    }
 +                    // Spigot end
-+                }
+                 }
 +                // CraftBukkit end
  
                  return true;
@@ -1113,7 +1121,7 @@
  
      public boolean setBlockAndUpdate(BlockPos pos, BlockState state) {
          return this.setBlock(pos, state, 3);
-@@ -288,20 +1115,15 @@
+@@ -288,20 +1124,15 @@
  
      public abstract void sendBlockUpdated(BlockPos pos, BlockState oldState, BlockState newState, int flags);
  
@@ -1139,7 +1147,7 @@
  
      @Override
      public void neighborShapeChanged(Direction direction, BlockState neighborState, BlockPos pos, BlockPos neighborPos, int flags, int maxUpdateDepth) {
-@@ -310,18 +1132,19 @@
+@@ -310,18 +1141,19 @@
  
      @Override
      public int getHeight(Heightmap.Types heightmap, int x, int z) {
@@ -1164,7 +1172,7 @@
      }
  
      @Override
-@@ -331,11 +1154,20 @@
+@@ -331,11 +1163,20 @@
  
      @Override
      public BlockState getBlockState(BlockPos pos) {
@@ -1187,7 +1195,7 @@
          }
      }
  
-@@ -344,8 +1176,9 @@
+@@ -344,8 +1185,9 @@
          if (this.isOutsideBuildHeight(pos)) {
              return Fluids.EMPTY.defaultFluidState();
          } else {
@@ -1199,7 +1207,7 @@
          }
      }
  
-@@ -358,19 +1191,22 @@
+@@ -358,19 +1200,22 @@
      }
  
      public void playSound(@Nullable Entity source, BlockPos pos, SoundEvent sound, SoundSource category, float volume, float pitch) {
@@ -1228,7 +1236,7 @@
      }
  
      public abstract void playSeededSound(@Nullable Player source, double x, double y, double z, Holder<SoundEvent> sound, SoundSource category, float volume, float pitch, long seed);
-@@ -394,31 +1230,26 @@
+@@ -394,31 +1239,26 @@
      }
  
      public void playLocalSound(BlockPos pos, SoundEvent sound, SoundSource category, float volume, float pitch, boolean useDistance) {
@@ -1270,7 +1278,7 @@
      }
  
      public void addBlockEntityTicker(TickingBlockEntity ticker) {
-@@ -426,40 +1257,84 @@
+@@ -426,40 +1266,84 @@
      }
  
      protected void tickBlockEntities() {
@@ -1347,7 +1355,7 @@
 +            final String msg = String.format("Entity threw exception at %s:%s,%s,%s", entity.level().getWorld().getName(), entity.getX(), entity.getY(), entity.getZ());
 +            MinecraftServer.LOGGER.error(msg, throwable);
 +            getCraftServer().getPluginManager().callEvent(new com.destroystokyo.paper.event.server.ServerExceptionEvent(new com.destroystokyo.paper.exception.ServerInternalException(msg, throwable))); // Paper - ServerExceptionEvent
-+            entity.discard();
++            entity.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DISCARD);
 +            // Paper end - Prevent block entity and entity crashes
 +        }
 +    }
@@ -1371,7 +1379,7 @@
  
      public boolean shouldTickDeath(Entity entity) {
          return true;
-@@ -474,11 +1349,11 @@
+@@ -474,11 +1358,11 @@
      }
  
      public Explosion explode(@Nullable Entity entity, double x, double y, double z, float power, Level.ExplosionInteraction explosionSourceType) {
@@ -1385,7 +1393,7 @@
      }
  
      public Explosion explode(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionDamageCalculator behavior, Vec3 pos, float power, boolean createFire, Level.ExplosionInteraction explosionSourceType) {
-@@ -494,29 +1369,31 @@
+@@ -494,29 +1378,31 @@
      }
  
      public Explosion explode(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionDamageCalculator behavior, double x, double y, double z, float power, boolean createFire, Level.ExplosionInteraction explosionSourceType, boolean particles, ParticleOptions particle, ParticleOptions emitterParticle, SoundEvent soundEvent) {
@@ -1425,7 +1433,7 @@
          explosion.explode();
          explosion.finalizeExplosion(particles);
          return explosion;
-@@ -531,17 +1408,33 @@
+@@ -531,17 +1417,33 @@
      @Nullable
      @Override
      public BlockEntity getBlockEntity(BlockPos pos) {
@@ -1466,7 +1474,7 @@
          }
      }
  
-@@ -559,8 +1452,9 @@
+@@ -559,8 +1461,9 @@
          if (this.isOutsideBuildHeight(pos)) {
              return false;
          } else {
@@ -1478,7 +1486,7 @@
          }
      }
  
-@@ -569,10 +1463,11 @@
+@@ -569,10 +1472,11 @@
      }
  
      public void updateSkyBrightness() {
@@ -1494,7 +1502,7 @@
      }
  
      public void setSpawnSettings(boolean spawnMonsters, boolean spawnAnimals) {
-@@ -580,12 +1475,13 @@
+@@ -580,12 +1484,13 @@
      }
  
      public BlockPos getSharedSpawnPos() {
@@ -1512,7 +1520,7 @@
      }
  
      public float getSharedSpawnAngle() {
-@@ -602,7 +1498,6 @@
+@@ -602,7 +1507,6 @@
  
      }
  
@@ -1520,7 +1528,7 @@
      public void close() throws IOException {
          this.getChunkSource().close();
      }
-@@ -617,26 +1512,14 @@
+@@ -617,26 +1521,14 @@
      public List<Entity> getEntities(@Nullable Entity except, AABB box, Predicate<? super Entity> predicate) {
          this.getProfiler().incrementCounter("getEntities");
          List<Entity> list = Lists.newArrayList();
@@ -1549,7 +1557,7 @@
          this.getEntities(filter, box, predicate, list);
          return list;
      }
-@@ -647,28 +1530,23 @@
+@@ -647,28 +1539,23 @@
  
      public <T extends Entity> void getEntities(EntityTypeTest<Entity, T> filter, AABB box, Predicate<? super T> predicate, List<? super T> result, int limit) {
          this.getProfiler().incrementCounter("getEntities");
@@ -1594,7 +1602,7 @@
      }
  
      @Nullable
-@@ -686,8 +1564,7 @@
+@@ -686,8 +1573,7 @@
          return 63;
      }
  
@@ -1604,7 +1612,7 @@
  
      public long getGameTime() {
          return this.levelData.getGameTime();
-@@ -701,11 +1578,9 @@
+@@ -701,11 +1587,9 @@
          return true;
      }
  
@@ -1618,7 +1626,7 @@
  
      public void blockEvent(BlockPos pos, Block block, int type, int data) {
          this.getBlockState(pos).triggerEvent(this, pos, type, data);
-@@ -727,9 +1602,10 @@
+@@ -727,9 +1611,10 @@
      }
  
      public void setThunderLevel(float thunderGradient) {
@@ -1632,7 +1640,7 @@
      }
  
      public float getRainLevel(float delta) {
-@@ -737,21 +1613,18 @@
+@@ -737,21 +1622,18 @@
      }
  
      public void setRainLevel(float rainGradient) {
@@ -1660,7 +1668,7 @@
      }
  
      public boolean isRainingAt(BlockPos pos) {
-@@ -762,8 +1635,9 @@
+@@ -762,8 +1644,9 @@
          } else if (this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() > pos.getY()) {
              return false;
          } else {
@@ -1672,7 +1680,7 @@
          }
      }
  
-@@ -774,47 +1648,56 @@
+@@ -774,47 +1657,56 @@
  
      public abstract int getFreeMapId();
  
@@ -1753,7 +1761,7 @@
                      }
                  }
              }
-@@ -824,14 +1707,15 @@
+@@ -824,14 +1716,15 @@
  
      @Override
      public DifficultyInstance getCurrentDifficultyAt(BlockPos pos) {
@@ -1772,7 +1780,7 @@
      }
  
      @Override
-@@ -839,8 +1723,7 @@
+@@ -839,8 +1732,7 @@
          return this.skyDarken;
      }
  
@@ -1782,7 +1790,7 @@
  
      @Override
      public WorldBorder getWorldBorder() {
-@@ -853,7 +1736,7 @@
+@@ -853,7 +1745,7 @@
  
      @Override
      public DimensionType dimensionType() {
@@ -1791,7 +1799,7 @@
      }
  
      public ResourceKey<DimensionType> dimensionTypeId() {
-@@ -885,10 +1768,19 @@
+@@ -885,10 +1777,19 @@
  
      public abstract RecipeManager getRecipeManager();
  
@@ -1814,7 +1822,7 @@
      }
  
      public boolean noSave() {
-@@ -896,7 +1788,7 @@
+@@ -896,7 +1797,7 @@
      }
  
      public ProfilerFiller getProfiler() {
@@ -1823,7 +1831,7 @@
      }
  
      public Supplier<ProfilerFiller> getProfilerSupplier() {
-@@ -916,7 +1808,7 @@
+@@ -916,7 +1817,7 @@
  
      @Override
      public long nextSubTickCount() {
@@ -1832,7 +1840,7 @@
      }
  
      @Override
-@@ -929,10 +1821,80 @@
+@@ -929,10 +1830,80 @@
      }
  
      public static enum ExplosionInteraction {
@@ -1854,7 +1862,7 @@
 +    public double getGlobalSoundRangeSquared(java.util.function.Function<org.spigotmc.SpigotWorldConfig, Integer> rangeFunction) {
 +        final double range = rangeFunction.apply(this.spigotConfig);
 +        return range <= 0 ? 64.0 * 64.0 : range * range; // 64 is taken from default in ServerLevel#levelEvent
-+    }
+     }
 +    // Paper end - respect global sound events gamerule
 +    // Paper start - notify observers even if grow failed
 +    public void checkCapturedTreeStateForObserverNotify(final BlockPos pos, final CraftBlockState craftBlockState) {
@@ -1882,7 +1890,7 @@
 +        List<Entity> ret = new java.util.ArrayList<>();
 +        ((ServerLevel)this).getEntityLookup().getHardCollidingEntities(except, box, ret, predicate);
 +        return ret;
-     }
++    }
 +
 +    @Override
 +    public void getEntities(Entity except, AABB box, Predicate<? super Entity> predicate, List<Entity> into) {

@@ -8,8 +8,13 @@
  import java.util.List;
  import java.util.Objects;
  import java.util.Optional;
-@@ -43,9 +44,10 @@
+@@ -41,11 +42,15 @@
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.phys.Vec3;
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public abstract class Raider extends PatrollingMonster {
 +
@@ -21,7 +26,7 @@
      };
      @Nullable
      protected Raid raid;
-@@ -62,14 +64,14 @@
+@@ -62,14 +67,14 @@
          super.registerGoals();
          this.goalSelector.addGoal(1, new Raider.ObtainRaidLeaderBannerGoal<>(this));
          this.goalSelector.addGoal(3, new PathfindToRaidGoal<>(this));
@@ -38,7 +43,7 @@
      }
  
      public abstract void applyRaidBuffs(int wave, boolean unused);
-@@ -86,17 +88,20 @@
+@@ -86,17 +91,20 @@
      public void aiStep() {
          if (this.level() instanceof ServerLevel && this.isAlive()) {
              Raid raid = this.getCurrentRaid();
@@ -64,7 +69,7 @@
                          this.noActionTime = 0;
                      }
                  }
-@@ -116,6 +121,7 @@
+@@ -116,6 +124,7 @@
          if (this.level() instanceof ServerLevel) {
              Entity entity = damageSource.getEntity();
              Raid raid = this.getCurrentRaid();
@@ -72,7 +77,7 @@
              if (raid != null) {
                  if (this.isPatrolLeader()) {
                      raid.removeLeader(this.getWave());
-@@ -128,33 +134,38 @@
+@@ -128,33 +137,38 @@
                  raid.removeFromRaid(this, false);
              }
  
@@ -128,7 +133,7 @@
                      }
                  }
              }
-@@ -190,11 +201,11 @@
+@@ -190,11 +204,11 @@
      }
  
      public boolean isCelebrating() {
@@ -142,7 +147,7 @@
      }
  
      @Override
-@@ -215,7 +226,7 @@
+@@ -215,7 +229,7 @@
          this.canJoinRaid = nbt.getBoolean("CanJoinRaid");
          if (nbt.contains("RaidId", 3)) {
              if (this.level() instanceof ServerLevel) {
@@ -151,7 +156,7 @@
              }
  
              if (this.raid != null) {
-@@ -230,19 +241,28 @@
+@@ -230,20 +244,29 @@
  
      @Override
      protected void pickUpItem(ItemEntity item) {
@@ -185,16 +190,18 @@
              this.onItemPickup(item);
 -            this.setItemSlot(equipmentSlot, itemStack);
 -            this.take(item, itemStack.getCount());
+-            item.discard();
 +            this.setItemSlot(enumitemslot, itemstack);
 +            this.take(item, itemstack.getCount());
-             item.discard();
++            item.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
              this.getCurrentRaid().setLeader(this.getWave(), this);
              this.setPatrolLeader(true);
-@@ -288,89 +308,28 @@
+         } else {
+@@ -288,89 +311,28 @@
  
      public abstract SoundEvent getCelebrateSound();
  
--    protected class HoldGroundAttackGoal extends Goal {
+-    public class HoldGroundAttackGoal extends Goal {
 -        private final Raider mob;
 -        private final float hostileRadiusSqr;
 -        public final TargetingConditions shoutTargeting = TargetingConditions.forNonCombat().range(8.0D).ignoreLineOfSight().ignoreInvisibilityTesting();
@@ -290,7 +297,7 @@
                      }
                  }
  
-@@ -384,55 +343,17 @@
+@@ -384,55 +346,17 @@
          public void tick() {
              if (this.mob.getNavigation().getTargetPos().closerToCenterThan(this.mob.position(), 1.414D)) {
                  List<ItemEntity> list = this.mob.level().getEntitiesOfClass(ItemEntity.class, this.mob.getBoundingBox().inflate(4.0D, 4.0D, 4.0D), Raider.ALLOWED_ITEMS);
@@ -349,7 +356,7 @@
          private final Raider raider;
          private final double speedModifier;
          private BlockPos poiPos;
-@@ -458,31 +379,28 @@
+@@ -458,31 +382,28 @@
          }
  
          private boolean hasSuitablePoi() {
@@ -389,7 +396,7 @@
                  this.visited.add(this.poiPos);
              }
  
-@@ -492,37 +410,44 @@
+@@ -492,37 +413,44 @@
          public void start() {
              super.start();
              this.raider.setNoActionTime(0);
@@ -446,7 +453,7 @@
          }
  
          private void updateVisited() {
-@@ -532,4 +457,125 @@
+@@ -532,4 +460,125 @@
  
          }
      }
@@ -493,7 +500,7 @@
 +        }
 +    }
 +
-+    protected class HoldGroundAttackGoal extends Goal {
++    public class HoldGroundAttackGoal extends Goal {
 +
 +        private final Raider mob;
 +        private final float hostileRadiusSqr;

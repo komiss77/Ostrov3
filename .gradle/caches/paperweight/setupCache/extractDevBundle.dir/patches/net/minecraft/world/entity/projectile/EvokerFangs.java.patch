@@ -8,8 +8,13 @@
  import java.util.UUID;
  import javax.annotation.Nullable;
  import net.minecraft.core.particles.ParticleTypes;
-@@ -13,12 +15,13 @@
+@@ -11,14 +13,18 @@
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.TraceableEntity;
  import net.minecraft.world.level.Level;
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public class EvokerFangs extends Entity implements TraceableEntity {
 +
@@ -23,7 +28,7 @@
      private boolean clientSideAttackStarted;
      @Nullable
      private LivingEntity owner;
-@@ -27,19 +30,19 @@
+@@ -27,19 +33,19 @@
  
      public EvokerFangs(EntityType<? extends EvokerFangs> type, Level world) {
          super(type, world);
@@ -46,7 +51,7 @@
  
      public void setOwner(@Nullable LivingEntity owner) {
          this.owner = owner;
-@@ -50,9 +53,10 @@
+@@ -50,9 +56,10 @@
      @Override
      public LivingEntity getOwner() {
          if (this.owner == null && this.ownerUUID != null && this.level() instanceof ServerLevel) {
@@ -59,7 +64,7 @@
              }
          }
  
-@@ -84,26 +88,32 @@
+@@ -84,47 +91,54 @@
              if (this.clientSideAttackStarted) {
                  --this.lifeTicks;
                  if (this.lifeTicks == 14) {
@@ -103,7 +108,12 @@
                  this.sentSpikeEvent = true;
              }
  
-@@ -115,16 +125,17 @@
+             if (--this.lifeTicks < 0) {
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+             }
+         }
+ 
      }
  
      private void dealDamageTo(LivingEntity target) {
@@ -127,7 +137,7 @@
              }
  
          }
-@@ -147,7 +158,8 @@
+@@ -147,7 +161,8 @@
              return 0.0F;
          } else {
              int i = this.lifeTicks - 2;

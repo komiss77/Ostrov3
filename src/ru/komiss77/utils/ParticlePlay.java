@@ -2,15 +2,16 @@ package ru.komiss77.utils;
 
 import java.util.List;
 import java.util.Set;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
+
+import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import net.kyori.adventure.text.Component;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Ostrov;
 import ru.komiss77.modules.player.Oplayer;
@@ -150,6 +151,87 @@ public class ParticlePlay {
     }
 
 
+
+
+  public static void deathEffect (final Player player, final boolean epic) {
+
+    final Location loc = player.getLocation().clone().add(0, 0.5, 0);
+    final BlockData bd = Material.OBSIDIAN.createBlockData();
+    int circleElements = 8;
+    double radius = 0.4;
+
+    for(int i = 0; i < 20; i++) {
+      double alpha = (360.0/circleElements)*i;
+      double x = radius * Math.sin(Math.toRadians(alpha));
+      double z = radius * Math.cos(Math.toRadians(alpha));
+      Location particleFrom = new Location(loc.getWorld(), loc.getX()+x, loc.getY(), loc.getZ()+z);
+      particleFrom.getWorld().spawnParticle(Particle.FALLING_DUST, particleFrom, 1, 0, 0, 0, bd);
+      particleFrom.getWorld().spawnParticle(Particle.FALLING_DUST, particleFrom.clone().add(0, 0.5, 0), 1, 0, 0, 0,bd);
+      particleFrom.getWorld().spawnParticle(Particle.FALLING_DUST, particleFrom.clone().add(0, 1, 0), 1, 0, 0, 0, bd);
+    }
+
+    loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc.clone().add(0, 2, 0), 1, 0, 0, 0, bd);
+    loc.getWorld().spawnParticle(Particle.FALLING_DUST, getLeftRaisedHandLocation(player), 1, 0, 0, 0, bd);
+    loc.getWorld().spawnParticle(Particle.FALLING_DUST, getLeftLoweredHandLocation(player), 1, 0, 0, 0, bd);
+    loc.getWorld().spawnParticle(Particle.FALLING_DUST, getLeftRaisedHandLocation(player), 1, 0, 0, 0, bd);
+    loc.getWorld().spawnParticle(Particle.FALLING_DUST, getRightLoweredHandLocation(player), 1, 0, 0, 0, bd);
+
+    if (epic) {
+      player.getWorld().playSound(player.getLocation(), "quake.random.meat", 1, 1);
+      final Firework firework = (Firework)loc.getWorld().spawn(loc, (Class)Firework.class);
+      final FireworkMeta fireworkMeta = firework.getFireworkMeta();
+      fireworkMeta.addEffect(FireworkEffect.builder().flicker(ApiOstrov.randBoolean()).withColor(Color.RED).withFade(Color.MAROON).with(FireworkEffect.Type.BURST).trail(ApiOstrov.randBoolean()).build());
+      fireworkMeta.setPower(0);
+      firework.setFireworkMeta(fireworkMeta);
+    }
+  }
+
+
+  public static Location getRightLoweredHandLocation(final Player player) {
+    return getRightSide(player.getEyeLocation(), 0.45).subtract(0, .6, 0); // right hand
+  }
+
+  public static Location getRightRaisedHandLocation(final Player player) {
+    final Location loc = player.getLocation().clone();
+
+    double a = loc.getYaw() / 180D * Math.PI + Math.PI / 2;
+    double l = Math.sqrt(0.8D * 0.8D + 0.4D * 0.4D);
+
+    loc.setX(loc.getX() + l * Math.cos(a) - 0.2D * Math.sin(a));
+    loc.setY(loc.getY() + player.getEyeHeight() - 0.4D);
+    loc.setZ(loc.getZ() + l * Math.sin(a) + 0.2D * Math.cos(a));
+    //if (player.isSneaking()) {
+    //     loc.subtract(0.0, 0.03, 0.0);
+    //}
+    return loc;
+  }
+
+  public static Location getLeftLoweredHandLocation(final Player player) {
+    return getLeftSide(player.getEyeLocation(), 0.45).subtract(0, .6, 0); // right hand
+  }
+
+  public static Location getLeftRaisedHandLocation(final Player player) {
+    final Location loc = player.getLocation().clone();
+
+    double a = loc.getYaw() / 180D * Math.PI + Math.PI / 2;
+    double l = Math.sqrt(0.8D * 0.8D + 0.4D * 0.4D);
+
+    loc.setX(loc.getX() + l * Math.cos(a) + 0.2D * Math.sin(a));
+    loc.setY(loc.getY() + player.getEyeHeight() - 0.4D);
+    loc.setZ(loc.getZ() + l * Math.sin(a) - 0.2D * Math.cos(a));
+
+    return loc;
+  }
+
+  public static Location getRightSide(Location location, double distance) {
+    float angle = location.getYaw() / 60;
+    return location.clone().subtract(new Vector(Math.cos(angle), 0, Math.sin(angle)).normalize().multiply(distance));
+  }
+
+  public static Location getLeftSide(Location location, double distance) {
+    float angle = location.getYaw() / 60;
+    return location.clone().add(new Vector(Math.cos(angle), 0, Math.sin(angle)).normalize().multiply(distance));
+  }
 
 
 

@@ -1,16 +1,14 @@
 package ru.komiss77.modules.signProtect;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.LocalDB;
-import ru.komiss77.Ostrov;
 import ru.komiss77.Timer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 class ProtectionData {
   public int valid;
@@ -37,7 +35,7 @@ class ProtectionData {
   }
 
   public boolean isValid() {
-    return valid> Timer.getTime();
+    return valid==-1 || valid> Timer.getTime();
   }
 
   public boolean isOwner(final Player p) {

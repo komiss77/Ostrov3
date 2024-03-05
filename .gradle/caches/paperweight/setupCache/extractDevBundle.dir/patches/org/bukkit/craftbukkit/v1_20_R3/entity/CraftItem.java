@@ -120,7 +120,7 @@ public class CraftItem extends CraftEntity implements Item {
     public void setHealth(int health) {
         if (health <= 0) {
             this.getHandle().getItem().onDestroyed(this.getHandle());
-            this.getHandle().discard();
+            this.getHandle().discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.PLUGIN);
         } else {
             this.getHandle().health = health;
         }

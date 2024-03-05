@@ -65,7 +65,7 @@ public class SideBar {
   }
 
   public SideBar reset() {
-    data.forEach((key, value) -> obj.getScore( "§"+(char)('a' + key)+ext+value).resetScore());
+    data.forEach( (key, value) -> obj.getScore( "§"+(char)('a' + key)+ext+value).resetScore());
     data.clear();
 
     toAdd.clear();
@@ -105,12 +105,23 @@ public class SideBar {
     return update(line, value);
   }
 
-  public SideBar add(final String name) {
-    return add(name, null);
+  public SideBar add(final String key) {
+    return add(key, null);
   }
 
-  public SideBar add(final String name, final @Nullable String value) {
-    toAdd.addFirst(new Duo<>(name, value));
+  //проба
+  public void remove(final String key) {
+    final Integer line = lines.remove(key);
+    if (line != null) {
+      final String old = data.get(line);
+      if (old!=null) {
+        obj.getScore("§"+(char)('a' + line)+ext+old).resetScore();
+      }
+    }
+  }
+
+  public SideBar add(final String key, final @Nullable String value) {
+    toAdd.addFirst(new Duo<>(key, value));
     return this;
   }
 

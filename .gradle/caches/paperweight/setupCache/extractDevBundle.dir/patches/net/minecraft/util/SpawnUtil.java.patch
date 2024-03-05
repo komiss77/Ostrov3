@@ -58,7 +58,7 @@
 +                        return Optional.of(t0);
 +                    }
 +
-+                    t0.discard();
++                    t0.discard(null); // CraftBukkit - add Bukkit remove cause
                  }
              }
          }

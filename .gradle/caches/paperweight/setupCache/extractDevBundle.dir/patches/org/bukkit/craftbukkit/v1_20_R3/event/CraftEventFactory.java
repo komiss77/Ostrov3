@@ -169,6 +169,7 @@ import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.EntitySpellCastEvent;
@@ -684,7 +685,7 @@ public class CraftEventFactory {
 
             if (spawnReason != SpawnReason.CUSTOM) {
                 if (isAnimal && !world.getWorld().getAllowAnimals() || isMonster && !world.getWorld().getAllowMonsters() || isNpc && !world.getCraftServer().getServer().areNpcsEnabled()) {
-                    entity.discard();
+                    entity.discard(null); // Add Bukkit remove cause
                     return false;
                 }
             }
@@ -722,12 +723,12 @@ public class CraftEventFactory {
         if (event != null && (event.isCancelled() || entity.isRemoved())) {
             Entity vehicle = entity.getVehicle();
             if (vehicle != null) {
-                vehicle.discard();
+                vehicle.discard(null); // Add Bukkit remove cause
             }
             for (Entity passenger : entity.getIndirectPassengers()) {
-                passenger.discard();
+                passenger.discard(null); // Add Bukkit remove cause
             }
-            entity.discard();
+            entity.discard(null); // Add Bukkit remove cause
             return false;
         }
 
@@ -753,7 +754,7 @@ public class CraftEventFactory {
                                 xp.value = maxValue;
                             } else {
                             xp.value += loopItem.value;
-                            loopItem.discard();
+                            loopItem.discard(null); // Add Bukkit remove cause
                             } // Paper end - Maximum exp value when merging
                         }
                     }
@@ -2085,6 +2086,21 @@ public class CraftEventFactory {
         return event;
     }
 
+    public static void callEntityRemoveEvent(Entity entity, EntityRemoveEvent.Cause cause) {
+        if (entity instanceof ServerPlayer) {
+            return; // Don't call for player
+        }
+
+        if (cause == null) {
+            // Don't call if cause is null
+            // This can happen when an entity changes dimension,
+            // the entity gets removed during world gen or
+            // the entity is removed before it is even spawned (when the spawn event is cancelled for example)
+            return;
+        }
+
+        Bukkit.getPluginManager().callEvent(new EntityRemoveEvent(entity.getBukkitEntity(), cause));
+    }
     // Paper start - PlayerUseUnknownEntityEvent
     public static void callPlayerUseUnknownEntityEvent(net.minecraft.world.entity.player.Player player, net.minecraft.network.protocol.game.ServerboundInteractPacket packet, InteractionHand hand, @Nullable net.minecraft.world.phys.Vec3 vector) {
         new com.destroystokyo.paper.event.player.PlayerUseUnknownEntityEvent(

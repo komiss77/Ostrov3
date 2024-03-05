@@ -8,18 +8,19 @@
  import net.minecraft.world.Containers;
  import net.minecraft.world.InteractionHand;
  import net.minecraft.world.InteractionResult;
-@@ -22,24 +23,34 @@
- import net.minecraft.world.item.Items;
+@@ -23,23 +24,35 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.gameevent.GameEvent;
+ 
 +// CraftBukkit start
 +import java.util.List;
 +import org.bukkit.Location;
 +import org.bukkit.craftbukkit.v1_20_R3.entity.CraftHumanEntity;
 +import org.bukkit.entity.HumanEntity;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.inventory.InventoryHolder;
 +// CraftBukkit end
- 
++
  public class ChestBoat extends Boat implements HasCustomInventoryScreen, ContainerEntity {
 +
      private static final int CONTAINER_SIZE = 27;
@@ -49,7 +50,7 @@
      }
  
      @Override
-@@ -55,12 +66,14 @@
+@@ -55,12 +68,14 @@
      @Override
      protected void addAdditionalSaveData(CompoundTag nbt) {
          super.addAdditionalSaveData(nbt);
@@ -64,16 +65,29 @@
          this.readChestVehicleSaveData(nbt);
      }
  
-@@ -73,7 +86,7 @@
+@@ -72,11 +87,18 @@
+ 
      @Override
      public void remove(Entity.RemovalReason reason) {
-         if (!this.level().isClientSide && reason.shouldDestroy()) {
+-        if (!this.level().isClientSide && reason.shouldDestroy()) {
 -            Containers.dropContents(this.level(), this, this);
++        // CraftBukkit start - add Bukkit remove cause
++        this.remove(reason, null);
++    }
++
++    @Override
++    public void remove(Entity.RemovalReason entity_removalreason, EntityRemoveEvent.Cause cause) {
++        // CraftBukkit end
++        if (!this.level().isClientSide && entity_removalreason.shouldDestroy()) {
 +            Containers.dropContents(this.level(), (Entity) this, (Container) this);
          }
  
-         super.remove(reason);
-@@ -84,13 +97,14 @@
+-        super.remove(reason);
++        super.remove(entity_removalreason, cause); // CraftBukkit - add Bukkit remove cause
+     }
+ 
+     @Override
+@@ -84,13 +106,14 @@
          if (this.canAddPassenger(player) && !player.isSecondaryUseActive()) {
              return super.interact(player, hand);
          } else {
@@ -91,7 +105,7 @@
          }
      }
  
-@@ -106,37 +120,38 @@
+@@ -106,37 +129,38 @@
  
      @Override
      public Item getDropItem() {
@@ -141,7 +155,7 @@
      }
  
      @Override
-@@ -175,8 +190,7 @@
+@@ -175,8 +199,7 @@
      }
  
      @Override
@@ -151,13 +165,13 @@
  
      @Override
      public boolean stillValid(Player player) {
-@@ -231,6 +245,67 @@
+@@ -231,6 +254,67 @@
  
      @Override
      public void stopOpen(Player player) {
 -        this.level().gameEvent(GameEvent.CONTAINER_CLOSE, this.position(), GameEvent.Context.of(player));
 +        this.level().gameEvent(GameEvent.CONTAINER_CLOSE, this.position(), GameEvent.Context.of((Entity) player));
-     }
++    }
 +
 +    // Paper start
 +    {
@@ -202,7 +216,7 @@
 +        org.bukkit.entity.Entity entity = this.getBukkitEntity();
 +        if (entity instanceof InventoryHolder) return (InventoryHolder) entity;
 +        return null;
-+    }
+     }
 +
 +    @Override
 +    public int getMaxStackSize() {

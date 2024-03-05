@@ -112,7 +112,7 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
 
         // during world generation, we don't want to run logic for dropping items and xp
         if (this.getHandle().generation && health == 0) {
-            this.getHandle().discard();
+            this.getHandle().discard(null); // Add Bukkit remove cause
             return;
         }
 

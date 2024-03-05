@@ -1,14 +1,19 @@
 --- a/net/minecraft/world/entity/projectile/ShulkerBullet.java
 +++ b/net/minecraft/world/entity/projectile/ShulkerBullet.java
-@@ -30,6 +30,7 @@
+@@ -28,8 +28,12 @@
+ import net.minecraft.world.phys.EntityHitResult;
+ import net.minecraft.world.phys.HitResult;
  import net.minecraft.world.phys.Vec3;
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public class ShulkerBullet extends Projectile {
 +
      private static final double SPEED = 0.15D;
      @Nullable
      private Entity finalTarget;
-@@ -50,16 +51,30 @@
+@@ -50,16 +54,30 @@
      public ShulkerBullet(Level world, LivingEntity owner, Entity target, Direction.Axis axis) {
          this(EntityType.SHULKER_BULLET, world);
          this.setOwner(owner);
@@ -44,7 +49,7 @@
      @Override
      public SoundSource getSoundSource() {
          return SoundSource.HOSTILE;
-@@ -100,8 +115,7 @@
+@@ -100,8 +118,7 @@
      }
  
      @Override
@@ -54,7 +59,7 @@
  
      @Nullable
      private Direction getMoveDirection() {
-@@ -113,73 +127,77 @@
+@@ -113,73 +130,77 @@
      }
  
      private void selectNextMoveDirection(@Nullable Direction.Axis axis) {
@@ -165,7 +170,16 @@
          }
  
          this.hasImpulse = true;
-@@ -197,38 +215,39 @@
+@@ -189,7 +210,7 @@
+     @Override
+     public void checkDespawn() {
+         if (this.level().getDifficulty() == Difficulty.PEACEFUL) {
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+         }
+ 
+     }
+@@ -197,38 +218,39 @@
      @Override
      public void tick() {
          super.tick();
@@ -219,7 +233,7 @@
          } else if (this.finalTarget != null && !this.finalTarget.isRemoved()) {
              if (this.flightSteps > 0) {
                  --this.flightSteps;
-@@ -238,14 +257,16 @@
+@@ -238,14 +260,16 @@
              }
  
              if (this.currentMoveDirection != null) {
@@ -243,7 +257,7 @@
                      }
                  }
              }
-@@ -277,14 +298,16 @@
+@@ -277,14 +301,16 @@
      protected void onHitEntity(EntityHitResult entityHitResult) {
          super.onHitEntity(entityHitResult);
          Entity entity = entityHitResult.getEntity();
@@ -267,7 +281,7 @@
              }
          }
  
-@@ -293,13 +316,13 @@
+@@ -293,19 +319,25 @@
      @Override
      protected void onHitBlock(BlockHitResult blockHitResult) {
          super.onHitBlock(blockHitResult);
@@ -277,13 +291,27 @@
      }
  
      private void destroy() {
-         this.discard();
+-        this.discard();
 -        this.level().gameEvent(GameEvent.ENTITY_DAMAGE, this.position(), GameEvent.Context.of(this));
++        // CraftBukkit start - add Bukkit remove cause
++        this.destroy(null);
++    }
++
++    private void destroy(EntityRemoveEvent.Cause cause) {
++        this.discard(cause);
++        // CraftBukkit end
 +        this.level().gameEvent(GameEvent.ENTITY_DAMAGE, this.position(), GameEvent.Context.of((Entity) this));
      }
  
      @Override
-@@ -315,9 +338,14 @@
+     protected void onHit(HitResult hitResult) {
+         super.onHit(hitResult);
+-        this.destroy();
++        this.destroy(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
+     }
+ 
+     @Override
+@@ -315,10 +347,15 @@
  
      @Override
      public boolean hurt(DamageSource source, float amount) {
@@ -295,11 +323,13 @@
          if (!this.level().isClientSide) {
              this.playSound(SoundEvents.SHULKER_BULLET_HURT, 1.0F, 1.0F);
 -            ((ServerLevel)this.level()).sendParticles(ParticleTypes.CRIT, this.getX(), this.getY(), this.getZ(), 15, 0.2D, 0.2D, 0.2D, 0.0D);
+-            this.destroy();
 +            ((ServerLevel) this.level()).sendParticles(ParticleTypes.CRIT, this.getX(), this.getY(), this.getZ(), 15, 0.2D, 0.2D, 0.2D, 0.0D);
-             this.destroy();
++            this.destroy(EntityRemoveEvent.Cause.DEATH); // CraftBukkit - add Bukkit remove cause
          }
  
-@@ -327,9 +355,10 @@
+         return true;
+@@ -327,9 +364,10 @@
      @Override
      public void recreateFromPacket(ClientboundAddEntityPacket packet) {
          super.recreateFromPacket(packet);

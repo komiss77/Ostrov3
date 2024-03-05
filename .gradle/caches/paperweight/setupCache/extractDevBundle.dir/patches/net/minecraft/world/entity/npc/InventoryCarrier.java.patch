@@ -1,8 +1,13 @@
 --- a/net/minecraft/world/entity/npc/InventoryCarrier.java
 +++ b/net/minecraft/world/entity/npc/InventoryCarrier.java
-@@ -7,27 +7,38 @@
+@@ -6,28 +6,43 @@
+ import net.minecraft.world.entity.item.ItemEntity;
  import net.minecraft.world.item.ItemStack;
  
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
++
  public interface InventoryCarrier {
 +
      String TAG_INVENTORY = "Inventory";
@@ -37,12 +42,13 @@
 -            ItemStack itemStack2 = simpleContainer.addItem(itemStack);
 -            entity.take(item, i - itemStack2.getCount());
 -            if (itemStack2.isEmpty()) {
+-                item.discard();
 +            int i = itemstack.getCount();
 +            ItemStack itemstack1 = inventorysubcontainer.addItem(itemstack);
 +
 +            entity.take(item, i - itemstack1.getCount());
 +            if (itemstack1.isEmpty()) {
-                 item.discard();
++                item.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
              } else {
 -                itemStack.setCount(itemStack2.getCount());
 +                itemstack.setCount(itemstack1.getCount());

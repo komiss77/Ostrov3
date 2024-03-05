@@ -1,10 +1,11 @@
 --- a/net/minecraft/world/entity/vehicle/MinecartTNT.java
 +++ b/net/minecraft/world/entity/vehicle/MinecartTNT.java
-@@ -22,8 +22,12 @@
+@@ -22,8 +22,13 @@
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.material.FluidState;
 +// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.entity.ExplosionPrimeEvent;
 +// CraftBukkit end
  
@@ -13,20 +14,20 @@
      private static final byte EVENT_PRIME = 10;
      public int fuse = -1;
  
-@@ -49,6 +53,12 @@
+@@ -49,6 +54,12 @@
      public void tick() {
          super.tick();
          if (this.fuse > 0) {
 +            // Paper start - Configurable TNT height nerf
 +            if (this.level().paperConfig().fixes.tntEntityHeightNerf.test(v -> this.getY() > v)) {
-+                this.discard();
++                this.discard(EntityRemoveEvent.Cause.OUT_OF_WORLD);
 +                return;
 +            }
 +            // Paper end - Configurable TNT height nerf
              --this.fuse;
              this.level().addParticle(ParticleTypes.SMOKE, this.getX(), this.getY() + 0.5D, this.getZ(), 0.0D, 0.0D, 0.0D);
          } else if (this.fuse == 0) {
-@@ -56,9 +66,10 @@
+@@ -56,9 +67,10 @@
          }
  
          if (this.horizontalCollision) {
@@ -40,7 +41,7 @@
              }
          }
  
-@@ -67,10 +78,14 @@
+@@ -67,10 +79,14 @@
      @Override
      public boolean hurt(DamageSource source, float amount) {
          Entity entity = source.getDirectEntity();
@@ -59,7 +60,7 @@
              }
          }
  
-@@ -79,8 +94,9 @@
+@@ -79,8 +95,9 @@
  
      @Override
      public void destroy(DamageSource source) {
@@ -71,7 +72,7 @@
              this.destroy(this.getDropItem());
          } else {
              if (this.fuse < 0) {
-@@ -97,17 +113,26 @@
+@@ -97,18 +114,27 @@
      }
  
      public void explode(double power) {
@@ -91,6 +92,7 @@
              }
  
 -            this.level().explode(this, damageSource, (ExplosionDamageCalculator)null, this.getX(), this.getY(), this.getZ(), (float)(4.0D + this.random.nextDouble() * 1.5D * d), false, Level.ExplosionInteraction.TNT);
+-            this.discard();
 +            // CraftBukkit start
 +            ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), (float) (4.0D + this.random.nextDouble() * 1.5D * d1), false);
 +            this.level().getCraftServer().getPluginManager().callEvent(event);
@@ -100,10 +102,11 @@
 +            }
 +            this.level().explode(this, damageSource, (ExplosionDamageCalculator) null, this.getX(), this.getY(), this.getZ(), event.getRadius(), event.getFire(), Level.ExplosionInteraction.TNT);
 +            // CraftBukkit end
-             this.discard();
++            this.discard(EntityRemoveEvent.Cause.EXPLODE); // CraftBukkit - add Bukkit remove cause
          }
  
-@@ -116,8 +141,9 @@
+     }
+@@ -116,8 +142,9 @@
      @Override
      public boolean causeFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
          if (fallDistance >= 3.0F) {
@@ -115,7 +118,7 @@
          }
  
          return super.causeFallDamage(fallDistance, damageMultiplier, damageSource);
-@@ -144,9 +170,9 @@
+@@ -144,9 +171,9 @@
      public void primeFuse() {
          this.fuse = 80;
          if (!this.level().isClientSide) {
@@ -127,7 +130,7 @@
              }
          }
  
-@@ -162,12 +188,12 @@
+@@ -162,12 +189,12 @@
  
      @Override
      public float getBlockExplosionResistance(Explosion explosion, BlockGetter world, BlockPos pos, BlockState blockState, FluidState fluidState, float max) {
@@ -142,7 +145,7 @@
      }
  
      @Override
-@@ -187,7 +213,7 @@
+@@ -187,7 +214,7 @@
  
      @Override
      boolean shouldSourceDestroy(DamageSource source) {

@@ -1758,10 +1758,10 @@
 +
 +            voxelshape1 = (VoxelShape) iterator.next();
 +        } while (Shapes.joinIsNotEmpty(voxelshape1, voxelshape, BooleanOp.AND));
- 
++
 +        return true;
 +    }
-+
+ 
 +    // CraftBukkit start - Delegate to teleport(Location)
      public void teleport(double x, double y, double z, float yaw, float pitch) {
 -        this.teleport(x, y, z, yaw, pitch, Collections.emptySet());
@@ -2791,7 +2791,7 @@
                  }
                  break;
              case START_FALL_FLYING:
-@@ -1386,23 +2619,32 @@
+@@ -1386,23 +2619,36 @@
      }
  
      public void addPendingMessage(PlayerChatMessage message) {
@@ -2821,7 +2821,11 @@
  
      public void sendPlayerChatMessage(PlayerChatMessage message, ChatType.Bound params) {
 +        // CraftBukkit start - SPIGOT-7262: if hidden we have to send as disguised message. Query whether we should send at all (but changing this may not be expected).
-+        if (!this.getCraftPlayer().canSee(message.link().sender())) {
++        // Paper start - Do not query the world for players, if they're not in the player list, then they're not in the world - don't query world state
++        // Also, mirror the logic for canSee in terms of "missing" players
++        final ServerPlayer sender = this.server.getPlayerList().getPlayer(message.link().sender());
++        if (sender == null || !this.getCraftPlayer().canSee(sender.getBukkitEntity())) {
++        // Paper end
 +            this.sendDisguisedChatMessage(message.decoratedContent(), params);
 +            return;
 +        }
@@ -2829,7 +2833,7 @@
          this.send(new ClientboundPlayerChatPacket(message.link().sender(), message.link().index(), message.signature(), message.signedBody().pack(this.messageSignatureCache), message.unsignedContent(), message.filterMask(), params.toNetwork(this.player.level().registryAccess())));
          this.addPendingMessage(message);
      }
-@@ -1415,6 +2657,18 @@
+@@ -1415,6 +2661,18 @@
          return this.connection.getRemoteAddress();
      }
  
@@ -2848,7 +2852,7 @@
      public void switchToConfig() {
          this.waitingForSwitchToConfig = true;
          this.removePlayerFromWorld();
-@@ -1429,27 +2683,78 @@
+@@ -1429,27 +2687,78 @@
      @Override
      public void handleInteract(ServerboundInteractPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.serverLevel());
@@ -2941,7 +2945,7 @@
                                  }
                              }
  
-@@ -1458,54 +2763,81 @@
+@@ -1458,54 +2767,81 @@
  
                      @Override
                      public void onInteraction(InteractionHand hand) {
@@ -3038,7 +3042,7 @@
                      }
                  }
                  break;
-@@ -1517,35 +2849,334 @@
+@@ -1517,35 +2853,334 @@
  
      @Override
      public void handleContainerClose(ServerboundContainerClosePacket packet) {
@@ -3382,7 +3386,7 @@
                          this.player.containerMenu.broadcastFullState();
                      } else {
                          this.player.containerMenu.broadcastChanges();
-@@ -1558,15 +3189,56 @@
+@@ -1558,15 +3193,56 @@
  
      @Override
      public void handlePlaceRecipe(ServerboundPlaceRecipePacket packet) {
@@ -3442,7 +3446,7 @@
              }
          }
      }
-@@ -1574,13 +3246,15 @@
+@@ -1574,13 +3250,15 @@
      @Override
      public void handleContainerButtonClick(ServerboundContainerButtonClickPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.serverLevel());
@@ -3461,7 +3465,7 @@
                      this.player.containerMenu.broadcastChanges();
                  }
  
-@@ -1592,31 +3266,78 @@
+@@ -1592,31 +3270,78 @@
      public void handleSetCreativeModeSlot(ServerboundSetCreativeModeSlotPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.serverLevel());
          if (this.player.gameMode.isCreative()) {
@@ -3556,7 +3560,7 @@
              }
          }
  
-@@ -1624,24 +3345,41 @@
+@@ -1624,24 +3349,41 @@
  
      @Override
      public void handleSignUpdate(ServerboundSignUpdatePacket packet) {
@@ -3608,7 +3612,7 @@
          }
  
      }
-@@ -1649,20 +3387,38 @@
+@@ -1649,20 +3391,38 @@
      @Override
      public void handlePlayerAbilities(ServerboundPlayerAbilitiesPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.serverLevel());
@@ -3649,7 +3653,7 @@
          }
      }
  
-@@ -1677,24 +3433,26 @@
+@@ -1677,24 +3437,26 @@
      @Override
      public void handleChatSessionUpdate(ServerboundChatSessionUpdatePacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.serverLevel());
@@ -3689,7 +3693,7 @@
                  }
  
              }
-@@ -1706,7 +3464,7 @@
+@@ -1706,7 +3468,7 @@
          if (!this.waitingForSwitchToConfig) {
              throw new IllegalStateException("Client acknowledged config, but none was requested");
          } else {
@@ -3698,7 +3702,7 @@
          }
      }
  
-@@ -1718,10 +3476,11 @@
+@@ -1718,10 +3480,11 @@
  
      private void resetPlayerChatState(RemoteChatSession session) {
          this.chatSession = session;
@@ -3711,7 +3715,7 @@
          });
      }
  
-@@ -1731,7 +3490,21 @@
+@@ -1731,7 +3494,21 @@
      }
  
      @FunctionalInterface

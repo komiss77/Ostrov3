@@ -96,16 +96,24 @@ public class MenuItem {
         return count;
     }
 
-    public int remove(final Player p) {
+    public int remove(final Player p) { //Iterator не использовать, java.lang.UnsupportedOperationException: Can't change the size of an inventory!
       int count = 0;
       MenuItem mi;
-      final Iterator<ItemStack> ite = p.getInventory().iterator();
-      while (ite.hasNext()) {
-        final ItemStack it = ite.next();
-        mi = MenuItemsManager.fromItemStack(it);
+      //final Iterator<ItemStack> ite = p.getInventory().iterator();
+      //while (ite.hasNext()) {
+      //  final ItemStack it = ite.next();
+      //  mi = MenuItemsManager.fromItemStack(it);
+      //  if (mi!=null && this.id == mi.id) {
+      //    count+= it.getAmount();
+      //    ite.remove(); //java.lang.UnsupportedOperationException: Can't change the size of an inventory!
+     //   }
+     // }
+      final ItemStack[] inv = p.getInventory().getContents();
+      for (int i = 0; i < inv.length; i++) {
+        mi = MenuItemsManager.fromItemStack(inv[i]);
         if (mi!=null && this.id == mi.id) {
-          count+= it.getAmount();
-          ite.remove();
+          count++;
+          p.getInventory().setItem(i, ItemUtils.air);
         }
       }
       return count;

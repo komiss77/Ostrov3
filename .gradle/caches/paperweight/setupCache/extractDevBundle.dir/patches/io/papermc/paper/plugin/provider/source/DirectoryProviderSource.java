@@ -33,7 +33,7 @@ public class DirectoryProviderSource implements ProviderSource<Path, List<Path>>
                 files.add(FILE_PROVIDER_SOURCE.prepareContext(path));
             } catch (IllegalArgumentException ignored) {
                 // Ignore illegal argument exceptions from jar checking
-            } catch (IOException e) {
+            } catch (final Exception e) {
                 LOGGER.error("Error preparing plugin context: " + e.getMessage(), e);
             }
         });

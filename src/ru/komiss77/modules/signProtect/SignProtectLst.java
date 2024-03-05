@@ -154,7 +154,7 @@ public class SignProtectLst implements Initiable, Listener {
         Sign s = SignProtect.findBlockProtection(b);
         if (s!=null) {
           final ProtectionData pd = ProtectionData.of(s);
-          if (pd.isValid()) {
+          if (pd.isValid() && pd.valid!=-1) {
             if (Timer.getTime()-pd.valid<1209600 && pd.isOwner((Player) e.getPlayer())) { //14*24*60*60
               pd.valid = Timer.getTime()+2592000; //30*24*60*60
               SignProtect.updateSign(s, pd); //автообновление срока за 2 недели до конца

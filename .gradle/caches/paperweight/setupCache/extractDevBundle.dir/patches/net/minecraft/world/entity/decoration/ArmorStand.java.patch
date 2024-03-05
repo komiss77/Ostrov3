@@ -22,11 +22,12 @@
  import net.minecraft.world.entity.vehicle.AbstractMinecart;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.Items;
-@@ -41,8 +41,16 @@
+@@ -41,8 +41,17 @@
  import net.minecraft.world.level.material.PushReaction;
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.Vec3;
 +// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.inventory.EquipmentSlot;
 +import org.bukkit.craftbukkit.v1_20_R3.CraftEquipmentSlot;
 +import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
@@ -39,7 +40,7 @@
      public static final int WOBBLE_TIME = 5;
      private static final boolean ENABLE_ARMS = true;
      private static final Rotations DEFAULT_HEAD_POSE = new Rotations(0.0F, 0.0F, 0.0F);
-@@ -71,22 +79,38 @@
+@@ -71,22 +80,38 @@
      public static final EntityDataAccessor<Rotations> DATA_LEFT_LEG_POSE = SynchedEntityData.defineId(ArmorStand.class, EntityDataSerializers.ROTATIONS);
      public static final EntityDataAccessor<Rotations> DATA_RIGHT_LEG_POSE = SynchedEntityData.defineId(ArmorStand.class, EntityDataSerializers.ROTATIONS);
      private static final Predicate<Entity> RIDABLE_MINECARTS = (entity) -> {
@@ -87,7 +88,7 @@
          this.setMaxUpStep(0.0F);
      }
  
-@@ -95,13 +119,21 @@
+@@ -95,13 +120,21 @@
          this.setPos(x, y, z);
      }
  
@@ -113,7 +114,7 @@
      }
  
      private boolean hasPhysics() {
-@@ -116,13 +148,13 @@
+@@ -116,13 +149,13 @@
      @Override
      protected void defineSynchedData() {
          super.defineSynchedData();
@@ -134,7 +135,7 @@
      }
  
      @Override
-@@ -136,63 +168,76 @@
+@@ -136,63 +169,76 @@
      }
  
      @Override
@@ -237,7 +238,7 @@
          nbt.putBoolean("Invisible", this.isInvisible());
          nbt.putBoolean("Small", this.isSmall());
          nbt.putBoolean("ShowArms", this.isShowArms());
-@@ -203,24 +248,28 @@
+@@ -203,24 +249,28 @@
          }
  
          nbt.put("Pose", this.writePose());
@@ -272,7 +273,7 @@
              }
          }
  
-@@ -231,66 +280,85 @@
+@@ -231,66 +281,85 @@
          this.setNoBasePlate(nbt.getBoolean("NoBasePlate"));
          this.setMarker(nbt.getBoolean("Marker"));
          this.noPhysics = !this.hasPhysics();
@@ -390,7 +391,7 @@
              if (this.distanceToSqr(entity) <= 0.2D) {
                  entity.push(this);
              }
-@@ -299,31 +367,34 @@
+@@ -299,31 +368,34 @@
      }
  
      @Override
@@ -436,7 +437,7 @@
                          return InteractionResult.SUCCESS;
                      }
                  }
-@@ -335,41 +406,61 @@
+@@ -335,41 +407,61 @@
          }
      }
  
@@ -522,7 +523,7 @@
                  return false;
              } else {
                  this.setItemSlot(slot, stack.split(1));
-@@ -377,21 +468,34 @@
+@@ -377,21 +469,34 @@
              }
          } else {
              this.setItemSlot(slot, stack);
@@ -561,7 +562,7 @@
                      return false;
                  } else if (source.is(DamageTypeTags.IGNITES_ARMOR_STANDS)) {
                      if (this.isOnFire()) {
-@@ -405,15 +509,18 @@
+@@ -405,15 +510,18 @@
                      this.causeDamage(source, 4.0F);
                      return false;
                  } else {
@@ -587,7 +588,7 @@
                                  return false;
                              }
                          }
-@@ -424,15 +531,16 @@
+@@ -424,15 +532,16 @@
                              this.kill();
                              return true;
                          } else {
@@ -610,7 +611,7 @@
                              }
  
                              return true;
-@@ -462,69 +570,78 @@
+@@ -462,69 +571,78 @@
  
      @Override
      public boolean shouldRenderAtSqrDistance(double distance) {
@@ -718,7 +719,7 @@
      }
  
      @Override
-@@ -560,35 +677,63 @@
+@@ -560,35 +678,63 @@
  
      @Override
      public void tick() {
@@ -800,7 +801,7 @@
          }
  
      }
-@@ -609,8 +754,25 @@
+@@ -609,9 +755,26 @@
          return this.isSmall();
      }
  
@@ -813,6 +814,7 @@
 +
      @Override
      public void kill() {
+-        this.remove(Entity.RemovalReason.KILLED);
 +        // Paper start
 +        kill(true);
 +    }
@@ -823,10 +825,11 @@
 +        org.bukkit.event.entity.EntityDeathEvent event = org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory.callEntityDeathEvent(this, this.drops); // CraftBukkit - call event // Paper - make cancellable
 +        if (event.isCancelled()) return; // Paper - make cancellable
 +        } // Paper
-         this.remove(Entity.RemovalReason.KILLED);
++        this.remove(Entity.RemovalReason.KILLED, EntityRemoveEvent.Cause.DEATH); // CraftBukkit - add Bukkit remove cause
          this.gameEvent(GameEvent.ENTITY_DIE);
      }
-@@ -631,42 +793,42 @@
+ 
+@@ -631,42 +794,42 @@
      }
  
      public void setSmall(boolean small) {
@@ -879,7 +882,7 @@
          }
  
          return value;
-@@ -674,32 +836,38 @@
+@@ -674,32 +837,38 @@
  
      public void setHeadPose(Rotations angle) {
          this.headPose = angle;
@@ -924,7 +927,7 @@
      }
  
      public Rotations getHeadPose() {
-@@ -733,7 +901,7 @@
+@@ -733,7 +902,7 @@
  
      @Override
      public boolean skipAttackInteraction(Entity attacker) {
@@ -933,7 +936,7 @@
      }
  
      @Override
-@@ -759,8 +927,7 @@
+@@ -759,8 +928,7 @@
      }
  
      @Override
@@ -943,7 +946,7 @@
  
      @Override
      public boolean isAffectedByPotions() {
-@@ -769,7 +936,7 @@
+@@ -769,7 +937,7 @@
  
      @Override
      public void onSyncedDataUpdated(EntityDataAccessor<?> data) {
@@ -952,7 +955,7 @@
              this.refreshDimensions();
              this.blocksBuilding = !this.isMarker();
          }
-@@ -788,33 +955,32 @@
+@@ -788,33 +956,32 @@
      }
  
      private EntityDimensions getDimensionsMarker(boolean marker) {
@@ -997,7 +1000,7 @@
          } else {
              return super.getLightProbePosition(tickDelta);
          }
-@@ -829,4 +995,13 @@
+@@ -829,4 +996,13 @@
      public boolean canBeSeenByAnyone() {
          return !this.isInvisible() && !this.isMarker();
      }

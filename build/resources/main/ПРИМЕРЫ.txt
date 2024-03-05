@@ -7,6 +7,11 @@
 
 net.minecraft.world.entity.player.EntityHuman -> net.minecraft.world.entity.player.Player
 
+ComplexEntityPart entityPart = (ComplexEntityPart) entity;
+ComplexLivingEntity parent = entityPart.getParent();
+EnderDragon enderDragon = (EnderDragon) parent;
+enderDragon.setPhase(Phase.FLY_TO_PORTAL);
+
 PlayerInput.get(p, 10, 1, f.econ.loni, amount -> {
 });
 PlayerInput.get(InputButton.InputType.ANVILL, p, value -> {

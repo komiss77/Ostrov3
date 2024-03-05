@@ -287,11 +287,18 @@ import ru.komiss77.Ostrov;
     
     
     
-    
     public static void spawnRandomFirework(final Location loc) {
         final Firework firework = loc.getWorld().spawn(loc, Firework.class);
         final FireworkMeta fireworkMeta = firework.getFireworkMeta();
-        fireworkMeta.addEffect(FireworkEffect.builder().flicker(ApiOstrov.randBoolean()).withColor(Color.fromBGR(ApiOstrov.randInt(0,255), ApiOstrov.randInt(0,255), ApiOstrov.randInt(0,255))).withFade(Color.fromBGR(ApiOstrov.randInt(0,255), ApiOstrov.randInt(0,255), ApiOstrov.randInt(0,255))).with(FireworkEffect.Type.BALL).trail(ApiOstrov.randBoolean()).build());
+        fireworkMeta.addEffect(
+          FireworkEffect.builder()
+            .flicker(ApiOstrov.randBoolean())
+            .withColor(Color.fromBGR(ApiOstrov.randInt(0,255), ApiOstrov.randInt(0,255), ApiOstrov.randInt(0,255)))
+            .withFade(Color.fromBGR(ApiOstrov.randInt(0,255), ApiOstrov.randInt(0,255), ApiOstrov.randInt(0,255)))
+            .with(FireworkEffect.Type.values()[ApiOstrov.randInt(0, FireworkEffect.Type.values().length-1)])//.with(FireworkEffect.Type.BALL)
+            .trail(ApiOstrov.randBoolean())
+            .build()
+        );
         fireworkMeta.setPower(0);
         firework.setFireworkMeta(fireworkMeta);
     }

@@ -804,9 +804,9 @@
 +        if (!this.isDebug() && flag) {
 +            j = this.getGameTime();
 +            gameprofilerfiller.push("blockTicks");
-+            this.blockTicks.tick(j, 65536, this::tickBlock);
++            this.blockTicks.tick(j, paperConfig().environment.maxBlockTicks, this::tickBlock); // Paper - configurable max block ticks
 +            gameprofilerfiller.popPush("fluidTicks");
-+            this.fluidTicks.tick(j, 65536, this::tickFluid);
++            this.fluidTicks.tick(j, paperConfig().environment.maxFluidTicks, this::tickFluid); // Paper - configurable max fluid ticks
 +            gameprofilerfiller.pop();
          }
 +        this.timings.scheduledBlocks.stopTiming(); // Paper
@@ -839,7 +839,7 @@
 -        boolean bl2 = !this.players.isEmpty() || !this.getForcedChunks().isEmpty();
 -        if (bl2) {
 +        gameprofilerfiller.pop();
-+        boolean flag1 = true || !this.players.isEmpty() || !this.getForcedChunks().isEmpty(); // CraftBukkit - this prevents entity cleanup, other issues on servers with no players
++        boolean flag1 = !paperConfig().unsupportedSettings.disableWorldTickingWhenEmpty || !this.players.isEmpty() || !this.getForcedChunks().isEmpty(); // CraftBukkit - this prevents entity cleanup, other issues on servers with no players // Paper - restore this
 +
 +        if (flag1) {
              this.resetEmptyTime();
@@ -1439,11 +1439,11 @@
 +    // Paper start - log detailed entity tick information
 +    // TODO replace with varhandle
 +    static final java.util.concurrent.atomic.AtomicReference<Entity> currentlyTickingEntity = new java.util.concurrent.atomic.AtomicReference<>();
- 
++
 +    public static List<Entity> getCurrentlyTickingEntities() {
 +        Entity ticking = currentlyTickingEntity.get();
 +        List<Entity> ret = java.util.Arrays.asList(ticking == null ? new Entity[0] : new Entity[] { ticking });
-+
+ 
 +        return ret;
      }
 +    // Paper end - log detailed entity tick information
@@ -1730,7 +1730,7 @@
      }
  
      public void addDuringCommandTeleport(ServerPlayer player) {
-@@ -851,35 +1662,82 @@
+@@ -851,52 +1662,132 @@
      }
  
      private void addPlayer(ServerPlayer player) {
@@ -1822,15 +1822,17 @@
          chunk.clearAllBlockEntities();
          chunk.unregisterTickContainerFromLevel(this);
      }
-@@ -888,15 +1746,48 @@
-         player.remove(reason);
-     }
  
+     public void removePlayerImmediately(ServerPlayer player, Entity.RemovalReason reason) {
+-        player.remove(reason);
++        player.remove(reason, null); // CraftBukkit - add Bukkit remove cause
++    }
++
 +    // CraftBukkit start
 +    public boolean strikeLightning(Entity entitylightning) {
 +        return this.strikeLightning(entitylightning, LightningStrikeEvent.Cause.UNKNOWN);
-+    }
-+
+     }
+ 
 +    public boolean strikeLightning(Entity entitylightning, LightningStrikeEvent.Cause cause) {
 +        LightningStrikeEvent lightning = CraftEventFactory.callLightningStrikeEvent((org.bukkit.entity.LightningStrike) entitylightning.getBukkitEntity(), cause);
 +
@@ -2230,7 +2232,7 @@
 +            // left
 +            chunkproviderserver.addRegionTicket(TicketType.START, new ChunkPos(spawn.offset(-radiusInBlocks, 0, z)), 1, Unit.INSTANCE); // level 32
 +        }
-+    }
+     }
 +    public void removeTicketsForSpawn(int radiusInBlocks, BlockPos spawn) {
 +        // In order to respect vanilla behavior, which is ensuring everything but the spawn border can tick, we added tickets
 +        // with level 31 for the non-border spawn chunks
@@ -2262,7 +2264,7 @@
 +            // left
 +            chunkproviderserver.removeRegionTicket(TicketType.START, new ChunkPos(spawn.offset(-radiusInBlocks, 0, z)), 1, Unit.INSTANCE); // level 32
 +        }
-     }
++    }
 +    // Paper end - Configurable Keep Spawn Loaded range per world
  
      public void setDefaultSpawnPos(BlockPos pos, float angle) {

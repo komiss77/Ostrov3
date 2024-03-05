@@ -1,11 +1,12 @@
 --- a/net/minecraft/world/entity/vehicle/VehicleEntity.java
 +++ b/net/minecraft/world/entity/vehicle/VehicleEntity.java
-@@ -13,7 +13,14 @@
+@@ -13,7 +13,15 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.gameevent.GameEvent;
  
 +// CraftBukkit start
 +import org.bukkit.entity.Vehicle;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.vehicle.VehicleDamageEvent;
 +import org.bukkit.event.vehicle.VehicleDestroyEvent;
 +// CraftBukkit end
@@ -15,7 +16,7 @@
      protected static final EntityDataAccessor<Integer> DATA_ID_HURT = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.INT);
      protected static final EntityDataAccessor<Integer> DATA_ID_HURTDIR = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.INT);
      protected static final EntityDataAccessor<Float> DATA_ID_DAMAGE = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.FLOAT);
-@@ -28,17 +35,48 @@
+@@ -28,17 +36,48 @@
              if (this.isInvulnerableTo(source)) {
                  return false;
              } else {
@@ -39,6 +40,7 @@
 -                boolean bl = source.getEntity() instanceof Player && ((Player)source.getEntity()).getAbilities().instabuild;
 -                if ((bl || !(this.getDamage() > 40.0F)) && !this.shouldSourceDestroy(source)) {
 -                    if (bl) {
+-                        this.discard();
 +                boolean flag = source.getEntity() instanceof Player && ((Player) source.getEntity()).getAbilities().instabuild;
 +
 +                if ((flag || this.getDamage() <= 40.0F) && !this.shouldSourceDestroy(source)) {
@@ -52,7 +54,7 @@
 +                            return true;
 +                        }
 +                        // CraftBukkit end
-                         this.discard();
++                        this.discard(EntityRemoveEvent.Cause.DEATH); // CraftBukkit - add Bukkit remove cause
                      }
                  } else {
 +                    // CraftBukkit start
@@ -67,7 +69,7 @@
                      this.destroy(source);
                  }
  
-@@ -56,44 +94,45 @@
+@@ -56,44 +95,45 @@
      public void destroy(Item selfAsItem) {
          this.kill();
          if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {

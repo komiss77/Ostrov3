@@ -18,12 +18,13 @@
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.server.level.ServerLevel;
  import net.minecraft.server.level.ServerPlayer;
-@@ -24,8 +28,12 @@
+@@ -24,8 +28,13 @@
  import net.minecraft.world.level.gameevent.GameEvent;
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.Vec3;
 +// CraftBukkit start
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +// CraftBukkit end
  
  public class LightningBolt extends Entity {
@@ -31,7 +32,7 @@
      private static final int START_LIFE = 2;
      private static final double DAMAGE_RADIUS = 3.0D;
      private static final double DETECTION_RADIUS = 15.0D;
-@@ -37,6 +45,7 @@
+@@ -37,6 +46,7 @@
      private ServerPlayer cause;
      private final Set<Entity> hitEntities = Sets.newHashSet();
      private int blocksSetOnFire;
@@ -39,7 +40,7 @@
  
      public LightningBolt(EntityType<? extends LightningBolt> type, Level world) {
          super(type, world);
-@@ -65,10 +74,11 @@
+@@ -65,10 +75,11 @@
      }
  
      private void powerLightningRod() {
@@ -55,7 +56,7 @@
          }
  
      }
-@@ -76,34 +86,41 @@
+@@ -76,38 +87,45 @@
      @Override
      public void tick() {
          super.tick();
@@ -107,7 +108,12 @@
                      }
                  }
  
-@@ -116,19 +133,22 @@
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+             } else if (this.life < -this.random.nextInt(10)) {
+                 --this.flashes;
+                 this.life = 1;
+@@ -116,19 +134,22 @@
              }
          }
  
@@ -136,7 +142,7 @@
                  }
              }
          }
-@@ -136,102 +156,128 @@
+@@ -136,102 +157,128 @@
      }
  
      private BlockPos getStrikePosition() {

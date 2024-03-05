@@ -1,10 +1,11 @@
 --- a/net/minecraft/world/entity/projectile/WitherSkull.java
 +++ b/net/minecraft/world/entity/projectile/WitherSkull.java
-@@ -20,8 +20,12 @@
+@@ -20,8 +20,13 @@
  import net.minecraft.world.level.material.FluidState;
  import net.minecraft.world.phys.EntityHitResult;
  import net.minecraft.world.phys.HitResult;
 +// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.entity.ExplosionPrimeEvent;
 +// CraftBukkit end
  
@@ -13,7 +14,7 @@
      private static final EntityDataAccessor<Boolean> DATA_DANGEROUS = SynchedEntityData.defineId(WitherSkull.class, EntityDataSerializers.BOOLEAN);
  
      public WitherSkull(EntityType<? extends WitherSkull> type, Level world) {
-@@ -52,33 +56,36 @@
+@@ -52,33 +57,36 @@
          super.onHitEntity(entityHitResult);
          if (!this.level().isClientSide) {
              Entity entity = entityHitResult.getEntity();
@@ -41,7 +42,7 @@
                  }
              } else {
 -                bl = entity.hurt(this.damageSources().magic(), 5.0F);
-+                flag = entity.hurt(this.damageSources().magic(), 5.0F);
++                flag = entity.hurt(this.damageSources().magic().customCausingEntity(this), 5.0F); // Paper - Fire EntityDamageByEntityEvent for unowned wither skulls
              }
  
 -            if (bl && entity instanceof LivingEntity) {
@@ -66,11 +67,12 @@
                  }
              }
  
-@@ -89,7 +96,15 @@
+@@ -89,8 +97,16 @@
      protected void onHit(HitResult hitResult) {
          super.onHit(hitResult);
          if (!this.level().isClientSide) {
 -            this.level().explode(this, this.getX(), this.getY(), this.getZ(), 1.0F, false, Level.ExplosionInteraction.MOB);
+-            this.discard();
 +            // CraftBukkit start
 +            // this.level().explode(this, this.getX(), this.getY(), this.getZ(), 1.0F, false, World.a.MOB);
 +            ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), 1.0F, false);
@@ -80,10 +82,11 @@
 +                this.level().explode(this, this.getX(), this.getY(), this.getZ(), event.getRadius(), event.getFire(), Level.ExplosionInteraction.MOB);
 +            }
 +            // CraftBukkit end
-             this.discard();
++            this.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
          }
  
-@@ -107,15 +122,15 @@
+     }
+@@ -107,15 +123,15 @@
  
      @Override
      protected void defineSynchedData() {

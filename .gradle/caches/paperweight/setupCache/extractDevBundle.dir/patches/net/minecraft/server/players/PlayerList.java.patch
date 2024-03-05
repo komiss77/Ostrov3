@@ -41,7 +41,7 @@
  import net.minecraft.world.level.GameRules;
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.block.Blocks;
-@@ -95,10 +100,29 @@
+@@ -95,10 +100,30 @@
  import net.minecraft.world.scores.DisplaySlot;
  import net.minecraft.world.scores.Objective;
  import net.minecraft.world.scores.PlayerTeam;
@@ -58,6 +58,7 @@
 +import org.bukkit.craftbukkit.v1_20_R3.util.CraftChatMessage;
 +import org.bukkit.craftbukkit.v1_20_R3.util.CraftLocation;
 +import org.bukkit.entity.Player;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.player.PlayerChangedWorldEvent;
 +import org.bukkit.event.player.PlayerJoinEvent;
 +import org.bukkit.event.player.PlayerLoginEvent;
@@ -72,7 +73,7 @@
      public static final File USERBANLIST_FILE = new File("banned-players.json");
      public static final File IPBANLIST_FILE = new File("banned-ips.json");
      public static final File OPLIST_FILE = new File("ops.json");
-@@ -109,14 +133,16 @@
+@@ -109,14 +134,16 @@
      private static final int SEND_PLAYER_INFO_INTERVAL = 600;
      private static final SimpleDateFormat BAN_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
      private final MinecraftServer server;
@@ -96,7 +97,7 @@
      public final PlayerDataStorage playerIo;
      private boolean doWhiteList;
      private final LayeredRegistryAccess<RegistryLayer> registries;
-@@ -127,411 +153,959 @@
+@@ -127,411 +154,959 @@
      private static final boolean ALLOW_LOGOUTIVATOR = false;
      private int sendAllPlayerInfoIn;
  
@@ -469,15 +470,16 @@
  
                  if (!player.isPassenger()) {
 -                    LOGGER.warn("Couldn't reattach entity to player");
+-                    entity.discard();
 +                    PlayerList.LOGGER.warn("Couldn't reattach entity to player");
-                     entity.discard();
++                    entity.discard(null); // CraftBukkit - add Bukkit remove cause
 +                    iterator1 = entity.getIndirectPassengers().iterator();
  
 -                    for(Entity entity3 : entity.getIndirectPassengers()) {
 -                        entity3.discard();
 +                    while (iterator1.hasNext()) {
 +                        entity1 = (Entity) iterator1.next();
-+                        entity1.discard();
++                        entity1.discard(null); // CraftBukkit - add Bukkit remove cause
                      }
                  }
              }
@@ -699,7 +701,7 @@
 +                        }
 +                    }
 +                    // Paper end - Fix villager boat exploit
-+                    entity1.setRemoved(Entity.RemovalReason.UNLOADED_WITH_PLAYER);
++                    entity1.setRemoved(Entity.RemovalReason.UNLOADED_WITH_PLAYER, EntityRemoveEvent.Cause.PLAYER_QUIT); // CraftBukkit - add Bukkit remove cause
                  });
              }
          }
@@ -804,7 +806,7 @@
 +
 +        // Paper start - Fix MC-158900
 +        UserBanListEntry gameprofilebanentry;
-+        if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
++        if (this.bans.isBanned(gameprofile) && (gameprofilebanentry = this.bans.get(gameprofile)) != null) {
 +            // Paper end - Fix MC-158900
 +
 +            ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned.reason", gameprofilebanentry.getReason());
@@ -1278,7 +1280,7 @@
                  }
              }
  
-@@ -539,13 +1113,13 @@
+@@ -539,13 +1114,13 @@
      }
  
      public String[] getPlayerNamesArray() {
@@ -1296,7 +1298,7 @@
      }
  
      public UserBanList getBans() {
-@@ -558,41 +1132,68 @@
+@@ -558,41 +1133,68 @@
  
      public void op(GameProfile profile) {
          this.ops.add(new ServerOpListEntry(profile, this.server.getOperatorUserPermissionLevel(), this.ops.canBypassPlayerLimit(profile)));
@@ -1378,7 +1380,7 @@
      }
  
      public boolean isOp(GameProfile profile) {
-@@ -601,27 +1202,26 @@
+@@ -601,27 +1203,26 @@
  
      @Nullable
      public ServerPlayer getPlayerByName(String name) {
@@ -1422,7 +1424,7 @@
                  }
              }
          }
-@@ -629,10 +1229,25 @@
+@@ -629,10 +1230,25 @@
      }
  
      public void saveAll() {
@@ -1451,7 +1453,7 @@
      }
  
      public UserWhiteList getWhiteList() {
-@@ -651,18 +1266,22 @@
+@@ -651,18 +1267,22 @@
          return this.ops.getUserList();
      }
  
@@ -1481,7 +1483,7 @@
          }
  
          player.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.LEVEL_CHUNKS_LOAD_START, 0.0F));
-@@ -671,8 +1290,16 @@
+@@ -671,8 +1291,16 @@
  
      public void sendAllPlayerInfo(ServerPlayer player) {
          player.inventoryMenu.sendAllDataToRemote();
@@ -1499,7 +1501,7 @@
      }
  
      public int getPlayerCount() {
-@@ -688,15 +1315,19 @@
+@@ -688,15 +1316,19 @@
      }
  
      public void setUsingWhiteList(boolean whitelistEnabled) {
@@ -1522,7 +1524,7 @@
              }
          }
  
-@@ -725,101 +1356,168 @@
+@@ -725,101 +1357,168 @@
      }
  
      public void removeAll() {
@@ -1735,7 +1737,7 @@
              }
          }
  
-@@ -827,11 +1525,14 @@
+@@ -827,11 +1526,14 @@
  
      public void setSimulationDistance(int simulationDistance) {
          this.simulationDistance = simulationDistance;
@@ -1754,7 +1756,7 @@
              }
          }
  
-@@ -843,7 +1544,7 @@
+@@ -843,7 +1545,7 @@
  
      @Nullable
      public ServerPlayer getPlayer(UUID uuid) {
@@ -1763,7 +1765,7 @@
      }
  
      public boolean canBypassPlayerLimit(GameProfile profile) {
-@@ -851,16 +1552,45 @@
+@@ -851,16 +1553,45 @@
      }
  
      public void reloadResources() {

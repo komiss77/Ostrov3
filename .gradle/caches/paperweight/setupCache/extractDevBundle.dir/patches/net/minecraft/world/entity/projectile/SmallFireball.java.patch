@@ -1,10 +1,13 @@
 --- a/net/minecraft/world/entity/projectile/SmallFireball.java
 +++ b/net/minecraft/world/entity/projectile/SmallFireball.java
-@@ -12,14 +12,21 @@
+@@ -12,14 +12,24 @@
  import net.minecraft.world.phys.BlockHitResult;
  import net.minecraft.world.phys.EntityHitResult;
  import net.minecraft.world.phys.HitResult;
-+import org.bukkit.event.entity.EntityCombustByEntityEvent; // CraftBukkit
++// CraftBukkit start
++import org.bukkit.event.entity.EntityCombustByEntityEvent;
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public class SmallFireball extends Fireball {
 +
@@ -22,7 +25,7 @@
      }
  
      public SmallFireball(Level world, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-@@ -31,13 +38,21 @@
+@@ -31,13 +41,21 @@
          super.onHitEntity(entityHitResult);
          if (!this.level().isClientSide) {
              Entity entity = entityHitResult.getEntity();
@@ -49,7 +52,7 @@
              }
  
          }
-@@ -48,10 +63,12 @@
+@@ -48,10 +66,12 @@
          super.onHitBlock(blockHitResult);
          if (!this.level().isClientSide) {
              Entity entity = this.getOwner();
@@ -66,3 +69,12 @@
                  }
              }
  
+@@ -62,7 +82,7 @@
+     protected void onHit(HitResult hitResult) {
+         super.onHit(hitResult);
+         if (!this.level().isClientSide) {
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
+         }
+ 
+     }

@@ -1,10 +1,13 @@
 package ru.komiss77.modules.player.profile;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import ru.komiss77.Ostrov;
 import ru.komiss77.enums.Game;
 import ru.komiss77.enums.ServerType;
+import ru.komiss77.events.BsignLocalArenaClick;
 import ru.komiss77.modules.games.ArenaInfo;
 import ru.komiss77.modules.games.GM;
 import ru.komiss77.modules.games.GameInfo;
@@ -61,13 +64,16 @@ public class GameMenu implements InventoryProvider {
                         if (e.isLeftClick()) {
                             final ArenaInfo ai = gi.arenas.get(0);
                             if (ai!=null) {
-                                if (game == GM.GAME) {
-                                    p.sendMessage("§6Вы и так уже на этом сервере!");
-                                    return;
+                                if (ai.server.equalsIgnoreCase(Ostrov.MOT_D)) {//if (game == GM.GAME) { //уже на этом сервере
+                                    //p.sendMessage("§6Вы и так уже на этом сервере!");
+                                    Bukkit.getPluginManager().callEvent(new BsignLocalArenaClick( p, ai.arenaName ) );
+                                } else {
+                                  p.performCommand("server "+ai.server);
                                 }
-                                p.performCommand("server "+ai.server);
                             }
-                        } else op.menu.openArenaMenu(p, game);
+                        } else if (e.isRightClick()) {
+                          op.menu.openArenaMenu(p, game);
+                        }
                     }));
                 }
             }

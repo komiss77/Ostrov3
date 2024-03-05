@@ -15,12 +15,13 @@
  import net.minecraft.core.particles.ParticleOptions;
  import net.minecraft.core.particles.ParticleTypes;
  import net.minecraft.core.registries.BuiltInRegistries;
-@@ -27,8 +30,12 @@
+@@ -27,8 +30,13 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.material.PushReaction;
  import org.slf4j.Logger;
 +import org.bukkit.craftbukkit.v1_20_R3.entity.CraftLivingEntity;
 +import org.bukkit.entity.LivingEntity;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +// CraftBukkit end
  
  public class AreaEffectCloud extends Entity implements TraceableEntity {
@@ -28,7 +29,7 @@
      private static final Logger LOGGER = LogUtils.getLogger();
      private static final int TIME_BETWEEN_APPLICATIONS = 5;
      private static final EntityDataAccessor<Float> DATA_RADIUS = SynchedEntityData.defineId(AreaEffectCloud.class, EntityDataSerializers.FLOAT);
-@@ -41,23 +48,29 @@
+@@ -41,23 +49,29 @@
      public static final float DEFAULT_WIDTH = 6.0F;
      public static final float HEIGHT = 0.5F;
      private static final String TAG_EFFECTS = "effects";
@@ -65,7 +66,7 @@
          this.noPhysics = true;
      }
  
-@@ -68,30 +81,31 @@
+@@ -68,30 +82,31 @@
  
      @Override
      protected void defineSynchedData() {
@@ -107,7 +108,7 @@
      }
  
      public void setPotion(Potion potion) {
-@@ -104,9 +118,9 @@
+@@ -104,9 +119,9 @@
  
      public void updateColor() {
          if (this.potion == Potions.EMPTY && this.effects.isEmpty()) {
@@ -119,7 +120,7 @@
          }
  
      }
-@@ -120,28 +134,28 @@
+@@ -120,28 +135,28 @@
      }
  
      public int getColor() {
@@ -154,7 +155,7 @@
      }
  
      public int getDuration() {
-@@ -152,52 +166,68 @@
+@@ -152,72 +167,89 @@
          this.duration = duration;
      }
  
@@ -164,7 +165,7 @@
 +        super.inactiveTick();
 +
 +        if (this.tickCount >= this.waitTime + this.duration) {
-+            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
 +            return;
 +        }
 +    }
@@ -253,7 +254,8 @@
              }
          } else {
              if (this.tickCount >= this.waitTime + this.duration) {
-@@ -205,12 +235,13 @@
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
                  return;
              }
  
@@ -271,7 +273,15 @@
                  return;
              }
  
-@@ -226,35 +257,59 @@
+             if (this.radiusPerTick != 0.0F) {
+                 f += this.radiusPerTick;
+                 if (f < 0.5F) {
+-                    this.discard();
++                    this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+                     return;
+                 }
+ 
+@@ -226,42 +258,66 @@
  
              if (this.tickCount % 5 == 0) {
                  this.victims.entrySet().removeIf((entry) -> {
@@ -349,7 +359,24 @@
                                          }
                                      }
  
-@@ -317,18 +372,19 @@
+                                     if (this.radiusOnUse != 0.0F) {
+                                         f += this.radiusOnUse;
+                                         if (f < 0.5F) {
+-                                            this.discard();
++                                            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+                                             return;
+                                         }
+ 
+@@ -271,7 +327,7 @@
+                                     if (this.durationOnUse != 0) {
+                                         this.duration += this.durationOnUse;
+                                         if (this.duration <= 0) {
+-                                            this.discard();
++                                            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+                                             return;
+                                         }
+                                     }
+@@ -317,18 +373,19 @@
          this.waitTime = waitTime;
      }
  
@@ -374,7 +401,7 @@
              }
          }
  
-@@ -351,9 +407,9 @@
+@@ -351,9 +408,9 @@
  
          if (nbt.contains("Particle", 8)) {
              try {
@@ -387,7 +414,7 @@
              }
          }
  
-@@ -366,13 +422,15 @@
+@@ -366,13 +423,15 @@
          }
  
          if (nbt.contains("effects", 9)) {
@@ -408,7 +435,7 @@
                  }
              }
          }
-@@ -403,20 +461,23 @@
+@@ -403,20 +462,23 @@
          }
  
          if (!this.effects.isEmpty()) {

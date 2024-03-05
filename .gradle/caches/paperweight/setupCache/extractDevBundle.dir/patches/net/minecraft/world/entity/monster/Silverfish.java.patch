@@ -1,11 +1,12 @@
 --- a/net/minecraft/world/entity/monster/Silverfish.java
 +++ b/net/minecraft/world/entity/monster/Silverfish.java
-@@ -34,7 +34,12 @@
+@@ -34,7 +34,13 @@
  import net.minecraft.world.level.block.state.BlockState;
  import org.joml.Vector3f;
  
 +// CraftBukkit start
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +// CraftBukkit end
 +
  public class Silverfish extends Monster {
@@ -13,7 +14,7 @@
      @Nullable
      private Silverfish.SilverfishWakeUpFriendsGoal friendsGoal;
  
-@@ -50,7 +55,7 @@
+@@ -50,7 +56,7 @@
          this.goalSelector.addGoal(3, this.friendsGoal);
          this.goalSelector.addGoal(4, new MeleeAttackGoal(this, 1.0D, false));
          this.goalSelector.addGoal(5, new Silverfish.SilverfishMergeWithStoneGoal(this));
@@ -22,7 +23,7 @@
          this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
      }
  
-@@ -120,8 +125,9 @@
+@@ -120,8 +126,9 @@
  
      public static boolean checkSilverfishSpawnRules(EntityType<Silverfish> type, LevelAccessor world, MobSpawnType spawnReason, BlockPos pos, RandomSource random) {
          if (checkAnyLightMonsterSpawnRules(type, world, spawnReason, pos, random)) {
@@ -34,7 +35,7 @@
          } else {
              return false;
          }
-@@ -137,7 +143,69 @@
+@@ -137,7 +144,69 @@
          return new Vector3f(0.0F, dimensions.height - 0.0625F * scaleFactor, 0.0F);
      }
  
@@ -105,7 +106,7 @@
          @Nullable
          private Direction selectedDirection;
          private boolean doMerge;
-@@ -154,12 +222,14 @@
+@@ -154,12 +223,14 @@
              } else if (!this.mob.getNavigation().isDone()) {
                  return false;
              } else {
@@ -126,7 +127,7 @@
                          this.doMerge = true;
                          return true;
                      }
-@@ -180,11 +250,17 @@
+@@ -180,69 +251,22 @@
              if (!this.doMerge) {
                  super.start();
              } else {
@@ -135,24 +136,13 @@
 -                BlockState blockState = levelAccessor.getBlockState(blockPos);
 -                if (InfestedBlock.isCompatibleHostBlock(blockState)) {
 -                    levelAccessor.setBlock(blockPos, InfestedBlock.infestedStateByHost(blockState), 3);
-+                Level world = this.mob.level();
-+                BlockPos blockposition = BlockPos.containing(this.mob.getX(), this.mob.getY() + 0.5D, this.mob.getZ()).relative(this.selectedDirection);
-+                BlockState iblockdata = world.getBlockState(blockposition);
-+
-+                if (InfestedBlock.isCompatibleHostBlock(iblockdata)) {
-+                    // CraftBukkit start
-+                    if (!CraftEventFactory.callEntityChangeBlockEvent(this.mob, blockposition, InfestedBlock.infestedStateByHost(iblockdata))) {
-+                        return;
-+                    }
-+                    // CraftBukkit end
-+                    world.setBlock(blockposition, InfestedBlock.infestedStateByHost(iblockdata), 3);
-                     this.mob.spawnAnim();
-                     this.mob.discard();
-                 }
-@@ -192,57 +268,4 @@
-             }
-         }
-     }
+-                    this.mob.spawnAnim();
+-                    this.mob.discard();
+-                }
+-
+-            }
+-        }
+-    }
 -
 -    static class SilverfishWakeUpFriendsGoal extends Goal {
 -        private final Silverfish silverfish;
@@ -194,16 +184,28 @@
 -                                } else {
 -                                    level.setBlock(blockPos2, ((InfestedBlock)block).hostStateByInfested(level.getBlockState(blockPos2)), 3);
 -                                }
--
++                Level world = this.mob.level();
++                BlockPos blockposition = BlockPos.containing(this.mob.getX(), this.mob.getY() + 0.5D, this.mob.getZ()).relative(this.selectedDirection);
++                BlockState iblockdata = world.getBlockState(blockposition);
+ 
 -                                if (randomSource.nextBoolean()) {
 -                                    return;
 -                                }
 -                            }
 -                        }
--                    }
--                }
++                if (InfestedBlock.isCompatibleHostBlock(iblockdata)) {
++                    // CraftBukkit start
++                    if (!CraftEventFactory.callEntityChangeBlockEvent(this.mob, blockposition, InfestedBlock.infestedStateByHost(iblockdata))) {
++                        return;
+                     }
++                    // CraftBukkit end
++                    world.setBlock(blockposition, InfestedBlock.infestedStateByHost(iblockdata), 3);
++                    this.mob.spawnAnim();
++                    this.mob.discard(EntityRemoveEvent.Cause.ENTER_BLOCK); // CraftBukkit - add Bukkit remove cause
+                 }
 -            }
--
--        }
--    }
+ 
++            }
+         }
+     }
  }

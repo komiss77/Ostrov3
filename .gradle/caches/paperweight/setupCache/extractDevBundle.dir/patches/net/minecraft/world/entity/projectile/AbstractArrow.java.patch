@@ -17,11 +17,12 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.enchantment.EnchantmentHelper;
-@@ -44,8 +47,12 @@
+@@ -44,8 +47,13 @@
  import net.minecraft.world.phys.HitResult;
  import net.minecraft.world.phys.Vec3;
  import net.minecraft.world.phys.shapes.VoxelShape;
 +import org.bukkit.event.entity.EntityCombustByEntityEvent;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.player.PlayerPickupArrowEvent;
 +// CraftBukkit end
  
@@ -30,7 +31,7 @@
      private static final double ARROW_BASE_DAMAGE = 2.0D;
      private static final EntityDataAccessor<Byte> ID_FLAGS = SynchedEntityData.defineId(AbstractArrow.class, EntityDataSerializers.BYTE);
      private static final EntityDataAccessor<Byte> PIERCE_LEVEL = SynchedEntityData.defineId(AbstractArrow.class, EntityDataSerializers.BYTE);
-@@ -56,20 +63,35 @@
+@@ -56,20 +64,35 @@
      private BlockState lastState;
      public boolean inGround;
      protected int inGroundTime;
@@ -69,7 +70,7 @@
          this.pickupItemStack = stack.copy();
          if (stack.hasCustomHoverName()) {
              this.setCustomName(stack.getHoverName());
-@@ -83,7 +105,7 @@
+@@ -83,7 +106,7 @@
      }
  
      protected AbstractArrow(EntityType<? extends AbstractArrow> type, LivingEntity owner, Level world, ItemStack stack) {
@@ -78,7 +79,7 @@
          this.setOwner(owner);
          if (owner instanceof Player) {
              this.pickup = AbstractArrow.Pickup.ALLOWED;
-@@ -97,19 +119,20 @@
+@@ -97,19 +120,20 @@
  
      @Override
      public boolean shouldRenderAtSqrDistance(double distance) {
@@ -106,7 +107,7 @@
      }
  
      @Override
-@@ -133,25 +156,33 @@
+@@ -133,25 +157,33 @@
      @Override
      public void tick() {
          super.tick();
@@ -153,7 +154,7 @@
                          this.inGround = true;
                          break;
                      }
-@@ -163,12 +194,12 @@
+@@ -163,12 +195,12 @@
              --this.shakeTime;
          }
  
@@ -169,7 +170,7 @@
                  this.startFalling();
              } else if (!this.level().isClientSide) {
                  this.tickDespawn();
-@@ -176,94 +207,118 @@
+@@ -176,94 +208,118 @@
  
              ++this.inGroundTime;
          } else {
@@ -334,16 +335,18 @@
          this.life = 0;
      }
  
-@@ -278,7 +333,7 @@
+@@ -278,8 +334,8 @@
  
      protected void tickDespawn() {
          ++this.life;
 -        if (this.life >= 1200) {
+-            this.discard();
 +        if (this.life >= (pickup == Pickup.CREATIVE_ONLY ? this.level().paperConfig().entities.spawning.creativeArrowDespawnRate.value() : (pickup == Pickup.DISALLOWED ? this.level().paperConfig().entities.spawning.nonPlayerArrowDespawnRate.value() : ((this instanceof ThrownTrident) ? this.level().spigotConfig.tridentDespawnRate : this.level().spigotConfig.arrowDespawnRate)))) { // Spigot // Paper - Configurable non-player arrow despawn rate; TODO: Extract this to init?
-             this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
          }
  
-@@ -299,8 +354,9 @@
+     }
+@@ -299,8 +355,9 @@
      protected void onHitEntity(EntityHitResult entityHitResult) {
          super.onHitEntity(entityHitResult);
          Entity entity = entityHitResult.getEntity();
@@ -355,7 +358,16 @@
          if (this.getPierceLevel() > 0) {
              if (this.piercingIgnoreEntityIds == null) {
                  this.piercingIgnoreEntityIds = new IntOpenHashSet(5);
-@@ -319,67 +375,80 @@
+@@ -311,7 +368,7 @@
+             }
+ 
+             if (this.piercingIgnoreEntityIds.size() >= this.getPierceLevel() + 1) {
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
+                 return;
+             }
+ 
+@@ -319,79 +376,92 @@
          }
  
          if (this.isCritArrow()) {
@@ -469,9 +481,11 @@
                      }
                  }
              }
-@@ -388,10 +457,10 @@
+ 
+             this.playSound(this.soundEvent, 1.0F, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
              if (this.getPierceLevel() <= 0) {
-                 this.discard();
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
              }
 -        } else if (bl2) {
 +        } else if (flag1) {
@@ -482,7 +496,16 @@
              this.setDeltaMovement(this.getDeltaMovement().scale(-0.1D));
              this.setYRot(this.getYRot() + 180.0F);
              this.yRotO += 180.0F;
-@@ -408,7 +477,8 @@
+@@ -400,7 +470,7 @@
+                     this.spawnAtLocation(this.getPickupItem(), 0.1F);
+                 }
+ 
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
+             }
+         }
+ 
+@@ -408,7 +478,8 @@
  
      public void deflect() {
          float f = this.random.nextFloat() * 360.0F;
@@ -492,7 +515,7 @@
          this.setYRot(this.getYRot() + f);
          this.yRotO += f;
      }
-@@ -417,15 +487,17 @@
+@@ -417,15 +488,17 @@
      protected void onHitBlock(BlockHitResult blockHitResult) {
          this.lastState = this.level().getBlockState(blockHitResult.getBlockPos());
          super.onHitBlock(blockHitResult);
@@ -515,7 +538,7 @@
          this.setSoundEvent(SoundEvents.ARROW_HIT);
          this.setShotFromCrossbow(false);
          this.resetPiercedEntities();
-@@ -439,8 +511,7 @@
+@@ -439,8 +512,7 @@
          return this.soundEvent;
      }
  
@@ -525,7 +548,7 @@
  
      @Nullable
      protected EntityHitResult findHitEntity(Vec3 currentPosition, Vec3 nextPosition) {
-@@ -455,14 +526,14 @@
+@@ -455,14 +527,14 @@
      @Override
      public void addAdditionalSaveData(CompoundTag nbt) {
          super.addAdditionalSaveData(nbt);
@@ -543,7 +566,7 @@
          nbt.putDouble("damage", this.baseDamage);
          nbt.putBoolean("crit", this.isCritArrow());
          nbt.putByte("PierceLevel", this.getPierceLevel());
-@@ -489,7 +560,7 @@
+@@ -489,7 +561,7 @@
          this.setCritArrow(nbt.getBoolean("crit"));
          this.setPierceLevel(nbt.getByte("PierceLevel"));
          if (nbt.contains("SoundEvent", 8)) {
@@ -552,7 +575,7 @@
          }
  
          this.setShotFromCrossbow(nbt.getBoolean("ShotFromCrossbow"));
-@@ -503,7 +574,7 @@
+@@ -503,7 +575,7 @@
      public void setOwner(@Nullable Entity entity) {
          super.setOwner(entity);
          if (entity instanceof Player) {
@@ -561,7 +584,7 @@
          }
  
      }
-@@ -511,7 +582,22 @@
+@@ -511,9 +583,24 @@
      @Override
      public void playerTouch(Player player) {
          if (!this.level().isClientSide && (this.inGround || this.isNoPhysics()) && this.shakeTime <= 0) {
@@ -583,9 +606,12 @@
 +            if ((this.pickup == AbstractArrow.Pickup.ALLOWED && player.getInventory().add(itemstack)) || (this.pickup == AbstractArrow.Pickup.CREATIVE_ONLY && player.getAbilities().instabuild)) {
 +                // CraftBukkit end
                  player.take(this, 1);
-                 this.discard();
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
              }
-@@ -574,39 +660,43 @@
+ 
+         }
+@@ -574,39 +661,43 @@
      }
  
      public void setPierceLevel(byte level) {
@@ -640,7 +666,7 @@
          }
  
          if (j > 0) {
-@@ -629,11 +719,7 @@
+@@ -629,11 +720,7 @@
      }
  
      public boolean isNoPhysics() {
@@ -653,7 +679,7 @@
      }
  
      public void setShotFromCrossbow(boolean shotFromCrossbow) {
-@@ -641,9 +727,10 @@
+@@ -641,9 +728,10 @@
      }
  
      public static enum Pickup {

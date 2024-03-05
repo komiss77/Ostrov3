@@ -18,12 +18,13 @@
  import net.minecraft.world.level.Level;
  import net.minecraft.world.level.ServerLevelAccessor;
  import net.minecraft.world.level.block.Blocks;
-@@ -64,7 +67,13 @@
+@@ -64,7 +67,14 @@
  import net.minecraft.world.phys.Vec3;
  import org.joml.Vector3f;
  
 +// CraftBukkit start;
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.entity.EntityTargetEvent;
 +// CraftBukkit end
 +
@@ -32,7 +33,7 @@
      private static final EntityDataAccessor<Integer> UNHAPPY_COUNTER = SynchedEntityData.defineId(Panda.class, EntityDataSerializers.INT);
      private static final EntityDataAccessor<Integer> SNEEZE_COUNTER = SynchedEntityData.defineId(Panda.class, EntityDataSerializers.INT);
      private static final EntityDataAccessor<Integer> EAT_COUNTER = SynchedEntityData.defineId(Panda.class, EntityDataSerializers.INT);
-@@ -90,9 +99,10 @@
+@@ -90,9 +100,10 @@
      private float rollAmount;
      private float rollAmountO;
      Panda.PandaLookAtPlayerGoal lookAtPlayerGoal;
@@ -46,7 +47,7 @@
      };
  
      public Panda(EntityType<? extends Panda> type, Level world) {
-@@ -106,20 +116,17 @@
+@@ -106,20 +117,17 @@
  
      @Override
      public boolean canTakeItem(ItemStack stack) {
@@ -72,7 +73,7 @@
      }
  
      public boolean isSneezing() {
-@@ -131,6 +138,7 @@
+@@ -131,6 +139,7 @@
      }
  
      public void sit(boolean sitting) {
@@ -80,7 +81,7 @@
          this.setFlag(8, sitting);
      }
  
-@@ -143,19 +151,19 @@
+@@ -143,19 +152,19 @@
      }
  
      public boolean isEating() {
@@ -104,7 +105,7 @@
      }
  
      public void sneeze(boolean sneezing) {
-@@ -167,15 +175,15 @@
+@@ -167,15 +176,15 @@
      }
  
      public int getSneezeCounter() {
@@ -123,7 +124,7 @@
      }
  
      public void setMainGene(Panda.Gene gene) {
-@@ -183,11 +191,11 @@
+@@ -183,11 +192,11 @@
              gene = Panda.Gene.getRandom(this.random);
          }
  
@@ -137,7 +138,7 @@
      }
  
      public void setHiddenGene(Panda.Gene gene) {
-@@ -195,7 +203,7 @@
+@@ -195,7 +204,7 @@
              gene = Panda.Gene.getRandom(this.random);
          }
  
@@ -146,7 +147,7 @@
      }
  
      public boolean isRolling() {
-@@ -209,24 +217,25 @@
+@@ -209,24 +218,25 @@
      @Override
      protected void defineSynchedData() {
          super.defineSynchedData();
@@ -182,7 +183,7 @@
          }
  
      }
-@@ -248,17 +257,19 @@
+@@ -248,17 +258,19 @@
      @Nullable
      @Override
      public AgeableMob getBreedOffspring(ServerLevel world, AgeableMob entity) {
@@ -208,7 +209,7 @@
      }
  
      @Override
-@@ -266,7 +277,7 @@
+@@ -266,7 +278,7 @@
          this.goalSelector.addGoal(0, new FloatGoal(this));
          this.goalSelector.addGoal(2, new Panda.PandaPanicGoal(this, 2.0D));
          this.goalSelector.addGoal(2, new Panda.PandaBreedGoal(this, 1.0D));
@@ -217,7 +218,7 @@
          this.goalSelector.addGoal(4, new TemptGoal(this, 1.0D, Ingredient.of(Blocks.BAMBOO.asItem()), false));
          this.goalSelector.addGoal(6, new Panda.PandaAvoidGoal<>(this, Player.class, 8.0F, 2.0D, 2.0D));
          this.goalSelector.addGoal(6, new Panda.PandaAvoidGoal<>(this, Monster.class, 4.0F, 2.0D, 2.0D));
-@@ -279,11 +290,11 @@
+@@ -279,11 +291,11 @@
          this.goalSelector.addGoal(12, new Panda.PandaRollGoal(this));
          this.goalSelector.addGoal(13, new FollowParentGoal(this, 1.25D));
          this.goalSelector.addGoal(14, new WaterAvoidingRandomStrollGoal(this, 1.0D));
@@ -231,7 +232,7 @@
      }
  
      public Panda.Gene getVariant() {
-@@ -342,15 +353,16 @@
+@@ -342,15 +354,16 @@
              }
          }
  
@@ -252,7 +253,7 @@
              }
  
              if (this.getUnhappyCounter() == 29 || this.getUnhappyCounter() == 14) {
-@@ -420,17 +432,19 @@
+@@ -420,17 +433,19 @@
  
      private void addEatingParticles() {
          if (this.getEatCounter() % 5 == 0) {
@@ -282,7 +283,7 @@
              }
          }
  
-@@ -484,16 +498,18 @@
+@@ -484,16 +499,18 @@
              this.roll(false);
          } else {
              if (!this.level().isClientSide) {
@@ -308,7 +309,7 @@
                  }
              }
  
-@@ -501,30 +517,40 @@
+@@ -501,31 +518,41 @@
      }
  
      private void afterSneeze() {
@@ -355,11 +356,13 @@
 +            this.setItemSlot(EquipmentSlot.MAINHAND, itemstack);
              this.setGuaranteedDrop(EquipmentSlot.MAINHAND);
 -            this.take(item, itemStack.getCount());
+-            item.discard();
 +            this.take(item, itemstack.getCount());
-             item.discard();
++            item.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
          }
  
-@@ -542,15 +568,16 @@
+     }
+@@ -542,15 +569,16 @@
      @Nullable
      @Override
      public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType spawnReason, @Nullable SpawnGroupData entityData, @Nullable CompoundTag entityNbt) {
@@ -380,7 +383,7 @@
      }
  
      public void setGeneFromParents(Panda mother, @Nullable Panda father) {
-@@ -590,7 +617,7 @@
+@@ -590,7 +618,7 @@
          }
  
          if (this.isLazy()) {
@@ -389,7 +392,7 @@
          }
  
      }
-@@ -606,23 +633,25 @@
+@@ -606,23 +634,25 @@
  
      @Override
      public InteractionResult mobInteract(Player player, InteractionHand hand) {
@@ -421,7 +424,7 @@
              } else {
                  if (this.level().isClientSide || this.isSitting() || this.isInWater()) {
                      return InteractionResult.PASS;
-@@ -630,13 +659,16 @@
+@@ -630,13 +660,16 @@
  
                  this.tryToSit();
                  this.eat(true);
@@ -443,7 +446,7 @@
              }
  
              return InteractionResult.SUCCESS;
-@@ -648,11 +680,7 @@
+@@ -648,11 +681,7 @@
      @Nullable
      @Override
      protected SoundEvent getAmbientSound() {
@@ -456,7 +459,7 @@
      }
  
      @Override
-@@ -690,14 +718,26 @@
+@@ -690,14 +719,26 @@
          return new Vector3f(0.0F, dimensions.height - (this.isBaby() ? 0.4375F : 0.0F) * scaleFactor, 0.0F);
      }
  
@@ -490,7 +493,7 @@
  
          public static final StringRepresentable.EnumCodec<Panda.Gene> CODEC = StringRepresentable.fromEnum(Panda.Gene::values);
          private static final IntFunction<Panda.Gene> BY_ID = ByIdMap.continuous(Panda.Gene::getId, values(), ByIdMap.OutOfBoundsStrategy.ZERO);
-@@ -706,10 +746,10 @@
+@@ -706,10 +747,10 @@
          private final String name;
          private final boolean isRecessive;
  
@@ -505,7 +508,7 @@
          }
  
          public int getId() {
-@@ -726,68 +766,51 @@
+@@ -726,68 +767,51 @@
          }
  
          static Panda.Gene getVariantFromGenes(Panda.Gene mainGene, Panda.Gene hiddenGene) {
@@ -594,7 +597,7 @@
          private final Panda panda;
          private int unhappyCooldown;
  
-@@ -804,8 +827,9 @@
+@@ -804,8 +828,9 @@
                          this.panda.setUnhappyCounter(32);
                          this.unhappyCooldown = this.panda.tickCount + 600;
                          if (this.panda.isEffectiveAi()) {
@@ -606,7 +609,7 @@
                          }
                      }
  
-@@ -819,15 +843,15 @@
+@@ -819,15 +844,15 @@
          }
  
          private boolean canFindBamboo() {
@@ -630,7 +633,7 @@
                                  return true;
                              }
                          }
-@@ -839,34 +863,104 @@
+@@ -839,34 +864,104 @@
          }
      }
  
@@ -717,8 +720,8 @@
 +                Panda.this.getNavigation().moveTo((Entity) list.get(0), 1.2000000476837158D);
 +            } else if (!Panda.this.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()) {
 +                Panda.this.tryToSit();
-+            }
-+
+             }
+ 
 +            this.cooldown = 0;
 +        }
 +
@@ -734,8 +737,8 @@
 +                int i = Panda.this.isLazy() ? Panda.this.random.nextInt(50) + 10 : Panda.this.random.nextInt(150) + 10;
 +
 +                this.cooldown = Panda.this.tickCount + i * 20;
-             }
- 
++            }
++
 +            Panda.this.sit(false);
          }
      }
@@ -746,7 +749,7 @@
          private final Panda panda;
          private int cooldown;
  
-@@ -881,11 +975,7 @@
+@@ -881,11 +976,7 @@
  
          @Override
          public boolean canContinueToUse() {
@@ -759,7 +762,7 @@
          }
  
          @Override
-@@ -901,7 +991,32 @@
+@@ -901,7 +992,32 @@
          }
      }
  
@@ -793,7 +796,7 @@
          private final Panda panda;
  
          public PandaLookAtPlayerGoal(Panda panda, Class<? extends LivingEntity> targetType, float range) {
-@@ -927,7 +1042,7 @@
+@@ -927,7 +1043,7 @@
                      if (this.lookAtType == Player.class) {
                          this.lookAt = this.mob.level().getNearestPlayer(this.lookAtContext, this.mob, this.mob.getX(), this.mob.getEyeY(), this.mob.getZ());
                      } else {
@@ -802,7 +805,7 @@
                              return true;
                          }), this.lookAtContext, this.mob, this.mob.getX(), this.mob.getEyeY(), this.mob.getZ());
                      }
-@@ -946,47 +1061,8 @@
+@@ -946,47 +1062,8 @@
          }
      }
  
@@ -851,7 +854,7 @@
          private final Panda panda;
  
          public PandaRollGoal(Panda panda) {
-@@ -1000,18 +1076,13 @@
+@@ -1000,18 +1077,13 @@
                  if (!this.panda.canPerformAction()) {
                      return false;
                  } else {
@@ -877,7 +880,7 @@
                  }
              } else {
                  return false;
-@@ -1034,94 +1105,31 @@
+@@ -1034,94 +1106,31 @@
          }
      }
  

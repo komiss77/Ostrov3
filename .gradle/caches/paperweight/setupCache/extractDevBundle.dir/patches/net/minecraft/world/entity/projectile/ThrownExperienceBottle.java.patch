@@ -1,14 +1,19 @@
 --- a/net/minecraft/world/entity/projectile/ThrownExperienceBottle.java
 +++ b/net/minecraft/world/entity/projectile/ThrownExperienceBottle.java
-@@ -12,6 +12,7 @@
+@@ -10,8 +10,12 @@
+ import net.minecraft.world.item.alchemy.Potions;
+ import net.minecraft.world.level.Level;
  import net.minecraft.world.phys.HitResult;
++// CraftBukkit start
++import org.bukkit.event.entity.EntityRemoveEvent;
++// CraftBukkit end
  
  public class ThrownExperienceBottle extends ThrowableItemProjectile {
 +
      public ThrownExperienceBottle(EntityType<? extends ThrownExperienceBottle> type, Level world) {
          super(type, world);
      }
-@@ -38,9 +39,19 @@
+@@ -38,10 +42,20 @@
      protected void onHit(HitResult hitResult) {
          super.onHit(hitResult);
          if (this.level() instanceof ServerLevel) {
@@ -17,6 +22,7 @@
 +            // this.level().levelEvent(2002, this.blockPosition(), PotionUtil.getColor(Potions.WATER));
              int i = 3 + this.level().random.nextInt(5) + this.level().random.nextInt(5);
 -            ExperienceOrb.award((ServerLevel)this.level(), this.position(), i);
+-            this.discard();
 +
 +            // CraftBukkit start
 +            org.bukkit.event.entity.ExpBottleEvent event = org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory.callExpBottleEvent(this, hitResult, i);
@@ -27,6 +33,7 @@
 +            // CraftBukkit end
 +
 +            ExperienceOrb.award((ServerLevel) this.level(), this.position(), i, org.bukkit.entity.ExperienceOrb.SpawnReason.EXP_BOTTLE, this.getOwner(), this); // Paper
-             this.discard();
++            this.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
          }
  
+     }

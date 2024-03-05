@@ -1,11 +1,20 @@
 package ru.komiss77.listener;
 
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Sheep;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Ostrov;
 import ru.komiss77.modules.bots.AfkBot;
@@ -50,10 +59,10 @@ public class TestLst implements Listener {
         
         if (e.getItem().getType()==Material.WOODEN_PICKAXE) {
             e.setCancelled(true);
-//            p.sendMessage("§8TestListener - interact cancel!");
+            //p.sendMessage("§8TestListener - interact cancel!");
             
             if (e.getAction()==Action.RIGHT_CLICK_AIR ) {
-              Nms.colorGlow(p, NamedTextColor.DARK_AQUA, false);
+              //Nms.colorGlow(p, NamedTextColor.DARK_AQUA, false);
                 //final String name = "РоботДолбоёб";//+ApiOstrov.randInt(0, 10);
                // if (bot==null) {
                     //bot = BotManager.createBot(name, AfkBot.class, () -> new AfkBot(name, new WXYZ(p.getLocation())));
@@ -61,18 +70,14 @@ public class TestLst implements Listener {
                // } else {
                     //p.sendMessage("bot exist!");
                // }
-                return;
+               // return;
             }
             if (e.getAction()==Action.RIGHT_CLICK_BLOCK ) {
-               // Material c = TCUtils.changeColor(mat, DyeColor.YELLOW);
-              //  p.sendMessage("inHand="+mat+" change="+c);
+              p.sendMessage("§8TestListener - interact cancel!");
                 if (p.isSneaking()) {
-                  //  bot.tag("", "", "");
                    // p.sendMessage("tag reset");
-                    //op.tag(Component.text("vvv", NamedTextColor.GOLD), Component.text("zzz", NamedTextColor.BLUE));
                 } else {
-                    //не меняет
-                   // bot.tag("§aprefbckdl-§fkdfkjdfg", "§b", "§esuffasddsfgsdfgsdf");
+
                   //  p.sendMessage("tag set");
                 }
 

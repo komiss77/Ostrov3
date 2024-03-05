@@ -11,13 +11,14 @@
  import java.util.Optional;
  import java.util.Set;
  import java.util.function.BiPredicate;
-@@ -90,13 +92,21 @@
+@@ -90,13 +92,22 @@
  import net.minecraft.world.phys.AABB;
  import org.slf4j.Logger;
  
 +// CraftBukkit start
 +import org.bukkit.Bukkit;
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.entity.EntityTransformEvent;
 +import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 +// CraftBukkit end
@@ -34,7 +35,7 @@
      private static final int MAX_GOSSIP_TOPICS = 10;
      private static final int GOSSIP_COOLDOWN = 1200;
      private static final int GOSSIP_DECAY_INTERVAL = 24000;
-@@ -112,7 +122,7 @@
+@@ -112,7 +123,7 @@
      private Player lastTradedPlayer;
      private boolean chasing;
      private int foodLevel;
@@ -43,7 +44,7 @@
      private long lastGossipTime;
      private long lastGossipDecayTime;
      private int villagerXp;
-@@ -120,15 +130,15 @@
+@@ -120,15 +131,15 @@
      public int numberOfRestocksToday;
      private long lastRestockCheckDayTime;
      private boolean assignProfessionWhenSpawned;
@@ -65,7 +66,7 @@
          return holder.is(PoiTypes.MEETING);
      });
  
-@@ -138,7 +148,8 @@
+@@ -138,7 +149,8 @@
  
      public Villager(EntityType<? extends Villager> entityType, Level world, VillagerType type) {
          super(entityType, world);
@@ -75,7 +76,7 @@
          this.getNavigation().setCanFloat(true);
          this.setCanPickUpLoot(true);
          this.setVillagerData(this.getVillagerData().setType(type).setProfession(VillagerProfession.NONE));
-@@ -146,46 +157,49 @@
+@@ -146,46 +158,49 @@
  
      @Override
      public Brain<Villager> getBrain() {
@@ -143,7 +144,7 @@
          brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
          brain.setDefaultActivity(Activity.IDLE);
          brain.setActiveActivityIfPossible(Activity.IDLE);
-@@ -196,7 +210,7 @@
+@@ -196,7 +211,7 @@
      protected void ageBoundaryReached() {
          super.ageBoundaryReached();
          if (this.level() instanceof ServerLevel) {
@@ -152,7 +153,7 @@
          }
  
      }
-@@ -209,10 +223,38 @@
+@@ -209,10 +224,38 @@
          return this.assignProfessionWhenSpawned;
      }
  
@@ -192,7 +193,7 @@
          this.level().getProfiler().pop();
          if (this.assignProfessionWhenSpawned) {
              this.assignProfessionWhenSpawned = false;
-@@ -226,26 +268,28 @@
+@@ -226,26 +269,28 @@
                      this.increaseProfessionLevelOnUpdate = false;
                  }
  
@@ -227,7 +228,7 @@
  
          super.customServerAiStep();
      }
-@@ -262,22 +306,24 @@
+@@ -262,22 +307,24 @@
  
      @Override
      public InteractionResult mobInteract(Player player, InteractionHand hand) {
@@ -257,7 +258,7 @@
                      return InteractionResult.sidedSuccess(this.level().isClientSide);
                  } else {
                      if (!this.level().isClientSide && !this.offers.isEmpty()) {
-@@ -308,9 +354,10 @@
+@@ -308,9 +355,10 @@
  
      @Override
      public void setTradingPlayer(@Nullable Player customer) {
@@ -270,7 +271,7 @@
              this.stopTrading();
          }
  
-@@ -323,8 +370,12 @@
+@@ -323,8 +371,12 @@
      }
  
      private void resetSpecialPrices() {
@@ -285,7 +286,7 @@
          }
  
      }
-@@ -341,9 +392,18 @@
+@@ -341,9 +393,18 @@
  
      public void restock() {
          this.updateDemand();
@@ -306,7 +307,7 @@
          }
  
          this.resendOffersToTradingPlayer();
-@@ -352,22 +412,29 @@
+@@ -352,22 +413,29 @@
      }
  
      private void resendOffersToTradingPlayer() {
@@ -345,7 +346,7 @@
      }
  
      private boolean allowedToRestock() {
-@@ -375,19 +442,21 @@
+@@ -375,19 +443,21 @@
      }
  
      public boolean shouldRestock() {
@@ -377,7 +378,7 @@
              this.resetNumberOfRestocks();
          }
  
-@@ -396,13 +465,24 @@
+@@ -396,13 +466,24 @@
  
      private void catchUpDemand() {
          int i = 2 - this.numberOfRestocksToday;
@@ -405,7 +406,7 @@
              this.updateDemand();
          }
  
-@@ -410,28 +490,42 @@
+@@ -410,28 +491,42 @@
      }
  
      private void updateDemand() {
@@ -458,7 +459,7 @@
              }
          }
  
-@@ -440,17 +534,21 @@
+@@ -440,17 +535,21 @@
      @Override
      protected void defineSynchedData() {
          super.defineSynchedData();
@@ -485,7 +486,7 @@
          nbt.putInt("Xp", this.villagerXp);
          nbt.putLong("LastRestock", this.lastRestockGameTime);
          nbt.putLong("LastGossipDecay", this.lastGossipDecayTime);
-@@ -465,8 +563,11 @@
+@@ -465,8 +564,11 @@
      public void readAdditionalSaveData(CompoundTag nbt) {
          super.readAdditionalSaveData(nbt);
          if (nbt.contains("VillagerData", 10)) {
@@ -499,7 +500,7 @@
          }
  
          if (nbt.contains("Offers", 10)) {
-@@ -477,8 +578,9 @@
+@@ -477,8 +579,9 @@
              this.foodLevel = nbt.getByte("FoodLevel");
          }
  
@@ -511,7 +512,7 @@
          if (nbt.contains("Xp", 3)) {
              this.villagerXp = nbt.getInt("Xp");
          }
-@@ -487,7 +589,7 @@
+@@ -487,7 +590,7 @@
          this.lastGossipDecayTime = nbt.getLong("LastGossipDecay");
          this.setCanPickUpLoot(true);
          if (this.level() instanceof ServerLevel) {
@@ -520,7 +521,7 @@
          }
  
          this.numberOfRestocksToday = nbt.getInt("RestocksToday");
-@@ -505,11 +607,7 @@
+@@ -505,11 +608,7 @@
      @Nullable
      @Override
      protected SoundEvent getAmbientSound() {
@@ -533,7 +534,7 @@
      }
  
      @Override
-@@ -523,31 +621,34 @@
+@@ -523,31 +622,34 @@
      }
  
      public void playWorkSound() {
@@ -575,7 +576,7 @@
          this.villagerXp += offer.getXp();
          this.lastTradedPlayer = this.getTradingPlayer();
          if (this.shouldIncreaseLevel()) {
-@@ -557,13 +658,13 @@
+@@ -557,13 +659,13 @@
          }
  
          if (offer.shouldRewardExp()) {
@@ -592,7 +593,7 @@
      }
  
      public boolean isChasing() {
-@@ -573,9 +674,9 @@
+@@ -573,9 +675,9 @@
      @Override
      public void setLastHurtByMob(@Nullable LivingEntity attacker) {
          if (attacker != null && this.level() instanceof ServerLevel) {
@@ -604,7 +605,7 @@
              }
          }
  
-@@ -584,8 +685,9 @@
+@@ -584,8 +686,9 @@
  
      @Override
      public void die(DamageSource damageSource) {
@@ -615,7 +616,7 @@
          if (entity != null) {
              this.tellWitnessesThatIWasMurdered(entity);
          }
-@@ -602,12 +704,18 @@
+@@ -602,12 +705,18 @@
      }
  
      private void tellWitnessesThatIWasMurdered(Entity killer) {
@@ -639,7 +640,7 @@
                  });
              }
          }
-@@ -615,16 +723,19 @@
+@@ -615,16 +724,19 @@
  
      public void releasePoi(MemoryModuleType<GlobalPos> pos) {
          if (this.level() instanceof ServerLevel) {
@@ -669,7 +670,7 @@
                      }
  
                  }
-@@ -643,14 +754,16 @@
+@@ -643,14 +755,16 @@
  
      private void eatUntilFull() {
          if (this.hungry() && this.countFoodPointsInInventory() != 0) {
@@ -692,7 +693,7 @@
                              this.foodLevel += integer;
                              this.getInventory().removeItem(i, 1);
                              if (!this.hungry()) {
-@@ -665,7 +778,7 @@
+@@ -665,7 +779,7 @@
      }
  
      public int getPlayerReputation(Player player) {
@@ -701,7 +702,7 @@
              return true;
          });
      }
-@@ -685,6 +798,7 @@
+@@ -685,6 +799,7 @@
  
      private boolean shouldIncreaseLevel() {
          int i = this.getVillagerData().getLevel();
@@ -709,7 +710,7 @@
          return VillagerData.canLevelUp(i) && this.villagerXp >= VillagerData.getMaxXpPerLevel(i);
      }
  
-@@ -695,7 +809,9 @@
+@@ -695,7 +810,9 @@
  
      @Override
      protected Component getTypeName() {
@@ -720,7 +721,7 @@
      }
  
      @Override
-@@ -734,38 +850,53 @@
+@@ -734,40 +851,55 @@
  
      @Nullable
      @Override
@@ -793,9 +794,12 @@
 +                world.addFreshEntityWithPassengers(entitywitch, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.LIGHTNING);
 +                // CraftBukkit end
                  this.releaseAllPois();
-                 this.discard();
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.TRANSFORMATION); // CraftBukkit - add Bukkit remove cause
              } else {
-@@ -785,7 +916,8 @@
+                 super.thunderHit(world, lightning);
+             }
+@@ -785,7 +917,8 @@
      @Override
      public boolean wantsToPickUp(ItemStack stack) {
          Item item = stack.getItem();
@@ -805,7 +809,7 @@
      }
  
      public boolean hasExcessFood() {
-@@ -797,36 +929,49 @@
+@@ -797,36 +930,49 @@
      }
  
      private int countFoodPointsInInventory() {
@@ -870,7 +874,7 @@
      }
  
      public void gossip(ServerLevel world, Villager villager, long time) {
-@@ -839,24 +984,26 @@
+@@ -839,24 +985,26 @@
      }
  
      private void maybeDecayGossip() {
@@ -907,7 +911,7 @@
                      list.forEach(GolemSensor::golemDetected);
                  }
              }
-@@ -864,11 +1011,7 @@
+@@ -864,11 +1012,7 @@
      }
  
      public boolean wantsToSpawnGolem(long time) {
@@ -920,7 +924,7 @@
      }
  
      @Override
-@@ -905,7 +1048,7 @@
+@@ -905,7 +1049,7 @@
      }
  
      public void setGossips(Tag nbt) {
@@ -929,7 +933,7 @@
      }
  
      @Override
-@@ -917,7 +1060,7 @@
+@@ -917,7 +1061,7 @@
      @Override
      public void startSleeping(BlockPos pos) {
          super.startSleeping(pos);
@@ -938,7 +942,7 @@
          this.brain.eraseMemory(MemoryModuleType.WALK_TARGET);
          this.brain.eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
      }
-@@ -925,15 +1068,12 @@
+@@ -925,15 +1069,12 @@
      @Override
      public void stopSleeping() {
          super.stopSleeping();

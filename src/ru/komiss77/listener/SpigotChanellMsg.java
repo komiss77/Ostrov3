@@ -159,7 +159,12 @@ public class SpigotChanellMsg implements Listener, PluginMessageListener {
         }
     }
 
-    public static boolean sendMessage(final Player msgTransport, final Operation action, final String senderInfo, final int int1, final int int2, final int int3, final String s1, final String s2, final String s3, final String s4, final String s5, final String s6) {
+    public static boolean sendMessage(final Player msgTransport,
+                                      final Operation action,
+                                      final String senderInfo,
+                                      final int int1, final int int2, final int int3,
+                                      final String s1, final String s2, final String s3, final String s4, final String s5, final String s6
+    ) {
         try {
             final ByteArrayOutputStream stream = new ByteArrayOutputStream();
             final DataOutputStream out = new DataOutputStream(stream);
@@ -406,23 +411,22 @@ public class SpigotChanellMsg implements Listener, PluginMessageListener {
                 break;
 
             case GAME_INFO_TO_OSTROV:
-                //senderInfo - сервер, отправивший данные сервер bw01 sg02 и тд + 
+                //senderInfo - MOT_D сервера, отправивший данные
                 //int1 - state.tag
                 //int2 - arena online
                 //int3 -
-                //s1 - арена
+                //s1 - название арены
                 //s2,s3,s4,s5 - строки
-                //s6 - extra
-                final Game game = Game.fromServerName(senderInfo);
+                //s6 - game.name()
+                final Game game = Game.fromServerName(s6);//Game.fromServerName(senderInfo);
                 if (game!=null) {
                     final GameInfo gi = GM.getGameInfo(game);
                     if (gi!=null) {
-                        gi.update(senderInfo, s1, GameState.byTag(int1), int2, s2, s3, s4, s5, s6);
+                        gi.update(senderInfo, s1, GameState.byTag(int1), int2, s2, s3, s4, s5);
                     } else {
                         Ostrov.log_err("ARENA_INFO_TO_OSTROV GameInfo=null : "+senderInfo);
                     }
                 }
-                //SM.ArenaInfoFromBungeeHandler(s1);
                 break;
 
             case PARTY_MEMBER_SERVER_SWITCH: //senderInfo-член, s1-лидер, s2-сервер лидера, s3-арена лидера

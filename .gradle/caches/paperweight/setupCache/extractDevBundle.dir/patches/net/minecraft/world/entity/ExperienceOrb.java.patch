@@ -10,12 +10,13 @@
  import net.minecraft.core.BlockPos;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.network.protocol.Packet;
-@@ -19,29 +20,92 @@
+@@ -19,29 +20,93 @@
  import net.minecraft.world.level.entity.EntityTypeTest;
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.Vec3;
 +// CraftBukkit start
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 +import org.bukkit.event.entity.EntityTargetEvent;
 +import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
@@ -107,7 +108,7 @@
      }
  
      @Override
-@@ -50,12 +114,12 @@
+@@ -50,12 +115,12 @@
      }
  
      @Override
@@ -122,7 +123,7 @@
          this.xo = this.getX();
          this.yo = this.getY();
          this.zo = this.getZ();
-@@ -66,7 +130,7 @@
+@@ -66,7 +131,7 @@
          }
  
          if (this.level().getFluidState(this.blockPosition()).is(FluidTags.LAVA)) {
@@ -131,7 +132,7 @@
          }
  
          if (!this.level().noCollision(this.getBoundingBox())) {
-@@ -81,22 +145,40 @@
+@@ -81,29 +146,47 @@
              this.followingPlayer = null;
          }
  
@@ -179,7 +180,15 @@
          if (this.onGround()) {
              this.setDeltaMovement(this.getDeltaMovement().multiply(1.0D, -0.9D, 1.0D));
          }
-@@ -114,39 +196,55 @@
+ 
+         ++this.age;
+         if (this.age >= 6000) {
+-            this.discard();
++            this.discard(EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
+         }
+ 
+     }
+@@ -114,39 +197,55 @@
      }
  
      private void scanForEntities() {
@@ -250,7 +259,7 @@
              return true;
          } else {
              return false;
-@@ -154,7 +252,7 @@
+@@ -154,7 +253,7 @@
      }
  
      private boolean canMerge(ExperienceOrb other) {
@@ -259,7 +268,12 @@
      }
  
      private static boolean canMerge(ExperienceOrb orb, int seed, int amount) {
-@@ -168,13 +266,13 @@
+@@ -164,17 +263,17 @@
+     private void merge(ExperienceOrb other) {
+         this.count += other.count;
+         this.age = Math.min(this.age, other.age);
+-        other.discard();
++        other.discard(EntityRemoveEvent.Cause.MERGE); // CraftBukkit - add Bukkit remove cause
      }
  
      private void setUnderwaterMovement() {
@@ -277,16 +291,19 @@
  
      @Override
      public boolean hurt(DamageSource source, float amount) {
-@@ -184,7 +282,7 @@
+@@ -184,9 +283,9 @@
              return true;
          } else {
              this.markHurt();
 -            this.health = (int)((float)this.health - amount);
 +            this.health = (int) ((float) this.health - amount);
              if (this.health <= 0) {
-                 this.discard();
+-                this.discard();
++                this.discard(EntityRemoveEvent.Cause.DEATH); // CraftBukkit - add Bukkit remove cause
              }
-@@ -195,29 +293,32 @@
+ 
+             return true;
+@@ -195,34 +294,37 @@
  
      @Override
      public void addAdditionalSaveData(CompoundTag nbt) {
@@ -326,7 +343,13 @@
                  }
  
                  --this.count;
-@@ -230,13 +331,29 @@
+                 if (this.count == 0) {
+-                    this.discard();
++                    this.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
+                 }
+             }
+ 
+@@ -230,13 +332,29 @@
      }
  
      private int repairPlayerItems(Player player, int amount) {
@@ -362,7 +385,7 @@
          } else {
              return amount;
          }
-@@ -255,51 +372,29 @@
+@@ -255,51 +373,29 @@
      }
  
      public int getIcon() {

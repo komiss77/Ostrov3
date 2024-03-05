@@ -8,7 +8,7 @@
  import java.util.List;
  import javax.annotation.Nullable;
  import net.minecraft.advancements.CriteriaTriggers;
-@@ -25,13 +26,21 @@
+@@ -25,13 +26,22 @@
  import net.minecraft.world.level.block.Blocks;
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.chunk.LevelChunk;
@@ -22,6 +22,7 @@
 +import org.bukkit.Bukkit;
 +import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
 +import org.bukkit.craftbukkit.v1_20_R3.util.CraftLocation;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.player.PlayerTeleportEvent;
 +// CraftBukkit end
  
@@ -30,7 +31,7 @@
      private static final Logger LOGGER = LogUtils.getLogger();
      private static final int SPAWN_TIME = 200;
      private static final int COOLDOWN_TIME = 40;
-@@ -67,9 +76,10 @@
+@@ -67,9 +77,10 @@
          super.load(nbt);
          this.age = nbt.getLong("Age");
          if (nbt.contains("ExitPortal", 10)) {
@@ -44,7 +45,7 @@
              }
          }
  
-@@ -85,23 +95,32 @@
+@@ -85,23 +96,32 @@
      }
  
      public static void teleportTick(Level world, BlockPos pos, BlockState state, TheEndGatewayBlockEntity blockEntity) {
@@ -83,7 +84,7 @@
              setChanged(world, pos, state);
          }
  
-@@ -120,11 +139,11 @@
+@@ -120,11 +140,11 @@
      }
  
      public float getSpawnPercent(float tickDelta) {
@@ -97,7 +98,7 @@
      }
  
      @Override
-@@ -157,101 +176,145 @@
+@@ -157,101 +177,145 @@
      }
  
      public static void teleportEntity(Level world, BlockPos pos, BlockState state, Entity entity, TheEndGatewayBlockEntity blockEntity) {
@@ -139,8 +140,9 @@
  
                      if (entity2 != null) {
 -                        entity3 = entity2;
+-                        entity.discard();
 +                        entity1 = entity2;
-                         entity.discard();
++                        entity.discard(EntityRemoveEvent.Cause.HIT); // CraftBukkit - add Bukkit remove cause
                      } else {
 -                        entity3 = entity;
 +                        entity1 = entity;
@@ -295,7 +297,7 @@
                              break;
                          }
                      }
-@@ -259,7 +322,7 @@
+@@ -259,7 +323,7 @@
              }
          }
  
@@ -304,7 +306,7 @@
      }
  
      private static LevelChunk getChunk(Level world, Vec3 pos) {
-@@ -268,27 +331,31 @@
+@@ -268,27 +332,31 @@
  
      @Nullable
      private static BlockPos findValidSpawnInChunk(LevelChunk chunk) {
@@ -351,7 +353,7 @@
      }
  
      private static void spawnGatewayPortal(ServerLevel world, BlockPos pos, EndGatewayConfiguration config) {
-@@ -302,9 +369,13 @@
+@@ -302,9 +370,13 @@
  
      public int getParticleAmount() {
          int i = 0;

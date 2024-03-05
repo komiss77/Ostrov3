@@ -35,6 +35,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Config;
+import ru.komiss77.Ostrov;
 import ru.komiss77.Timer;
 import ru.komiss77.commands.PassportCmd;
 import ru.komiss77.enums.ServerType;
@@ -207,7 +208,7 @@ public class InteractLst implements Listener {
                 //клик по серверной табличке
                 final String locAsString = LocationUtil.toString(b.getLocation());
                 final GameSign gameSign = GM.signs.get(locAsString);
-
+//Ostrov.log("locAsString="+locAsString+" gameSign="+gameSign);
                 if (gameSign!=null) {
                     if (Timer.has(p, "gameSign")) {
                         p.sendMessage("§8подождите 2 секунды..");

@@ -758,9 +758,10 @@ public class ApiOstrov {
         return b.getRelative(BlockFace.DOWN);
     }
 
-
+    @Deprecated //use GM.sendArenaData direct!
     public static void sendArenaData(final String arenaName, final GameState state, final String line0, final String line1, final String line2, final String line3, final String extra, final int playerInGame) {
-        GM.sendArenaData(arenaName, (state==null ? GameState.НЕОПРЕДЕЛЕНО : state), playerInGame, line0, line1, line2, line3, extra);
+      //GM.sendArenaData(arenaName, (state==null ? GameState.НЕОПРЕДЕЛЕНО : state), playerInGame, line0, line1, line2, line3, extra);
+      GM.sendArenaData(Game.fromServerName(Ostrov.MOT_D), arenaName, (state==null ? GameState.НЕОПРЕДЕЛЕНО : state), playerInGame, line0, line1, line2, line3);
     }
 
 

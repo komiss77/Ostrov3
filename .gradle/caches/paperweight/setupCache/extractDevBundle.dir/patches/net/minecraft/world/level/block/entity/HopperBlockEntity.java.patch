@@ -23,7 +23,7 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.inventory.AbstractContainerMenu;
  import net.minecraft.world.inventory.HopperMenu;
-@@ -30,16 +31,60 @@
+@@ -30,16 +31,61 @@
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.shapes.BooleanOp;
  import net.minecraft.world.phys.shapes.Shapes;
@@ -33,6 +33,7 @@
 +import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftInventory;
 +import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
 +import org.bukkit.entity.HumanEntity;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.inventory.HopperInventorySearchEvent;
 +import org.bukkit.event.inventory.InventoryMoveItemEvent;
 +import org.bukkit.event.inventory.InventoryPickupItemEvent;
@@ -86,7 +87,7 @@
      }
  
      @Override
-@@ -70,13 +115,13 @@
+@@ -70,13 +116,13 @@
  
      @Override
      public ItemStack removeItem(int slot, int amount) {
@@ -102,7 +103,7 @@
          this.getItems().set(slot, stack);
          if (stack.getCount() > this.getMaxStackSize()) {
              stack.setCount(this.getMaxStackSize());
-@@ -94,29 +139,74 @@
+@@ -94,29 +140,74 @@
          blockEntity.tickedGameTime = world.getGameTime();
          if (!blockEntity.isOnCooldown()) {
              blockEntity.setCooldown(0);
@@ -188,7 +189,7 @@
                      setChanged(world, pos, state);
                      return true;
                  }
-@@ -127,115 +217,442 @@
+@@ -127,115 +218,442 @@
      }
  
      private boolean inventoryFull() {
@@ -252,8 +253,8 @@
 +                    return true;
 +                }
 +                origItemStack.setCount(originalItemCount);
-+            }
-+        }
+             }
+         }
 +        if (foundItem && level.paperConfig().hopper.cooldownWhenFull) { // Inventory was full - cooldown
 +            hopper.setCooldown(level.spigotConfig.hopperTransfer);
 +        }
@@ -266,7 +267,7 @@
 +        final int movedItemCount = Math.min(level.spigotConfig.hopperAmount, originalItemCount);
 +        container.setChanged(); // original logic always marks source inv as changed even if no move happens.
 +        movedItem.setCount(movedItemCount);
-+
+ 
 +        if (!skipPullModeEventFire) {
 +            movedItem = callPullMoveEvent(hopper, container, movedItem);
 +            if (movedItem == null) { // cancelled
@@ -275,9 +276,9 @@
 +                // No plugin could of relied on the behavior of false as the other call
 +                // site for IMIE did not exhibit the same behavior
 +                return true;
-             }
-         }
- 
++            }
++        }
++
 +        final ItemStack remainingItem = addItem(container, hopper, movedItem, null);
 +        final int remainingItemCount = remainingItem.getCount();
 +        if (remainingItemCount != movedItemCount) {
@@ -663,7 +664,8 @@
 +        if (itemstack1.isEmpty()) {
 +            flag = true;
              itemEntity.setItem(ItemStack.EMPTY);
-             itemEntity.discard();
+-            itemEntity.discard();
++            itemEntity.discard(EntityRemoveEvent.Cause.PICKUP); // CraftBukkit - add Bukkit remove cause
          } else {
 -            itemEntity.setItem(itemStack2);
 +            itemEntity.setItem(itemstack1);
@@ -691,7 +693,7 @@
                  }
  
                  return stack;
-@@ -244,8 +661,8 @@
+@@ -244,8 +662,8 @@
  
          int j = to.getContainerSize();
  
@@ -702,7 +704,7 @@
          }
  
          return stack;
-@@ -255,14 +672,19 @@
+@@ -255,14 +673,19 @@
          if (!inventory.canPlaceItem(slot, stack)) {
              return false;
          } else {
@@ -726,7 +728,7 @@
          }
      }
  
-@@ -270,47 +692,67 @@
+@@ -270,47 +693,67 @@
          if (!fromInventory.canTakeItem(hopperInventory, slot, stack)) {
              return false;
          } else {
@@ -820,7 +822,7 @@
                      }
                  }
  
-@@ -321,73 +763,130 @@
+@@ -321,73 +764,130 @@
          return stack;
      }
  
@@ -977,7 +979,7 @@
      }
  
      private void setCooldown(int transferCooldown) {
-@@ -413,10 +912,12 @@
+@@ -413,10 +913,12 @@
      }
  
      public static void entityInside(Level world, BlockPos pos, BlockState state, Entity entity, HopperBlockEntity blockEntity) {
@@ -994,7 +996,7 @@
                  });
              }
          }
-@@ -424,7 +925,7 @@
+@@ -424,7 +926,7 @@
      }
  
      @Override

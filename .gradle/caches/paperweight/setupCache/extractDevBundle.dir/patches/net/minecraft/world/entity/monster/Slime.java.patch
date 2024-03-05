@@ -1,6 +1,6 @@
 --- a/net/minecraft/world/entity/monster/Slime.java
 +++ b/net/minecraft/world/entity/monster/Slime.java
-@@ -44,7 +44,16 @@
+@@ -44,7 +44,17 @@
  import net.minecraft.world.phys.Vec3;
  import org.joml.Vector3f;
  
@@ -8,6 +8,7 @@
 +import java.util.ArrayList;
 +import java.util.List;
 +import org.bukkit.craftbukkit.v1_20_R3.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityRemoveEvent;
 +import org.bukkit.event.entity.EntityTransformEvent;
 +import org.bukkit.event.entity.SlimeSplitEvent;
 +// CraftBukkit end
@@ -17,7 +18,7 @@
      private static final EntityDataAccessor<Integer> ID_SIZE = SynchedEntityData.defineId(Slime.class, EntityDataSerializers.INT);
      public static final int MIN_SIZE = 1;
      public static final int MAX_SIZE = 127;
-@@ -65,8 +74,8 @@
+@@ -65,8 +75,8 @@
          this.goalSelector.addGoal(2, new Slime.SlimeAttackGoal(this));
          this.goalSelector.addGoal(3, new Slime.SlimeRandomDirectionGoal(this));
          this.goalSelector.addGoal(5, new Slime.SlimeKeepOnJumpingGoal(this));
@@ -28,7 +29,7 @@
          }));
          this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, IronGolem.class, true));
      }
-@@ -79,32 +88,34 @@
+@@ -79,32 +89,34 @@
      @Override
      protected void defineSynchedData() {
          super.defineSynchedData();
@@ -71,7 +72,7 @@
          nbt.putInt("Size", this.getSize() - 1);
          nbt.putBoolean("wasOnGround", this.wasOnGround);
      }
-@@ -113,6 +124,11 @@
+@@ -113,6 +125,11 @@
      public void readAdditionalSaveData(CompoundTag nbt) {
          this.setSize(nbt.getInt("Size") + 1, false);
          super.readAdditionalSaveData(nbt);
@@ -83,7 +84,7 @@
          this.wasOnGround = nbt.getBoolean("wasOnGround");
      }
  
-@@ -137,12 +153,13 @@
+@@ -137,12 +154,13 @@
          if (this.onGround() && !this.wasOnGround) {
              int i = this.getSize();
  
@@ -103,7 +104,7 @@
              }
  
              this.playSound(this.getSquishSound(), this.getSoundVolume(), ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) / 0.8F);
-@@ -165,16 +182,17 @@
+@@ -165,16 +183,17 @@
  
      @Override
      public void refreshDimensions() {
@@ -126,7 +127,7 @@
              this.refreshDimensions();
              this.setYRot(this.yHeadRot);
              this.yBodyRot = this.yHeadRot;
-@@ -188,36 +206,61 @@
+@@ -188,46 +207,78 @@
  
      @Override
      public EntityType<? extends Slime> getType() {
@@ -136,6 +137,13 @@
  
      @Override
      public void remove(Entity.RemovalReason reason) {
++        // CraftBukkit start - add Bukkit remove cause
++        this.remove(reason, null);
++    }
++
++    @Override
++    public void remove(Entity.RemovalReason entity_removalreason, EntityRemoveEvent.Cause cause) {
++        // CraftBukkit end
          int i = this.getSize();
 +
          if (!this.level().isClientSide && i > 1 && this.isDeadOrDying()) {
@@ -160,7 +168,7 @@
 +            if (!event.isCancelled() && event.getCount() > 0) {
 +                k = event.getCount();
 +            } else {
-+                super.remove(reason);
++                super.remove(entity_removalreason, cause); // CraftBukkit - add Bukkit remove cause
 +                return;
 +            }
 +            List<LivingEntity> slimes = new ArrayList<>(j);
@@ -194,7 +202,7 @@
              }
 +            // CraftBukkit start
 +            if (CraftEventFactory.callEntityTransformEvent(this, slimes, EntityTransformEvent.TransformReason.SPLIT).isCancelled()) {
-+                super.remove(reason);
++                super.remove(entity_removalreason, cause); // CraftBukkit - add Bukkit remove cause
 +                return;
 +            }
 +            for (LivingEntity living : slimes) {
@@ -203,8 +211,11 @@
 +            // CraftBukkit end
          }
  
-         super.remove(reason);
-@@ -227,7 +270,7 @@
+-        super.remove(reason);
++        super.remove(entity_removalreason, cause); // CraftBukkit - add Bukkit remove cause
+     }
+ 
+     @Override
      public void push(Entity entity) {
          super.push(entity);
          if (entity instanceof IronGolem && this.isDealsDamage()) {
@@ -213,7 +224,7 @@
          }
  
      }
-@@ -243,7 +286,8 @@
+@@ -243,7 +294,8 @@
      protected void dealDamage(LivingEntity target) {
          if (this.isAlive()) {
              int i = this.getSize();
@@ -223,7 +234,7 @@
                  this.playSound(SoundEvents.SLIME_ATTACK, 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
                  this.doEnchantDamageEffects(this, target);
              }
-@@ -258,7 +302,7 @@
+@@ -258,7 +310,7 @@
  
      @Override
      protected Vector3f getPassengerAttachmentPoint(Entity passenger, EntityDimensions dimensions, float scaleFactor) {
@@ -232,7 +243,7 @@
      }
  
      protected boolean isDealsDamage() {
-@@ -266,7 +310,7 @@
+@@ -266,7 +318,7 @@
      }
  
      protected float getAttackDamage() {
@@ -241,7 +252,7 @@
      }
  
      @Override
-@@ -292,7 +336,11 @@
+@@ -292,7 +344,11 @@
                      return checkMobSpawnRules(type, world, spawnReason, pos, random);
                  }
  
@@ -254,7 +265,7 @@
                      return checkMobSpawnRules(type, world, spawnReason, pos, random);
                  }
  
-@@ -300,9 +348,13 @@
+@@ -300,9 +356,13 @@
                      return false;
                  }
  
@@ -271,7 +282,7 @@
                      return checkMobSpawnRules(type, world, spawnReason, pos, random);
                  }
              }
-@@ -313,7 +365,7 @@
+@@ -313,7 +373,7 @@
  
      @Override
      public float getSoundVolume() {
@@ -280,7 +291,7 @@
      }
  
      @Override
-@@ -327,27 +379,31 @@
+@@ -327,27 +387,31 @@
  
      @Override
      protected void jumpFromGround() {
@@ -317,7 +328,7 @@
          return ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) * f;
      }
  
-@@ -357,67 +413,68 @@
+@@ -357,67 +421,68 @@
  
      @Override
      public EntityDimensions getDimensions(Pose pose) {
@@ -428,7 +439,7 @@
          private final Slime slime;
  
          public SlimeFloatGoal(Slime slime) {
-@@ -428,7 +485,7 @@
+@@ -428,7 +493,7 @@
  
          @Override
          public boolean canUse() {
@@ -437,7 +448,7 @@
          }
  
          @Override
-@@ -442,94 +499,96 @@
+@@ -442,94 +507,96 @@
                  this.slime.getJumpControl().jump();
              }
  
@@ -491,13 +502,13 @@
 +            // Paper end - Slime pathfinder events
          }
 -    }
- 
+-
 -    static class SlimeMoveControl extends MoveControl {
 -        private float yRot;
 -        private int jumpDelay;
 -        private final Slime slime;
 -        private boolean isAggressive;
--
+ 
 -        public SlimeMoveControl(Slime slime) {
 -            super(slime);
 -            this.slime = slime;
@@ -567,22 +578,22 @@
 +            if (entityliving != null) {
 +                this.slime.lookAt(entityliving, 10.0F, 10.0F);
 +            }
-+
-+            MoveControl controllermove = this.slime.getMoveControl();
  
++            MoveControl controllermove = this.slime.getMoveControl();
++
 +            if (controllermove instanceof Slime.SlimeMoveControl) {
 +                Slime.SlimeMoveControl entityslime_controllermoveslime = (Slime.SlimeMoveControl) controllermove;
 +
 +                entityslime_controllermoveslime.setDirection(this.slime.getYRot(), this.slime.isDealsDamage());
              }
 +
-+        }
+         }
 +
 +        // Paper start - Slime pathfinder events; clear timer and target when goal resets
 +        public void stop() {
 +            this.growTiredTimer = 0;
 +            this.slime.setTarget(null);
-         }
++        }
 +        // Paper end - Slime pathfinder events
      }
  
@@ -592,7 +603,7 @@
          private final Slime slime;
          private float chosenDegrees;
          private int nextRandomizeTime;
-@@ -541,21 +600,67 @@
+@@ -541,21 +608,67 @@
  
          @Override
          public boolean canUse() {
@@ -622,10 +633,10 @@
 +                Slime.SlimeMoveControl entityslime_controllermoveslime = (Slime.SlimeMoveControl) controllermove;
 +
 +                entityslime_controllermoveslime.setDirection(this.chosenDegrees, false);
-+            }
-+
-+        }
-+    }
+             }
+ 
+         }
+     }
 +
 +    private static class SlimeKeepOnJumpingGoal extends Goal {
 +
@@ -649,10 +660,10 @@
 +                Slime.SlimeMoveControl entityslime_controllermoveslime = (Slime.SlimeMoveControl) controllermove;
 +
 +                entityslime_controllermoveslime.setWantedMovement(1.0D);
-             }
- 
-         }
-     }
++            }
++
++        }
++    }
 +
 +    // Paper start - Slime pathfinder events
 +    private boolean canWander = true;
