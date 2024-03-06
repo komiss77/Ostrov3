@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import ru.komiss77.Ostrov;
 import ru.komiss77.objects.CaseInsensitiveMap;
 
 // !!!!!!!  не ставить ничего от бакита, не грузит банжик!!!
@@ -35,8 +34,8 @@ public enum Game {
     WZ      ("§3⚒ ", 24, 1, 3, "поле-брани", "wz01", ServerType.ARENAS, "TOTEM_OF_UNDYING", "§b§lПоле Брани", Arrays.asList(""), 0, -77), //warzone
     BB      ("§3✍ ", 25, 1, 33, "билдбатл", "bb01", ServerType.ARENAS, "GOLDEN_PICKAXE", "§a§lБитва Строителей", Arrays.asList(""), 0, -77),
     //21 - пусто
-    TW      ("§e▦ ", 27, 1, 30, "твист", "twis", ServerType.ARENAS, "MUSIC_DISC_RELIC", "§d§lТвист", Arrays.asList(""), 0, -77),
-    SN      ("§6ಊ ", 28, 1, 32, "змейка", "snek", ServerType.ARENAS, "STRING", "§f§lЗмейка", Arrays.asList(""), 0, -77),
+    TW      ("§e▦ ", 27, 1, 30, "твист", "mg01", ServerType.ARENAS, "MUSIC_DISC_RELIC", "§d§lТвист", Arrays.asList(""), 0, -77),
+    SN      ("§6ಊ ", 28, 1, 32, "змейка", "mg01", ServerType.ARENAS, "STRING", "§f§lЗмейка", Arrays.asList(""), 0, -77),
     CS      ("§3✡ ", 29, 1, 19, "контра", "cs01", ServerType.ARENAS, "FLINT_AND_STEEL", "§5§lКонтра", Arrays.asList(""), 0, -77),
     HS      ("§a۩ ", 30, 1, 13, "прятки", "hs01", ServerType.ARENAS, "JACK_O_LANTERN", "§3§lПрятки", Arrays.asList(""), 0, -77),
     QU      ("§4⚛ ", 31, 1, 29, "квэйк", "qu01", ServerType.ARENAS, "TRIDENT", "§c§lКвэйк", Arrays.asList(""), 0, -77),
@@ -89,8 +88,6 @@ public enum Game {
     }
     
     static {
-        //Map<String,Game> nm = new ConcurrentHashMap<>();
-        //Map<String,Game> gnm = new ConcurrentHashMap<>();
         displayNames = new HashSet<>();
         nameMap = new CaseInsensitiveMap<>();
         
@@ -99,15 +96,12 @@ public enum Game {
                 MAX_SLOT = 36 * game.menuPage + game.menuSlot;
             }
             if (game==GLOBAL) continue;
-            //nm.put(game.serverName.toLowerCase(),game);
-            nameMap.put(game.name().toLowerCase(),game); //lobby da pa bw bb sg
-            nameMap.put(game.suggestName.toLowerCase(),game);
-            nameMap.put(game.serverName,game);
-            
-            
+            nameMap.put(game.name(), game); //lobby da pa bw bb sg
+            nameMap.put(game.suggestName, game);
+            nameMap.put(game.serverName, game);
             displayNames.add(game.suggestName);
         }
-        //nameMap = Collections.unmodifiableMap(nm);
+
         nameMap.put("хаб", LOBBY);
         nameMap.put("лобби", LOBBY);
         nameMap.put("hub", LOBBY);
@@ -118,11 +112,7 @@ public enum Game {
         nameMap.put("lobby3", LOBBY);
         nameMap.put("lobby4", LOBBY);
         nameMap.put("skyblock", SK); //фикс-портал в лобби отпраляет на skyblock
-        
-        
-        
-        //nameMap = Collections.unmodifiableMap(gnm);
-        
+
     }
     
     //park skyblock не определило

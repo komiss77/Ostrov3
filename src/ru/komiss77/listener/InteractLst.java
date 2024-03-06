@@ -210,14 +210,13 @@ public class InteractLst implements Listener {
                 final GameSign gameSign = GM.signs.get(locAsString);
 //Ostrov.log("locAsString="+locAsString+" gameSign="+gameSign);
                 if (gameSign!=null) {
-                    if (Timer.has(p, "gameSign")) {
-                        p.sendMessage("§8подождите 2 секунды..");
-                        return;
-                    }
-                    Timer.add(p, "gameSign", 2);
-
                     e.setUseInteractedBlock(Event.Result.DENY);
                     e.setUseItemInHand(Event.Result.DENY); //если не отменять, то может сразу сработать слим выхода с арены
+                    if (Timer.has(p, "gameSign")) {
+                        p.sendMessage("§8подождите..");
+                        return;
+                    }
+                    Timer.add(p, "gameSign", 1);
 
                     if (GM.GAME.type==ServerType.ARENAS) {
                         Bukkit.getPluginManager().callEvent(new BsignLocalArenaClick( p, gameSign.arena ));

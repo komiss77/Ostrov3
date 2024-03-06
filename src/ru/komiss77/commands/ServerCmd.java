@@ -107,13 +107,13 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
         
         if (arg.length==0) {
             //op.menu.open(p, Section.РЕЖИМЫ);
-        	final TextComponent.Builder homes = Component.text().content("§bКлик на сервер: §e");
+        	final TextComponent.Builder servers = Component.text().content("§bКлик на сервер: §e");
             for (final String serverName : Game.displayNames) {
-                homes.append(Component.text(serverName+"§7, §e")
+              servers.append(Component.text(serverName+"§7, §e")
             		.hoverEvent(HoverEvent.showText(Component.text("§7Клик - перейти")))
             		.clickEvent(ClickEvent.runCommand("/server "+serverName)));
             }
-            p.sendMessage(homes.build());
+            p.sendMessage(servers.build());
             return true;
         }
         
@@ -150,25 +150,58 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
             
             
             final Game game = Game.fromServerName(serverName);
-//Ostrov.log("onCommand serverName="+serverName+" game="+game); 
-            
-            //нераспознанные отправляем туда,куда набрал
-            if (game==null || game==Game.GLOBAL) {
-                p.sendMessage("§5Не найдена игра с названием §b"+serverName);
-                ApiOstrov.sendToServer(p, serverName, "");
+//Ostrov.log("onCommand serverName="+serverName+" game="+game);
+
+          if (game.type==ServerType.ONE_GAME || game.type==ServerType.LOBBY || arg.length==1) { //в лобби отправляет как /server lobby0 [space] !
+
+            if (game.type == ServerType.ONE_GAME) {
+
+              //чекаем уровень и репу для перехода на серв вообще
+              hasLevel = op.getStat(Stat.LEVEL) >= game.level;
+              hasReputation = op.reputationCalc >= game.reputation;
+              if (!hasLevel || !hasReputation) {
+                p.sendMessage("§cДля перехода на данный сервер требуется уровень > " + game.level + " и репутация > " + game.reputation);
                 return true;
-            }
-            serverName = game.serverName;
-            
-            //чекаем уровень и репу для перехода на серв вообще
-            hasLevel =  op.getStat(Stat.LEVEL)>=game.level;
-            hasReputation =  op.reputationCalc>=game.reputation;
-            if (!hasLevel || !hasReputation) {
-                p.sendMessage("§cДля перехода на данный сервер требуется уровень > "+game.level+" и репутация > "+game.reputation);
-                return true;
+              }
+              if (game == Game.SE) {
+                serverName = op.getTextData("sedna");//подставить сервер выхода с седны!?
+                if (serverName.isEmpty() || !GM.allBungeeServersName.contains(serverName)) {
+                  serverName = "sedna_wastes";
+                }
+//p.sendMessage("to Sedna:"+serverName);
+              }
+
+            } else if (game == Game.LOBBY) {
+
+              if (arg[0].length() == 6 && arg[0].startsWith("lobby")) {
+                serverName = arg[0]; //для лобби восстановить конкретный номер при прямом вводе
+              } else {
+                serverName = "lobby0";
+              }
+
             }
 
+            if (Ostrov.MOT_D.equalsIgnoreCase(serverName)) {
+              p.sendMessage("§6Вы и так уже на этом сервере!");
+              return true;
+            } else {
+              ApiOstrov.sendToServer(p, serverName, "");
+              return true;
+            }
+
+          }
+
+            //нераспознанные отправляем туда,куда набрал
+            //if (game==null || game==Game.GLOBAL) {
+            //    p.sendMessage("§5Не найдена игра с названием §b"+serverName);
+            //    ApiOstrov.sendToServer(p, serverName, "");
+            //    return true;
+            //}
+            //serverName = game.serverName;
             
+
+
+            /*
             final GameInfo gi = GM.getGameInfo(game);
 //Ostrov.log("game="+game+" gi="+gi); 
             if (gi==null || game.type==ServerType.ONE_GAME || game.type==ServerType.LOBBY || arg.length==1) { //в лобби отправляет как /server lobby0 [space] !
@@ -194,11 +227,13 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                     ApiOstrov.sendToServer(p, serverName, "");
                     return true;
                 }
-            }
+            }*/
 
             //определяем арену, если указана как аргумент
             //одиночки сюда уже не дойдут
-            ArenaInfo ai = gi.getArena(serverName, arg[1]);//null;
+            final String arenaMane = arg[1];
+            ArenaInfo ai = GM.lookup(serverName, arenaMane);//gi.getArena(serverName, arg[1]);//null;
+//Ostrov.log("arenaMane=>"+arenaMane+" ai="+ai);
 
 
             if (ai==null) { //арены не определить - просто на серв
@@ -207,6 +242,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                 return true;
 
             } else {
+//Ostrov.log("ai.server="+ai.server+" ai.arenaName="+ai.arenaName);
 
                 //if (game.type!=ServerType.LOBBY && ai.server.equals(Ostrov.MOT_D)) {
                 //    p.sendMessage("§6Вы и так уже на сервере с этой ареной!");

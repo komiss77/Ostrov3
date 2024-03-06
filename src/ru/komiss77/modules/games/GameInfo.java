@@ -16,18 +16,14 @@ import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.translate.Lang;
 import ru.komiss77.utils.ItemBuilder;
 
-
 public class GameInfo {
     
     public final Game game;
     
     private int gameOnline; //для одиночек, либо общий онлайн на аренах
     public final HashMap<Integer,ArenaInfo>arenas=new HashMap<>(); //position в меню, арена. String,Arena нельзя - могут быть одинаковые арены на разных серверах!!
-    
     public Material mat;
 
-     
-    
     public GameInfo( final Game game ) {
         this.game = game;
         mat = Material.matchMaterial(game.mat);

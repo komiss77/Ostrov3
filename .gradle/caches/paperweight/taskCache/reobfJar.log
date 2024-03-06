@@ -1,2 +1,2 @@
 Command: C:\Users\home\.gradle\jdks\eclipse_adoptium-17-amd64-windows\jdk-17.0.10+7\bin\java.exe -Xmx1G -classpath C:\Users\home\.gradle\caches\modules-2\files-2.1\net.fabricmc\tiny-remapper\0.8.10\7b6ef88079ac1d0c306c4f243d689357978b5ae5\tiny-remapper-0.8.10-fat.jar net.fabricmc.tinyremapper.Main D:\Docum\NetBeansProjects\Ostrov3\build\libs\Ostrov-3.0-dev.jar D:\Docum\NetBeansProjects\Ostrov3\build\Ostrov.jar D:\Docum\NetBeansProjects\Ostrov3\.gradle\caches\paperweight\setupCache\extractDevBundle.dir\data\mojang+yarn-spigot-reobf.tiny mojang+yarn spigot D:\Docum\NetBeansProjects\Ostrov3\.gradle\caches\paperweight\setupCache\applyMojangMappedPaperclipPatch.jar --threads=1
-Finished after 1364,08 ms.
+Finished after 1405,44 ms.

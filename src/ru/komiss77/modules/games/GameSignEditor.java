@@ -45,25 +45,25 @@ public class GameSignEditor implements InventoryProvider {
         
         if (game==null) {
             
-            for (final String serverName : GM.allBungeeServersName) {//(Game g : Game.values()) {
-                final Game g = Game.fromServerName(serverName);
+            for (final Game g : Game.values()) {
+                //final Game g = Game.fromServerName(serverName);
                 if (g==Game.GLOBAL) continue;
                 
                 final ItemStack is = new ItemBuilder(Material.matchMaterial(g.mat))
                     .name(g.displayName)
+                    //.addLore("")
+                    //.addLore("§6Игра: §b"+serverName)
                     .addLore("")
-                    .addLore("§6Сервер: §b"+serverName)
-                    .addLore("")
-                    .addLore("§7Выбрать этот сервер")
+                    .addLore("§7Выбрать эту игру")
                     .addLore("§7для таблички")
                     .addLore("")
                     .build();
                 
                     contents.add(ClickableItem.of(is, e -> {
-                        game = g;
                         if (g.type == ServerType.ONE_GAME) {
-                            GM.addGameSign(p, sign, serverName, "");
+                            GM.addGameSign(p, sign, game, game.serverName, "");
                         } else {
+                            game = g;
                             reopen(p, contents);
                         }
                     }));
@@ -92,7 +92,7 @@ public class GameSignEditor implements InventoryProvider {
                     .build();
 
                 contents.add(ClickableItem.of(is, e -> {
-                    GM.addGameSign(p, sign, ai.server, ai.arenaName);
+                    GM.addGameSign(p, sign, game, ai.server, ai.arenaName);
                 }));            
             }
             

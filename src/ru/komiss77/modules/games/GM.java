@@ -5,13 +5,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -40,7 +37,6 @@ import ru.komiss77.modules.translate.Lang;
 import ru.komiss77.utils.LocationUtil;
 import ru.komiss77.utils.OstrovConfig;
 import ru.komiss77.utils.TCUtils;
-
 
 
 //не переименовывать!!!! другие плагины берут напрямую!
@@ -94,6 +90,10 @@ public final class GM {
     //Вызывать async!!!
     public static void reload() {
         games.clear();
+        for (Game g : Game.values()) {
+          if (g==Game.GLOBAL) continue;
+          games.put(g, new GameInfo(g));
+        }
         signs.clear();
         loadArenaInfo(); // 2 !!
     }
@@ -104,30 +104,27 @@ public final class GM {
     //useOstrovData и соединение чекать до вызова! 
     //c 0 прогрузит всё принудительно
     public static void loadArenaInfo() {   //запускается после загрузки в loadServersAndArenas
-//System.out.println(" ++++++++++++++++++ loadArenaInfo fromStamp="+fromStamp);                                    
-        
-        //Statement stmt=null;
+
         ResultSet rs = null;
         try  (Statement stmt = OstrovDB.getConnection().createStatement()){
-            //stmt = OstrovDB.getConnection().createStatement(); 
-//System.out.println(" SELECT `сервер`,`игроки`  FROM "+Table.GAMES_MAIN.table_name+" WHERE `тип` LIKE '"+GameType.SINGLE.toString()+"' AND `штамп` > "+last_check);
-            rs = stmt.executeQuery( " SELECT `name`,`motd`,`online`,`type`  FROM "+Table.BUNGEE_SERVERS.table_name+" WHERE `stamp` >= "+fromStamp ); 
-//System.out.println("loadArenaInfo 1");                                    
-            
+            rs = stmt.executeQuery( " SELECT `name`,`motd`,`online`,`type`  FROM "+Table.BUNGEE_SERVERS.table_name+" WHERE `stamp` >= "+fromStamp );
+
             ServerType type;
+            Game game;
             GameInfo gi;
+
             //прогрузка больших из BUNGEE_SERVERS
             //в таблице банжи могут быть только одиночные и лобби
             while (rs.next()) {
                 
                 type = ServerType.fromString(rs.getString("type"));
                 if (type!=ServerType.ONE_GAME && type!=ServerType.LOBBY) continue; //или getGameInfo ругается на REG и прочие
-                
-                gi = getGameInfo(rs.getString("name"));
-//Ostrov.log("");
-                if (gi!=null) {
-//System.out.println("loadArenaInfo 1 gi="+gi.game);
-                    
+
+                game = Game.fromServerName(rs.getString("name"));
+                gi = getGameInfo(game);
+
+                //if (gi!=null) {
+
                     if (gi.game.type==ServerType.ONE_GAME) {
                         
                         gi.update(
@@ -154,21 +151,19 @@ public final class GM {
                         );
 
                     }
-                }
+                //}
 
             }
             rs.close();
 
-//System.out.println("loadArenaInfo 2");                                    
-            rs = stmt.executeQuery( " SELECT *  FROM "+Table.ARENAS.table_name+" WHERE  `stamp` >= "+fromStamp ); 
-//System.out.println("loadArenaInfo 3"); 
+            //прогрузка по аренам
+            rs = stmt.executeQuery( " SELECT *  FROM "+Table.ARENAS.table_name+" WHERE  `stamp` >= "+fromStamp );
+
             while (rs.next()) {
-                
-                gi = getGameInfo(rs.getString("server"));
-//if (gi==null) System.out.println("--------loadArenaInfo gi=null!!"+rs.getString("server")+" from="+fromStamp);
-                
-                if (gi!=null) {
-//System.out.println("loadArenaInfo 1 gi="+gi.game+">>"+rs.getString("server")+" from="+fromStamp);                    
+                game = Game.fromServerName(rs.getString("game"));
+                gi = getGameInfo(game);
+//Ostrov.log("----- "+rs.getString("game")+" game="+game+" gi="+gi);
+                //if (gi!=null) {
                     if (gi.game.type==ServerType.ARENAS) {
                         
                         ArenaInfo ai = gi.getArena(rs.getString("server"), rs.getString("arenaName"));
@@ -187,7 +182,6 @@ public final class GM {
                             ai.level = rs.getInt("level");
                             ai.reputation = rs.getInt("reputation");
                         }
-//System.out.println("loadArenaInfo 2 gi="+gi.game+" ai="+ai.arenaName+" from="+fromStamp);
 
                         //далее простая обнова
                         gi.update(
@@ -202,7 +196,7 @@ public final class GM {
                         );
 
                     }
-                }
+                //}
                 
             }
 
@@ -227,15 +221,7 @@ public final class GM {
             Ostrov.log_warn("§4GM Не удалось загрузить данные серверов! update_sinfo "+ex.getMessage());
             fromStamp = -1; //c -1 будет пытаться прогрузить по таймеру
             
-        } /*finally {
-            try {
-                if (rs!=null) rs.close();
-                //if (stmt!=null) stmt.close();
-            } catch (SQLException ex) {
-                Ostrov.log_warn("§4GM Не удалось закрыть соединение! update_sinfo "+ex.getMessage());
-            }
-        }*/
-
+        }
 
      }
 
@@ -255,7 +241,7 @@ public final class GM {
     final String line2,
     final String line3
   ) {
-
+//Ostrov.log("==sendArenaData "+arenaName+" : "+state);
     if (game.type==ServerType.ARENAS) {  //на миниигре вызываем локальные эвент для табличек этого сервера! (с банжи не получит)
       //если игры с острова не прогрузились, но локальные арены уже шлют данные -
       //создать локальныю запись, чтобы могли стартовать таблички
@@ -334,72 +320,10 @@ public final class GM {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  private static GameInfo getGameInfo(final String serverName) {
-    final Game game = Game.fromServerName(serverName);
-
-    if (game==null || game==Game.GLOBAL) {
-      Ostrov.log_warn("GameManager onGameData : нет игры для сервера "+serverName);
-      return null;
-    }
-
-    if (!games.containsKey(game)) {
-      switch (game.type) {
-
-        case ONE_GAME, LOBBY, ARENAS -> games.put(game, new GameInfo(game ));
-        default -> {
-          return null;
-        }
-      }
-
-    }
-    return games.get(game);
-    //gi.update(serverName, arenaName, state, players, line0, line1, line2, line3, extra, mat);
-
-  }
-
-
-
-
-
-
-
-
   public static GameInfo getGameInfo(final Game game) {
     if (game==null) return null;
     return games.get(game);
   }
-/*
-  public static Collection<ArenaInfo> getArenas(final Game game) { //аркаим даария bw01 bb01 sg02
-    if (games.containsKey(game)) return games.get(game).arenas.values();
-    else return Collections.emptyList();//new ArrayList<>();
-  }
-
-  public static List<String> getArenasNames(final Game game) {  //аркаим даария bw01 bb01 sg02
-    final List<String> list = new ArrayList<>();
-    if (games.containsKey(game)) {
-      for (final ArenaInfo ai : games.get(game).arenas.values()) {
-        list.add(ai.arenaName);
-      }
-    }
-    return list;
-  }*/
 
   public static Collection<GameInfo> getGames() {
     return games.values();
@@ -465,6 +389,7 @@ public final class GM {
 
         if (gameSigns.getConfigurationSection("signs") !=null)   {
             GameInfo gi;
+            Game game;
             String serverName;
 
             for (String loc_string : gameSigns.getConfigurationSection("signs").getKeys(false)) {
@@ -486,9 +411,19 @@ public final class GM {
                 }
 
                 serverName = gameSigns.getString("signs."+loc_string+".server");
-                gi = getGameInfo(serverName);//games.get(Game.fromServerName(serverName));
+
+                game = Game.fromServerName(gameSigns.getString("signs."+loc_string+".game", ""));
+
+                if (game == Game.GLOBAL) { //фикс для старых значений
+                  Game.fromServerName(serverName);
+                }
+              if (game == Game.GLOBAL) {
+                  Ostrov.log_err("loadGameSign -> Не удалось определить игру для таблички "+ loc_string+" serverName="+serverName);
+                  continue;
+                }
+                gi = getGameInfo(game);//games.get(Game.fromServerName(serverName));
                 if (gi==null) {
-                    Ostrov.log_err("loadGameSign -> Нет игры для сервера "+serverName+", табличка "+ loc_string);
+                    Ostrov.log_err("loadGameSign -> Нет GameInfo для игры "+game+", табличка "+ loc_string);
                     continue;
                 }
 
@@ -499,21 +434,21 @@ public final class GM {
 
                     ai = gi.arenas.get(0);
                     if (ai==null) { //по идее, для больших создаётся нулевая арена автоматом в new GameInfo. Но для перестраховки проверяем.
-                        Ostrov.log_err("loadGameSign -> Нет ArenaInfo для сервера "+serverName+", табличка "+ loc_string);
+                        Ostrov.log_err("loadGameSign -> Нет ArenaInfo для игры "+game+", табличка "+ loc_string);
                     }
 
                 } else if ( gi.game.type==ServerType.ARENAS || gi.game.type==ServerType.LOBBY ) {
 
                     arenaName = gameSigns.getString("signs."+loc_string+".arena", "");
                     if (arenaName.isEmpty()) {
-                        Ostrov.log_err("loadGameSign -> тип сервера "+serverName+"="+gi.game.type+", но аренна не указана; табличка "+ loc_string);
+                        Ostrov.log_err("loadGameSign -> тип сервера ="+gi.game.type+", но аренна не указана; табличка "+ loc_string);
                         continue;
                     }
 
                     ai = gi.getArena(serverName, arenaName);
                 }
 
-                signs.put(loc_string, new GameSign(loc, serverName, arenaName));
+                signs.put(loc_string, new GameSign(loc, game, serverName, arenaName));
                 if (ai!=null) {
                     ai.signs.add(loc_string);
                     updateSigns(ai);
@@ -547,14 +482,14 @@ public final class GM {
     }
 
     
-    public static void addGameSign (final Player p, final Sign sign, final String serverName, final String arenaName) {
+    public static void addGameSign (final Player p, final Sign sign, final Game game, final String serverName, final String arenaName) {
         p.closeInventory();
         final String locAsString = LocationUtil.toString(sign.getBlock().getLocation());
 
-        GM.signs.put( locAsString, new GameSign(sign.getBlock().getLocation(), serverName, arenaName));
+        GM.signs.put( locAsString, new GameSign(sign.getBlock().getLocation(), game, serverName, arenaName));
 
         //добав в инфоб обновить
-        final Game game = Game.fromServerName(serverName);
+        //final Game game = Game.fromServerName(serverName);
         final GameInfo gi = GM.getGameInfo(game);
         final ArenaInfo ai = gi.getArena(serverName, arenaName);
         if (ai!=null) {
@@ -566,7 +501,8 @@ public final class GM {
             ss.line(3, TCUtils.format(ai.line3));
             sign.update();
         }
-        GM.gameSigns.set("signs."+locAsString+".server", serverName);
+      GM.gameSigns.set("signs."+locAsString+".game", game.name());
+      GM.gameSigns.set("signs."+locAsString+".server", serverName);
         GM.gameSigns.set("signs."+locAsString+".arena", arenaName);
         GM.gameSigns.saveConfig();
 
@@ -577,8 +513,48 @@ public final class GM {
         }
         
     }
-    
-    
 
-    
+
+    public static ArenaInfo lookup(final String serverName, final String arenaMane) {
+      for (GameInfo gi : games.values()) {
+        for (ArenaInfo ai : gi.arenas.values()) {
+          if (ai.server.equalsIgnoreCase(serverName) && ai.arenaName.equalsIgnoreCase(arenaMane)) {
+            return ai;
+          }
+        }
+      }
+      return null;
+    }
+
+
 }
+
+
+
+  /*
+    private static GameInfo getGameInfo(final String serverName) {
+      final Game game = Game.fromServerName(serverName);
+
+      if (game==null || game==Game.GLOBAL) {
+        Ostrov.log_warn("GameManager onGameData : нет игры для сервера "+serverName);
+        return null;
+      }
+
+      if (!games.containsKey(game)) {
+        switch (game.type) {
+
+          case ONE_GAME, LOBBY, ARENAS -> games.put(game, new GameInfo(game ));
+          default -> {
+            return null;
+          }
+        }
+
+      }
+      return games.get(game);
+      //gi.update(serverName, arenaName, state, players, line0, line1, line2, line3, extra, mat);
+
+    }*/
+
+
+
+
