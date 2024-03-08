@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import ru.komiss77.Ostrov;
 import ru.komiss77.objects.CaseInsensitiveMap;
 
 // !!!!!!!  не ставить ничего от бакита, не грузит банжик!!!
@@ -92,10 +94,10 @@ public enum Game {
         nameMap = new CaseInsensitiveMap<>();
         
         for (Game game : Game.values()) {
+            if (game==GLOBAL) continue;
             if ( 36 * game.menuPage + game.menuSlot>MAX_SLOT) {
                 MAX_SLOT = 36 * game.menuPage + game.menuSlot;
             }
-            if (game==GLOBAL) continue;
             nameMap.put(game.name(), game); //lobby da pa bw bb sg
             nameMap.put(game.suggestName, game);
             nameMap.put(game.serverName, game);
@@ -130,7 +132,7 @@ public enum Game {
             serverName = serverName.substring(0, 2);
         }
         game = nameMap.get(serverName);
-//Ostrov.log_warn("2 serverName="+serverName+"game="+game);
+//Ostrov.log_warn("2 serverName="+serverName+" game="+game);
         if (game!=null) return game;
         
         if (serverName.startsWith("sedna_")) {

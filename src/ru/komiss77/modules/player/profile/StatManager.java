@@ -34,6 +34,7 @@ public class StatManager {
             return;
         }
         final Oplayer op = PM.getOplayer(p.getName());
+        if (op.isGuest) return;
         if (op==null) {
             Ostrov.log_warn("addStat op==null для "+p.getName()+", stat="+stat.name()+", ammount="+ammount);
             return;
@@ -121,7 +122,10 @@ public class StatManager {
     
     
     public static void reputationCalc(final Oplayer op) {
-        
+        if (op.isGuest) {
+          op.reputationCalc = 0;
+          return;
+        }
         //!!!!!!!!!!создал клан,остров,выбрал класс - проверять через ачивки
         if ( op.getPlayer().hasPermission("ostrov.trust") ) { //if (ApiOstrov.hasGroup(op.nik, "trust")) {
             op.reputationCalc = 100;

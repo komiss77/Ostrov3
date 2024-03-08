@@ -152,7 +152,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
             final Game game = Game.fromServerName(serverName);
 //Ostrov.log("onCommand serverName="+serverName+" game="+game);
 
-          if (game.type==ServerType.ONE_GAME || game.type==ServerType.LOBBY || arg.length==1) { //в лобби отправляет как /server lobby0 [space] !
+          if (game.type==ServerType.ONE_GAME || game.type==ServerType.LOBBY || arg.length==1) {  //в лобби отправляет как /server lobby0 [space] !
 
             if (game.type == ServerType.ONE_GAME) {
 
@@ -169,6 +169,8 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                   serverName = "sedna_wastes";
                 }
 //p.sendMessage("to Sedna:"+serverName);
+              } else {
+                serverName = game.serverName; //могло быть набрано /server Даария
               }
 
             } else if (game == Game.LOBBY) {

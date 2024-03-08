@@ -390,7 +390,7 @@ public final class GM {
         if (gameSigns.getConfigurationSection("signs") !=null)   {
             GameInfo gi;
             Game game;
-            String serverName;
+            String gameName, serverName;
 
             for (String loc_string : gameSigns.getConfigurationSection("signs").getKeys(false)) {
 
@@ -410,17 +410,19 @@ public final class GM {
                     continue;
                 }
 
+                gameName = gameSigns.getString("signs."+loc_string+".game", "");
                 serverName = gameSigns.getString("signs."+loc_string+".server");
-
-                game = Game.fromServerName(gameSigns.getString("signs."+loc_string+".game", ""));
-
-                if (game == Game.GLOBAL) { //фикс для старых значений
-                  Game.fromServerName(serverName);
+                if (gameName.isEmpty()) { //фикс для старых значений
+                  game = Game.fromServerName(serverName);
+                } else {
+                  game = Game.fromServerName(gameName);
                 }
-              if (game == Game.GLOBAL) {
-                  Ostrov.log_err("loadGameSign -> Не удалось определить игру для таблички "+ loc_string+" serverName="+serverName);
+
+                if (game == Game.GLOBAL) {
+                  Ostrov.log_err("loadGameSign -> Не удалось определить игру для таблички "+ loc_string+", gameName="+gameName+", serverName="+serverName);
                   continue;
                 }
+
                 gi = getGameInfo(game);//games.get(Game.fromServerName(serverName));
                 if (gi==null) {
                     Ostrov.log_err("loadGameSign -> Нет GameInfo для игры "+game+", табличка "+ loc_string);

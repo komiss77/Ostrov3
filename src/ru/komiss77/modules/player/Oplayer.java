@@ -367,6 +367,7 @@ public class Oplayer {
     }
 
     public void addStat(final Stat st, final int value) {
+      if (isGuest) return;
         switch (st) {
             case PLAY_TIME, REPUTATION, KARMA -> {
                 return;
@@ -385,6 +386,7 @@ public class Oplayer {
     }
     
     public void addExp(final Player p, int value) { //отдельным методом, т.к. надо ставить отдельно уровень и дневное накопление
+      if (isGuest) return;
         if (value<=0) return;
         int curr_level = getStat(Stat.LEVEL);
         int lvlAdd = 0; //расчёт, сколько добавится уровня
