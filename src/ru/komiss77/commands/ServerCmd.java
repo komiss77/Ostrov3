@@ -1,11 +1,15 @@
 package ru.komiss77.commands;
 
 import com.google.common.collect.ImmutableList;
+import me.rerere.matrix.internal.s;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.bukkit.entity.Player;
 import org.bukkit.command.Command;
@@ -25,10 +29,18 @@ import ru.komiss77.modules.games.GameInfo;
 import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.player.profile.Section;
+import ru.komiss77.objects.CaseInsensitiveSet;
 
 public class ServerCmd implements CommandExecutor, TabCompleter {
-    
-   
+
+  private static final CaseInsensitiveSet displayNames; //для команды /server
+  static {
+    displayNames = new CaseInsensitiveSet();
+    for (Game game : Game.values()) {
+      if (game==Game.GLOBAL) continue;
+      displayNames.add(game.suggestName);
+    }
+  }
     
     @Override
     public List<String> onTabComplete(CommandSender cs, Command cmnd, String command, String[] strings) {
@@ -38,7 +50,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
             
             case 1 -> {
                 //0- пустой (то,что уже введено)
-                return Game.displayNames.stream().filter( name -> name.regionMatches(true, 0, strings[0], 0, strings[0].length()))
+                return displayNames.stream().filter( name -> name.regionMatches(true, 0, strings[0], 0, strings[0].length()))
                     .limit(30).collect(Collectors.toList());
                 //final List <String> sugg = new ArrayList<>();
                 //for (String s : GM.allBungeeServersName) {
@@ -108,7 +120,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
         if (arg.length==0) {
             //op.menu.open(p, Section.РЕЖИМЫ);
         	final TextComponent.Builder servers = Component.text().content("§bКлик на сервер: §e");
-            for (final String serverName : Game.displayNames) {
+            for (final String serverName : displayNames) {
               servers.append(Component.text(serverName+"§7, §e")
             		.hoverEvent(HoverEvent.showText(Component.text("§7Клик - перейти")))
             		.clickEvent(ClickEvent.runCommand("/server "+serverName)));
@@ -147,12 +159,14 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                 p.sendMessage("§cВы сможете покинуть чистилище через "+ApiOstrov.secondToTime(op.getDataInt(Data.BAN_TO)-Timer.getTime()));
                 return true;
             }
-            
-            
-            final Game game = Game.fromServerName(serverName);
+
+          final Game game = Game.fromServerName(serverName);
 //Ostrov.log("onCommand serverName="+serverName+" game="+game);
 
-          if (game.type==ServerType.ONE_GAME || game.type==ServerType.LOBBY || arg.length==1) {  //в лобби отправляет как /server lobby0 [space] !
+          if (arg.length==1
+            || game.type == ServerType.ONE_GAME //для больших аргументы не имеют значения
+            || game.type == ServerType.LOBBY //для лобби аргументы не имеют значения
+            || (arg.length==2 && arg[1].isEmpty()) ) {  //иногда в лобби отправляет как /server lobby0 [space] !
 
             if (game.type == ServerType.ONE_GAME) {
 
@@ -173,7 +187,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                 serverName = game.serverName; //могло быть набрано /server Даария
               }
 
-            } else if (game == Game.LOBBY) {
+            } else if (game.type == ServerType.LOBBY) {
 
               if (arg[0].length() == 6 && arg[0].startsWith("lobby")) {
                 serverName = arg[0]; //для лобби восстановить конкретный номер при прямом вводе
@@ -181,6 +195,17 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                 serverName = "lobby0";
               }
 
+            } else if (game.type == ServerType.ARENAS) { //переход типа /server wz или /server поле_брани, без арены
+              final GameInfo gi = GM.getGameInfo(game);
+              if (gi==null) {
+                p.sendMessage("§5Нет данных для игры "+game.displayName+"!");
+                return true;
+              } else if (gi.arenas.isEmpty()) {
+                p.sendMessage("§5Для игры "+game.displayName+" не найдено арен!");
+                return true;
+              } else {
+                serverName = gi.arenas.get(0).server;
+              }
             }
 
             if (Ostrov.MOT_D.equalsIgnoreCase(serverName)) {
@@ -193,6 +218,48 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
 
           }
 
+          if (displayNames.contains(serverName)) {
+
+          }
+          //далее сработает только если serverName указан напрямую, типа bw01
+
+          //определяем арену, если указана как аргумент
+          //одиночки сюда уже не дойдут
+          final String arenaMane = arg[1];
+          ArenaInfo ai = null;
+          if (game == Game.GLOBAL) {
+            ai = GM.lookup("", arenaMane);//пытаться найти арену по названию
+          } else { //игра была определена (это могло быть типа /server поле_брани арена)
+            final GameInfo gi = GM.getGameInfo(game);
+            ai = gi.getArena(serverName, arenaMane);
+            if (ai==null) {
+              ai = GM.lookup("", arenaMane);//пытаться найти арену по названию
+            }
+          }
+//Ostrov.log("arenaMane=>"+arenaMane+" ai="+ai);
+
+
+          if (ai==null) { //арены не определить - просто на серв
+
+            ApiOstrov.sendToServer(p, serverName, "");
+            return true;
+
+          } else {
+//Ostrov.log("ai.server="+ai.server+" ai.arenaName="+ai.arenaName);
+
+            //if (game.type!=ServerType.LOBBY && ai.server.equals(Ostrov.MOT_D)) {
+            //    p.sendMessage("§6Вы и так уже на сервере с этой ареной!");
+            //    return true;
+            //}
+            hasLevel =  op.getStat(Stat.LEVEL)>=ai.level;
+            hasReputation =  op.reputationCalc>=ai.reputation;
+            if (hasLevel && hasReputation) {
+              ApiOstrov.sendToServer(p, ai.server, ai.arenaName);
+            } else {
+              p.sendMessage("§cДля перехода на данный сервер требуется уровень > "+ai.level+" и репутация > "+ai.reputation);
+            }
+
+          }
             //нераспознанные отправляем туда,куда набрал
             //if (game==null || game==Game.GLOBAL) {
             //    p.sendMessage("§5Не найдена игра с названием §b"+serverName);
@@ -231,34 +298,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                 }
             }*/
 
-            //определяем арену, если указана как аргумент
-            //одиночки сюда уже не дойдут
-            final String arenaMane = arg[1];
-            ArenaInfo ai = GM.lookup(serverName, arenaMane);//gi.getArena(serverName, arg[1]);//null;
-//Ostrov.log("arenaMane=>"+arenaMane+" ai="+ai);
 
-
-            if (ai==null) { //арены не определить - просто на серв
-
-                ApiOstrov.sendToServer(p, serverName, "");
-                return true;
-
-            } else {
-//Ostrov.log("ai.server="+ai.server+" ai.arenaName="+ai.arenaName);
-
-                //if (game.type!=ServerType.LOBBY && ai.server.equals(Ostrov.MOT_D)) {
-                //    p.sendMessage("§6Вы и так уже на сервере с этой ареной!");
-                //    return true;
-                //}
-                hasLevel =  op.getStat(Stat.LEVEL)>=ai.level;
-                hasReputation =  op.reputationCalc>=ai.reputation;
-                if (hasLevel && hasReputation) {
-                    ApiOstrov.sendToServer(p, ai.server, ai.arenaName);
-                } else {
-                    p.sendMessage("§cДля перехода на данный сервер требуется уровень > "+ai.level+" и репутация > "+ai.reputation);
-                }
-
-            }
 
             
         }

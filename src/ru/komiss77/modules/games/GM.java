@@ -520,9 +520,16 @@ public final class GM {
     public static ArenaInfo lookup(final String serverName, final String arenaMane) {
       for (GameInfo gi : games.values()) {
         for (ArenaInfo ai : gi.arenas.values()) {
-          if (ai.server.equalsIgnoreCase(serverName) && ai.arenaName.equalsIgnoreCase(arenaMane)) {
-            return ai;
+          if (serverName.isEmpty()) {
+            if (ai.arenaName.equalsIgnoreCase(arenaMane)) {
+              return ai;
+            }
+          } else {
+            if (ai.server.equalsIgnoreCase(serverName) && ai.arenaName.equalsIgnoreCase(arenaMane)) {
+              return ai;
+            }
           }
+
         }
       }
       return null;

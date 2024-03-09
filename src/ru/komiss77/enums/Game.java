@@ -70,7 +70,7 @@ public enum Game {
     public static int MAX_SLOT;
     public final int level;
     public final int reputation;
-    public static final Set<String> displayNames; //для команды /server
+
     private static final CaseInsensitiveMap<Game> nameMap; //напихать максимально для распознавания
     
     
@@ -90,18 +90,16 @@ public enum Game {
     }
     
     static {
-        displayNames = new HashSet<>();
         nameMap = new CaseInsensitiveMap<>();
-        
+
         for (Game game : Game.values()) {
-            if (game==GLOBAL) continue;
-            if ( 36 * game.menuPage + game.menuSlot>MAX_SLOT) {
-                MAX_SLOT = 36 * game.menuPage + game.menuSlot;
-            }
-            nameMap.put(game.name(), game); //lobby da pa bw bb sg
-            nameMap.put(game.suggestName, game);
-            nameMap.put(game.serverName, game);
-            displayNames.add(game.suggestName);
+          if (game==GLOBAL) continue;
+          if ( 36 * game.menuPage + game.menuSlot>MAX_SLOT) {
+              MAX_SLOT = 36 * game.menuPage + game.menuSlot;
+          }
+          nameMap.put(game.name(), game); //lobby da pa bw bb sg
+          nameMap.put(game.suggestName, game);
+          nameMap.put(game.serverName, game);
         }
 
         nameMap.put("хаб", LOBBY);
@@ -141,6 +139,9 @@ public enum Game {
 
         return GLOBAL; //rg0 ol0 ?
     }
+
+
+
 }
 
 
