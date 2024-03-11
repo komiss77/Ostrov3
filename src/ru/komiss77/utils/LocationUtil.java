@@ -231,53 +231,31 @@ public class LocationUtil {
     }
 
     //годится ли блок для головы?
-    public static boolean isPassable(final Material mat) {
-        if (mat.isAir()) {
-            return true;
-        }
-        return switch (mat) {
-            case AIR, 
-                CAVE_AIR, 
-                VOID_AIR, 
-                STRUCTURE_VOID, 
-                CHORUS_FLOWER, 
-                CHORUS_PLANT, 
-                TALL_GRASS, 
-                SHORT_GRASS,
-                FERN, 
-                LARGE_FERN, 
-                SWEET_BERRY_BUSH, 
-                KELP_PLANT, 
-                BAMBOO, 
-                VINE, 
-                WEEPING_VINES, 
-                MOSS_CARPET, 
-                TWISTING_VINES,
-                WHEAT,
-                PAINTING,
-                LADDER,
-                LILY_PAD -> true;
-            default -> false;
-        };
-        //if (mat.name().endsWith("_BANNER") || mat.name().endsWith("_SIGN")) return true;
-
+    public static boolean isPassable(Material mat) {
+      if (mat.isAir()) return true;
+      return switch (mat) {
+          case AIR, CAVE_AIR, VOID_AIR, BARRIER, STRUCTURE_VOID,
+            CHORUS_FLOWER, CHORUS_PLANT, TALL_GRASS, SHORT_GRASS,
+            FERN, LARGE_FERN, SWEET_BERRY_BUSH, KELP_PLANT, BAMBOO,
+            VINE, WEEPING_VINES, MOSS_CARPET, TWISTING_VINES, WHEAT,
+            PAINTING, LADDER, LILY_PAD -> true;
+          default -> !mat.isOccluding();
+      };
     }
 
-    public static boolean isFeetAllow(final Material mat) {
-        return isPassable(mat) || !mat.isOccluding();
-        //полублоки, снег!!!
+    @Deprecated
+    public static boolean isFeetAllow(Material mat) {
+      return isPassable(mat);
     }
 
-    public static boolean canStand(final Material mat) {
-        return switch (mat) {
-            case LAVA, 
-                WATER, 
-                BEDROCK ->
-                false;
+    public static boolean canStand(Material mat) {
+      switch (mat) {
+        case LAVA:
+        case WATER:
+        case BEDROCK:
 
-            default ->
-                mat.isSolid();
-        };
+      }
+      return mat.isSolid();
     }
 
     @Slow(priority = 1)
