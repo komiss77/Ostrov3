@@ -18,15 +18,15 @@ public class  TeleportLoc {
   private static final int SEARCH_DST = 6;
 
   public static void onSafeLocAsync(final Location loc, final byte dYAir,
-    final boolean down, final boolean lookNear, final Consumer<Location> onFind) {
+    final boolean down, final byte near, final Consumer<Location> onFind) {
     Ostrov.async(() -> {
-      final Location fin = findSafeLoc(loc, dYAir, down, lookNear);
+      final Location fin = findSafeLoc(loc, dYAir, down, near);
       if (fin != null) Ostrov.sync(() -> onFind.accept(fin));
     });
   }
 
   @ThreadSafe
-  public static Location findSafeLoc(final Location loc, final byte dYAir, final boolean down, final boolean lookNear) {
+  public static Location findSafeLoc(final Location loc, final byte dYAir, final boolean down, final byte near) {
     if (loc == null)
       return null;
     WXYZ lc = new WXYZ(loc);
@@ -35,20 +35,19 @@ public class  TeleportLoc {
     WXYZ fin = testLoc(lc, dYAir, down);
     if (fin != null)
       return fin.getCenterLoc();
-    if (lookNear)
-      for (int d = 1; d != 6; d++) {
-        int fd = -d - 1;
-        for (int dx = d; dx != fd; dx--) {
-          for (int dz = d; dz != fd; dz--) {
-            if (dx == d || dz == d || dx == -d || dz == -d) {
-              fin = testLoc(lc.clone().add(dx * FastMath.absInt(dx), 0, dz *
-                FastMath.absInt(dz)), dYAir, down);
-              if (fin != null)
-                return fin.getCenterLoc();
-            }
+    for (int d = 1; d <= near; d++) {
+      int fd = -d - 1;
+      for (int dx = d; dx != fd; dx--) {
+        for (int dz = d; dz != fd; dz--) {
+          if (dx == d || dz == d || dx == -d || dz == -d) {
+            fin = testLoc(lc.clone().add(dx * FastMath.absInt(dx), 0, dz *
+              FastMath.absInt(dz)), dYAir, down);
+            if (fin != null)
+              return fin.getCenterLoc();
           }
         }
       }
+    }
     return null;
   }
 
@@ -57,6 +56,7 @@ public class  TeleportLoc {
     if (loc == null) return null;
     final Location lc = loc.getCenterLoc();
     if (!lc.isChunkLoaded()) Ostrov.sync(() -> lc.getChunk().load());
+    if (air < 1) return loc;
     int reqAir = air;
     if (down) {
       final int min = loc.w.getMinHeight();
@@ -64,12 +64,10 @@ public class  TeleportLoc {
       for (int y = loc.y; y != min; y--) {
 //        for (final Player p : loc.w.getPlayers()) p.sendBlockChange(new Location(loc.w, loc.x, y, loc.z), fbd);
         if (LocationUtil.isPassable(Nms.getFastMat(loc.w, loc.x, y, loc.z))) {
-          reqAir--;
+          if (reqAir != 0) reqAir--;
           continue;
         }
-        if (reqAir < 1) {
-          return new WXYZ(loc.w, loc.x, y + 1, loc.z);
-        }
+        if (reqAir == 0) return new WXYZ(loc.w, loc.x, y + 1, loc.z);
         reqAir = air;
       }
     } else {
@@ -78,12 +76,11 @@ public class  TeleportLoc {
       for (int y = loc.y; y != max; y++) {
         if (LocationUtil.isPassable(Nms.getFastMat(loc.w, loc.x, y, loc.z))) {
           reqAir--;
-          if (reqAir < 1) {
-            int finY = y + reqAir - air + 1;
-            if (finY > loc.y + 2) {
-              return new WXYZ(loc.w, loc.x, finY, loc.z);
-            }
-            return testLoc(new WXYZ(loc.w, loc.x, finY, loc.z), air, true);
+          if (reqAir == 0) {
+            int finY = y - air + 1;
+            final WXYZ nlc = new WXYZ(loc.w, loc.x, finY, loc.z);
+            if (finY == loc.y) return testLoc(nlc, (byte) 1, true);
+            return nlc;
           }
           continue;
         }

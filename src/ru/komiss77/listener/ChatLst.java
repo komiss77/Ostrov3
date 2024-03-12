@@ -34,6 +34,7 @@ import ru.komiss77.utils.PlayerInput;
 import ru.komiss77.utils.TCUtils;
 import ru.komiss77.utils.inventory.InputButton;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -60,7 +61,10 @@ public class ChatLst implements Listener {
   private static final ClickEvent DONATE_CLICK_URL;
 
   static {
-    NIK_COLOR = "§н|b";
+    NIK_COLOR = switch (Ostrov.calendar.get(Calendar.MONTH)) {
+      case 11, 0, 1 -> "§н|b"; case 2, 3, 4 -> "§о|a";
+      case 8, 9, 10 -> "§б|6"; default -> "§с|3";
+    };
     MSG_COLOR = NamedTextColor.GRAY;
     SUGGEST_MUTE_TOOLTIP_RU = TCUtils.format("§кКлик - выдать молчанку");
     //SUGGEST_BLACKLIST_TOOLTIP_RU = TCUtils.format("§кКлик - кинуть в ЧС");

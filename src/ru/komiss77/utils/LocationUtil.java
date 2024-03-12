@@ -231,15 +231,13 @@ public class LocationUtil {
     }
 
     //годится ли блок для головы?
-    public static boolean isPassable(Material mat) {
+    public static boolean isPassable(final Material mat) {
       if (mat.isAir()) return true;
       return switch (mat) {
-          case AIR, CAVE_AIR, VOID_AIR, BARRIER, STRUCTURE_VOID,
-            CHORUS_FLOWER, CHORUS_PLANT, TALL_GRASS, SHORT_GRASS,
-            FERN, LARGE_FERN, SWEET_BERRY_BUSH, KELP_PLANT, BAMBOO,
-            VINE, WEEPING_VINES, MOSS_CARPET, TWISTING_VINES, WHEAT,
-            PAINTING, LADDER, LILY_PAD -> true;
-          default -> !mat.isOccluding();
+          case BARRIER, STRUCTURE_VOID, CHORUS_FLOWER,
+            CHORUS_PLANT, SWEET_BERRY_BUSH, BAMBOO, VINE, WEEPING_VINES,
+            MOSS_CARPET, TWISTING_VINES, LADDER, LILY_PAD -> true;
+          default -> !mat.isCollidable();
       };
     }
 
