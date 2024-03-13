@@ -19,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Ostrov;
+import ru.komiss77.Perm;
 import ru.komiss77.Timer;
 import ru.komiss77.enums.Chanell;
 import ru.komiss77.enums.Data;
@@ -33,6 +34,7 @@ import ru.komiss77.utils.PlayerInput;
 import ru.komiss77.utils.TCUtils;
 import ru.komiss77.utils.inventory.InputButton;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -59,7 +61,10 @@ public class ChatLst implements Listener {
   private static final ClickEvent DONATE_CLICK_URL;
 
   static {
-    NIK_COLOR = "§н|b";
+    NIK_COLOR = switch (Ostrov.calendar.get(Calendar.MONTH)) {
+      case 11, 0, 1 -> "§н|b"; case 2, 3, 4 -> "§о|a";
+      case 8, 9, 10 -> "§б|6"; default -> "§с|3";
+    };
     MSG_COLOR = NamedTextColor.GRAY;
     SUGGEST_MUTE_TOOLTIP_RU = TCUtils.format("§кКлик - выдать молчанку");
     //SUGGEST_BLACKLIST_TOOLTIP_RU = TCUtils.format("§кКлик - кинуть в ЧС");
@@ -250,7 +255,7 @@ public class ChatLst implements Listener {
 
   public static void process (final ChatPrepareEvent ce) {
 
-    final boolean useColorCode = ce.getOplayer().isStaff; //ApiOstrov.isLocalBuilder(ce.getPlayer(), false);
+    final boolean useColorCode = Perm.canColorChat(ce.getOplayer());
 
     final TextComponent msgRU = TCUtils.format( useColorCode ?
       ce.stripMsgRu.replace('&', '§') : //сообщение от билдеров возможно с цветами
@@ -524,6 +529,24 @@ public class ChatLst implements Listener {
 
   //с прокси пришло сообшение от другого сервера по новому каналу
   //приходят 2 волны - на русском и английком
+  public static void onProxyChat(final Chanell ch, final String senderName, final String gsonMsg) {
+    final Component c = GsonComponentSerializer.gson().deserialize(gsonMsg);
+    for (Player p : Bukkit.getOnlinePlayers()) {
+      final Oplayer oplayerTo = PM.getOplayer(p);
+      if (oplayerTo != null) {
+        if (oplayerTo.isBlackListed(senderName) || oplayerTo.isLocalChat()) {
+          continue;
+        }
+        if (oplayerTo.eng && ch == Chanell.CHAT_EN) { //русским русский чат
+          p.sendMessage(c);
+        } else if (!oplayerTo.eng && ch==Chanell.CHAT_RU) { //остальным показываем английскую версию
+          p.sendMessage(c);
+        }
+      }
+    }
+  }
+
+  @Deprecated
   public static void onProxyChat(final Chanell ch, final int proxyId, final String serverName, final String senderName, final String gsonMsg) {
 //Ostrov.log_warn("serverName="+serverName+" senderName="+senderName+" msg="+msg);
     final Component c = GsonComponentSerializer.gson().deserialize(gsonMsg);

@@ -104,7 +104,8 @@ public class ItemBuilder {
     
     public ItemBuilder name(@Nullable final String name) {
       if (meta == null) meta = item.getItemMeta();
-      meta.displayName(TCUtils.format(name));
+      if (name == null) meta.displayName(null);
+      else meta.displayName(TCUtils.format(name));
     	return this;
     }
     
@@ -167,7 +168,8 @@ public class ItemBuilder {
       //else lore.add(TCUtils.format(s));
     	return this;
     }
-    
+
+    @Deprecated
     public ItemBuilder addLore(final Object... lores) {
         if (lores == null) return this;
     	for (final Object o : lores) {
@@ -182,6 +184,7 @@ public class ItemBuilder {
         return this;
     }
 
+    @Deprecated
     public ItemBuilder setLore(final Object o) {
         if (o==null) {
             lore = null;
@@ -192,7 +195,8 @@ public class ItemBuilder {
         }    	
     	return addLore(o);
     }
-    
+
+    @Deprecated
     public ItemBuilder setLore(final Object... lores) {
         if (lores==null) {
             lore = null;

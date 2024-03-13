@@ -250,7 +250,7 @@ public class Oplayer {
     
     public void updTabListName (final Player p) {
         if (Config.tablist_name) {
-            final String displayName = isGuest ? beforeName + "§8(Гость) §7" + getDataString(Data.FAMILY) : beforeName + nik;
+            final String displayName = isGuest ? "§8(Гость) " + beforeName + getDataString(Data.FAMILY) : beforeName + nik;
             p.playerListName(TCUtils.format(tabPreffix + displayName + tabSuffix));
         }
     }
@@ -259,7 +259,7 @@ public class Oplayer {
     public void tag(final String tagPrefix, final String tagSuffix) {
         if (tagPrefix!=null) this.tagPreffix = tagPrefix; //чтобы можно было поменять что-то одно, не трогая другое
         if (tagSuffix!=null) this.tagSuffix = tagSuffix;
-        final String displayName = isGuest ? beforeName + "§8(Гость) §7" + getDataString(Data.FAMILY) : beforeName + nik;
+        final String displayName = isGuest ? "§8(Гость) " + beforeName + getDataString(Data.FAMILY) : beforeName + nik;
         tag.content(this.tagPreffix + displayName + this.tagSuffix);
     }
 

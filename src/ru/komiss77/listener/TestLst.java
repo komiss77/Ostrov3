@@ -1,28 +1,15 @@
 package ru.komiss77.listener;
 
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.DyeColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Sheep;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 import ru.komiss77.ApiOstrov;
-import ru.komiss77.Ostrov;
 import ru.komiss77.modules.bots.AfkBot;
-import ru.komiss77.modules.bots.BotManager;
-import ru.komiss77.modules.player.PM;
-import ru.komiss77.modules.world.WXYZ;
-import ru.komiss77.version.Nms;
-
+import ru.komiss77.utils.TeleportLoc;
 
 
 public class TestLst implements Listener {
@@ -30,14 +17,20 @@ public class TestLst implements Listener {
     private AfkBot bt;
 
 
-  //@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+//  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void test(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
         if (!ApiOstrov.isLocalBuilder(p) || e.getItem()==null) return;
 //Ostrov.log("PlayerInteractEvent "+e.getMaterial());
         if (e.getItem().getType() == Material.DRAGON_BREATH) {
           p.sendMessage("§8TestListener - interact cancel!");
-          if (e.getClickedBlock() == null) {
+          if (e.getClickedBlock() != null) {
+            e.setCancelled(true);
+            TeleportLoc.onSafeLocAsync(e.getClickedBlock().getLocation(), (byte) 3, e.getAction().isLeftClick(), (byte) 1, lc -> {
+              p.sendBlockChange(lc, Material.DIRT.createBlockData());
+            });
+          }
+          /*if (e.getClickedBlock() == null) {
             if (bt != null) {
               bt.remove();
               bt = null;
@@ -54,11 +47,11 @@ public class TestLst implements Listener {
             case 3 -> NamedTextColor.RED;
             case 4 -> NamedTextColor.BLUE;
             default -> NamedTextColor.WHITE;
-          });
+          });*/
         }
         
         if (e.getItem().getType()==Material.WOODEN_PICKAXE) {
-            e.setCancelled(true);
+//            e.setCancelled(true);
             //p.sendMessage("§8TestListener - interact cancel!");
             
             if (e.getAction()==Action.RIGHT_CLICK_AIR ) {
@@ -73,7 +66,6 @@ public class TestLst implements Listener {
                // return;
             }
             if (e.getAction()==Action.RIGHT_CLICK_BLOCK ) {
-              p.sendMessage("§8TestListener - interact cancel!");
                 if (p.isSneaking()) {
                    // p.sendMessage("tag reset");
                 } else {
@@ -100,7 +92,6 @@ public class TestLst implements Listener {
                 //p.sendMessage("name="+Translate.getMaterialName(e.getClickedBlock().getType(), EnumLang.RU_RU));
             }
             if (e.getAction()==Action.LEFT_CLICK_AIR ) {
-              p.setGlowing(false);
                // op.addCd("test", count++);
                 if (p.isSneaking()) {
                    // bot.score.below("aaaaaa"+ApiOstrov.randInt(0, 10), 1);
