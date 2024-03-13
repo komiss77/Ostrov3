@@ -1305,7 +1305,7 @@
 [DEBUG]  Hunk 44: EXACT: @@ -1348,15 +2036,18 @@
 [DEBUG]  Hunk 45: EXACT: @@ -1368,43 +2059,54 @@
 [DEBUG]  Hunk 46: EXACT: @@ -1412,40 +2114,43 @@
-[DEBUG]  Hunk 47: EXACT: @@ -1454,8 +2159,22 @@
+[DEBUG]  Hunk 47: EXACT: @@ -1453,9 +2158,23 @@
 [DEBUG]  Hunk 48: EXACT: @@ -1484,13 +2203,14 @@
 [DEBUG]  Hunk 49: EXACT: @@ -1506,10 +2226,11 @@
 [DEBUG]  Hunk 50: EXACT: @@ -1517,17 +2238,19 @@
@@ -2244,12 +2244,31 @@
 [DEBUG]  Hunk 15: EXACT: @@ -559,7 +569,7 @@
 [DEBUG]  Hunk 16: EXACT: @@ -571,12 +581,27 @@
 [DEBUG] Patching: net/minecraft/world/entity/animal/camel/Camel.java
-[DEBUG]  Hunk 0: EXACT: @@ -148,7 +148,7 @@
-[DEBUG]  Hunk 1: EXACT: @@ -384,12 +384,12 @@
-[DEBUG]  Hunk 2: EXACT: @@ -445,9 +445,9 @@
-[DEBUG]  Hunk 3: EXACT: @@ -556,7 +556,7 @@
-[DEBUG]  Hunk 4: EXACT: @@ -565,7 +565,7 @@
-[DEBUG]  Hunk 5: EXACT: @@ -574,6 +574,7 @@
+[DEBUG]  Hunk 0: EXACT: @@ -53,6 +53,7 @@
+[DEBUG]  Hunk 1: EXACT: @@ -81,37 +82,39 @@
+[DEBUG]  Hunk 2: EXACT: @@ -127,8 +130,7 @@
+[DEBUG]  Hunk 3: EXACT: @@ -137,7 +139,7 @@
+[DEBUG]  Hunk 4: EXACT: @@ -148,8 +150,9 @@
+[DEBUG]  Hunk 5: EXACT: @@ -167,7 +170,7 @@
+[DEBUG]  Hunk 6: EXACT: @@ -214,14 +217,15 @@
+[DEBUG]  Hunk 7: EXACT: @@ -250,7 +254,8 @@
+[DEBUG]  Hunk 8: EXACT: @@ -282,19 +287,20 @@
+[DEBUG]  Hunk 9: EXACT: @@ -305,8 +311,7 @@
+[DEBUG]  Hunk 10: EXACT: @@ -340,21 +345,23 @@
+[DEBUG]  Hunk 11: EXACT: @@ -382,31 +389,35 @@
+[DEBUG]  Hunk 12: EXACT: @@ -423,19 +434,25 @@
+[DEBUG]  Hunk 13: EXACT: @@ -445,28 +462,29 @@
+[DEBUG]  Hunk 14: EXACT: @@ -475,51 +493,56 @@
+[DEBUG]  Hunk 15: EXACT: @@ -539,7 +562,7 @@
+[DEBUG]  Hunk 16: EXACT: @@ -547,8 +570,9 @@
+[DEBUG]  Hunk 17: EXACT: @@ -556,7 +580,7 @@
+[DEBUG]  Hunk 18: EXACT: @@ -565,7 +589,7 @@
+[DEBUG]  Hunk 19: EXACT: @@ -574,6 +598,7 @@
+[DEBUG]  Hunk 20: EXACT: @@ -581,7 +606,7 @@
+[DEBUG]  Hunk 21: EXACT: @@ -589,7 +614,7 @@
+[DEBUG]  Hunk 22: EXACT: @@ -599,7 +624,7 @@
+[DEBUG]  Hunk 23: EXACT: @@ -624,21 +649,24 @@
+[DEBUG]  Hunk 24: EXACT: @@ -652,18 +680,18 @@
 [DEBUG] Patching: net/minecraft/world/entity/animal/frog/Frog.java
 [DEBUG]  Hunk 0: EXACT: @@ -101,7 +101,7 @@
 [DEBUG]  Hunk 1: EXACT: @@ -239,7 +239,12 @@
@@ -2497,21 +2516,22 @@
 [DEBUG]  Hunk 3: EXACT: @@ -69,8 +74,8 @@
 [DEBUG]  Hunk 4: EXACT: @@ -79,9 +84,9 @@
 [DEBUG]  Hunk 5: EXACT: @@ -93,42 +98,57 @@
-[DEBUG]  Hunk 6: EXACT: @@ -162,6 +182,18 @@
-[DEBUG]  Hunk 7: EXACT: @@ -189,9 +221,10 @@
-[DEBUG]  Hunk 8: EXACT: @@ -216,18 +249,20 @@
-[DEBUG]  Hunk 9: EXACT: @@ -236,11 +271,11 @@
-[DEBUG]  Hunk 10: EXACT: @@ -248,26 +283,44 @@
-[DEBUG]  Hunk 11: EXACT: @@ -285,17 +338,23 @@
-[DEBUG]  Hunk 12: EXACT: @@ -323,13 +382,14 @@
-[DEBUG]  Hunk 13: EXACT: @@ -338,7 +398,7 @@
-[DEBUG]  Hunk 14: EXACT: @@ -346,7 +406,7 @@
-[DEBUG]  Hunk 15: EXACT: @@ -358,11 +418,11 @@
-[DEBUG]  Hunk 16: EXACT: @@ -370,19 +430,22 @@
-[DEBUG]  Hunk 17: EXACT: @@ -396,28 +459,43 @@
-[DEBUG]  Hunk 18: EXACT: @@ -425,7 +503,7 @@
-[DEBUG]  Hunk 19: EXACT: @@ -450,8 +528,9 @@
-[DEBUG]  Hunk 20: EXACT: @@ -460,8 +539,9 @@
+[DEBUG]  Hunk 6: EXACT: @@ -141,9 +161,9 @@
+[DEBUG]  Hunk 7: EXACT: @@ -162,6 +182,18 @@
+[DEBUG]  Hunk 8: EXACT: @@ -189,9 +221,10 @@
+[DEBUG]  Hunk 9: EXACT: @@ -216,18 +249,20 @@
+[DEBUG]  Hunk 10: EXACT: @@ -236,11 +271,11 @@
+[DEBUG]  Hunk 11: EXACT: @@ -248,26 +283,44 @@
+[DEBUG]  Hunk 12: EXACT: @@ -285,17 +338,23 @@
+[DEBUG]  Hunk 13: EXACT: @@ -323,13 +382,14 @@
+[DEBUG]  Hunk 14: EXACT: @@ -338,7 +398,7 @@
+[DEBUG]  Hunk 15: EXACT: @@ -346,7 +406,7 @@
+[DEBUG]  Hunk 16: EXACT: @@ -358,11 +418,11 @@
+[DEBUG]  Hunk 17: EXACT: @@ -370,19 +430,22 @@
+[DEBUG]  Hunk 18: EXACT: @@ -396,28 +459,43 @@
+[DEBUG]  Hunk 19: EXACT: @@ -425,7 +503,7 @@
+[DEBUG]  Hunk 20: EXACT: @@ -450,8 +528,9 @@
+[DEBUG]  Hunk 21: EXACT: @@ -460,8 +539,9 @@
 [DEBUG] Patching: net/minecraft/world/entity/decoration/LeashFenceKnotEntity.java
 [DEBUG]  Hunk 0: EXACT: @@ -1,5 +1,6 @@
 [DEBUG]  Hunk 1: EXACT: @@ -8,6 +9,8 @@
@@ -5203,12 +5223,12 @@
 [DEBUG]  Hunk 0: EXACT: @@ -1,6 +1,7 @@
 [DEBUG]  Hunk 1: EXACT: @@ -25,13 +26,22 @@
 [DEBUG]  Hunk 2: EXACT: @@ -67,9 +77,10 @@
-[DEBUG]  Hunk 3: EXACT: @@ -85,23 +96,32 @@
-[DEBUG]  Hunk 4: EXACT: @@ -120,11 +140,11 @@
-[DEBUG]  Hunk 5: EXACT: @@ -157,101 +177,145 @@
-[DEBUG]  Hunk 6: EXACT: @@ -259,7 +323,7 @@
-[DEBUG]  Hunk 7: EXACT: @@ -268,27 +332,31 @@
-[DEBUG]  Hunk 8: EXACT: @@ -302,9 +370,13 @@
+[DEBUG]  Hunk 3: EXACT: @@ -85,23 +96,25 @@
+[DEBUG]  Hunk 4: EXACT: @@ -120,11 +133,11 @@
+[DEBUG]  Hunk 5: EXACT: @@ -157,101 +170,146 @@
+[DEBUG]  Hunk 6: EXACT: @@ -259,7 +317,7 @@
+[DEBUG]  Hunk 7: EXACT: @@ -268,27 +326,31 @@
+[DEBUG]  Hunk 8: EXACT: @@ -302,9 +364,13 @@
 [DEBUG] Patching: net/minecraft/world/level/block/grower/TreeGrower.java
 [DEBUG]  Hunk 0: EXACT: @@ -2,8 +2,11 @@
 [DEBUG]  Hunk 1: EXACT: @@ -18,24 +21,28 @@
@@ -5947,7 +5967,7 @@ Patch Summary:
  Missing files:    0
 
  Failed matches:   0
- Exact matches:    5138
+ Exact matches:    5158
  Access matches:   0
  Offset matches:   0
  Fuzzy matches:    0

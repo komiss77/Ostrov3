@@ -2056,11 +2056,13 @@
                      }
                  }
  
-@@ -1454,8 +2159,22 @@
+@@ -1453,9 +2158,23 @@
+         }
      }
  
-     public void push(double deltaX, double deltaY, double deltaZ) {
+-    public void push(double deltaX, double deltaY, double deltaZ) {
 -        this.setDeltaMovement(this.getDeltaMovement().add(deltaX, deltaY, deltaZ));
++    public final void push(double deltaX, double deltaY, double deltaZ) { // Paper - override the added overload below
 +        // Paper start - Add EntityKnockbackByEntityEvent and EntityPushedByEntityAttackEvent
 +        this.push(deltaX, deltaY, deltaZ, null);
 +    }
@@ -3892,7 +3894,7 @@
          return true;
 @@ -2690,8 +4010,12 @@
  
-     private void teleportPassengers() {
+     public void teleportPassengers() {
          this.getSelfAndPassengers().forEach((entity) -> {
 -            for(Entity entity2 : entity.passengers) {
 -                entity.positionRider(entity2, Entity::moveTo);

@@ -45,7 +45,7 @@
              }
          }
  
-@@ -85,23 +96,32 @@
+@@ -85,23 +96,25 @@
      }
  
      public static void teleportTick(Level world, BlockPos pos, BlockState state, TheEndGatewayBlockEntity blockEntity) {
@@ -63,14 +63,7 @@
 +
              if (!list.isEmpty()) {
 -                teleportEntity(world, pos, state, list.get(world.random.nextInt(list.size())), blockEntity);
-+                // Paper start - Ensure safe gateway teleport
-+                for (Entity entity : list) {
-+                    if (entity.canChangeDimensions()) {
-+                        TheEndGatewayBlockEntity.teleportEntity(world, pos, state, entity, blockEntity);
-+                        break;
-+                    }
-+                }
-+                // Paper end - Ensure safe gateway teleport
++                TheEndGatewayBlockEntity.teleportEntity(world, pos, state, (Entity) list.get(world.random.nextInt(list.size())), blockEntity);
              }
  
              if (blockEntity.age % 2400L == 0L) {
@@ -84,7 +77,7 @@
              setChanged(world, pos, state);
          }
  
-@@ -120,11 +140,11 @@
+@@ -120,11 +133,11 @@
      }
  
      public float getSpawnPercent(float tickDelta) {
@@ -98,7 +91,7 @@
      }
  
      @Override
-@@ -157,101 +177,145 @@
+@@ -157,101 +170,146 @@
      }
  
      public static void teleportEntity(Level world, BlockPos pos, BlockState state, Entity entity, TheEndGatewayBlockEntity blockEntity) {
@@ -169,6 +162,7 @@
 +
 +                    entity1.setPortalCooldown();
 +                    ((ServerPlayer) entity1).connection.teleport(teleEvent.getTo());
++                    entity1.teleportPassengers(); // Paper - teleport passengers as well, preventing invisible passengers post teleport.
 +                    TheEndGatewayBlockEntity.triggerCooldown(world, pos, state, blockEntity); // CraftBukkit - call at end of method
 +                    return;
 +
@@ -297,7 +291,7 @@
                              break;
                          }
                      }
-@@ -259,7 +323,7 @@
+@@ -259,7 +317,7 @@
              }
          }
  
@@ -306,7 +300,7 @@
      }
  
      private static LevelChunk getChunk(Level world, Vec3 pos) {
-@@ -268,27 +332,31 @@
+@@ -268,27 +326,31 @@
  
      @Nullable
      private static BlockPos findValidSpawnInChunk(LevelChunk chunk) {
@@ -353,7 +347,7 @@
      }
  
      private static void spawnGatewayPortal(ServerLevel world, BlockPos pos, EndGatewayConfiguration config) {
-@@ -302,9 +370,13 @@
+@@ -302,9 +364,13 @@
  
      public int getParticleAmount() {
          int i = 0;

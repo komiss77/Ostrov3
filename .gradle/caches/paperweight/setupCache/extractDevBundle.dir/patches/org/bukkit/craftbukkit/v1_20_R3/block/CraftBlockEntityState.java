@@ -52,7 +52,7 @@ public abstract class CraftBlockEntityState<T extends BlockEntity> extends Craft
         super(state);
         this.tileEntity = this.createSnapshot(state.snapshot);
         this.snapshot = this.tileEntity;
-        this.load(this.snapshot);
+        this.loadData(state.getSnapshotNBT());
     }
 
     public void refreshSnapshot() {
