@@ -32,7 +32,7 @@ import ru.komiss77.version.Nms;
 public class Ostrov extends JavaPlugin {
     
     public static Ostrov instance;
-    public static Random random;
+    public static final Random random;
     public static final String L = "Ł";
     public static final String PREFIX = "§2[§aОстров§2] §f";
     public static final String MOT_D;
