@@ -124,3 +124,5 @@ build
 .gradle
 /*.jar
 /gradle/
+/.gradle/
+/.idea/

@@ -1,2 +1,0 @@
-Command: C:\Users\home\.gradle\jdks\eclipse_adoptium-17-amd64-windows\jdk-17.0.10+7\bin\java.exe -Dpaperclip.patchonly=true -classpath D:\Docum\NetBeansProjects\Ostrov3\.gradle\caches\paperweight\setupCache\extractDevBundle.dir\data\paperclip-mojang+yarn.jar io.papermc.paperclip.Main
-Applying patches
