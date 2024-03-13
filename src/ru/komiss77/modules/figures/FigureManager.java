@@ -475,7 +475,7 @@ public class FigureManager implements Initiable {
             le.setCollidable(false);
             le.setRemoveWhenFarAway(false);
             
-            le.setCollidable(false);
+            //le.setCollidable(false);
             //if(entity.getType()==EntityType.WANDERING_TRADER) {
             //    WanderingTrader wt = (WanderingTrader) entity;
             //    wt.getEquipment().

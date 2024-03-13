@@ -62,15 +62,16 @@ public class GameMenu implements InventoryProvider {
                 if (game.menuSlot>0) {
                     content.set(game.menuSlot, ClickableItem.of( gi.getIcon(op), e-> {
                         if (e.isLeftClick()) {
-                            final ArenaInfo ai = gi.arenas.get(0);
-                            if (ai!=null) {
-                                if (ai.server.equalsIgnoreCase(Ostrov.MOT_D)) {//if (game == GM.GAME) { //уже на этом сервере
+                          GM.randomPlay(p, game, null);
+                            //final ArenaInfo ai = gi.arenas.get(0);
+                           // if (ai!=null) {
+                           //     if (ai.server.equalsIgnoreCase(Ostrov.MOT_D)) {//if (game == GM.GAME) { //уже на этом сервере
                                     //p.sendMessage("§6Вы и так уже на этом сервере!");
-                                    Bukkit.getPluginManager().callEvent(new BsignLocalArenaClick( p, ai.arenaName ) );
-                                } else {
-                                  p.performCommand("server "+ai.server);
-                                }
-                            }
+                          //          Bukkit.getPluginManager().callEvent(new BsignLocalArenaClick( p, ai.arenaName ) );
+                         //       } else {
+                         //         p.performCommand("server "+ai.server);
+                         //       }
+                         //   }
                         } else if (e.isRightClick()) {
                           op.menu.openArenaMenu(p, game);
                         }

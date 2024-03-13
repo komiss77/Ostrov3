@@ -198,11 +198,12 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
             } else if (game.type == ServerType.ARENAS) { //переход типа /server wz или /server поле_брани, без арены
               final GameInfo gi = GM.getGameInfo(game);
               if (gi==null) {
-                p.sendMessage("§5Нет данных для игры "+game.displayName+"!");
+                p.sendMessage("§5Нет данных для игры "+game.name()+"!");
                 return true;
               } else if (gi.arenas.isEmpty()) {
-                p.sendMessage("§5Для игры "+game.displayName+" не найдено арен!");
-                return true;
+                p.sendMessage("§5Для игры §6"+game.name()+" §5не найдено арен - редирект на §e"+game.serverName);
+                serverName = game.serverName;
+                //return true;
               } else {
                 serverName = gi.arenas.get(0).server;
               }
@@ -218,9 +219,9 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
 
           }
 
-          if (displayNames.contains(serverName)) {
+          //if (displayNames.contains(serverName)) {
 
-          }
+         // }
           //далее сработает только если serverName указан напрямую, типа bw01
 
           //определяем арену, если указана как аргумент

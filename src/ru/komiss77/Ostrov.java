@@ -176,7 +176,7 @@ public class Ostrov extends JavaPlugin {
         log_ok ("");
         log_ok ("§5===== Регистрация слушателей : postWorld =====");
         WorldManager.autoLoadWorlds(); // 1 !! найти и догрузить миры, помеченные на автозагрузку
-        GM.OnWorldsLoadDone(); //прописать состояние серверов на таблички
+        GM.onWorldsLoadDone(); //прописать состояние серверов на таблички
         //Bukkit.getPluginManager().registerEvents(GM.gmListener, Ostrov.instance);
         
         modules.values().stream().forEach( 

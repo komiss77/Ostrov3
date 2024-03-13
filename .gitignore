@@ -1,7 +1,7 @@
 # User-specific stuff
 .idea/
-!.build_and_start.bat
-!.gradle.properties
+build_and_start.bat
+gradle.properties
 
 *.iml
 *.ipr
@@ -9,6 +9,7 @@
 
 # IntelliJ
 out/
+gradle/
 
 # Eclipse
 .classpath

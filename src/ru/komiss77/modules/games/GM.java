@@ -10,6 +10,8 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
+import me.rerere.matrix.internal.a;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -23,15 +25,14 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
-import ru.komiss77.ApiOstrov;
-import ru.komiss77.Config;
-import ru.komiss77.Ostrov;
-import ru.komiss77.OstrovDB;
+import org.jetbrains.annotations.Nullable;
+import ru.komiss77.*;
 import ru.komiss77.enums.Game;
 import ru.komiss77.enums.GameState;
 import ru.komiss77.enums.Operation;
 import ru.komiss77.enums.ServerType;
 import ru.komiss77.enums.Table;
+import ru.komiss77.events.BsignLocalArenaClick;
 import ru.komiss77.listener.SpigotChanellMsg;
 import ru.komiss77.modules.translate.Lang;
 import ru.komiss77.utils.LocationUtil;
@@ -54,7 +55,7 @@ public final class GM {
     public static final Set<String> allBungeeServersName;
     public static int bungee_online=0;
     public static int fromStamp; //при первом чтении вычитает все арены, дальше только обновы статусов
-        
+    public static boolean reload;
     
     static {
         gameSigns = Config.manager.getNewConfig("gameSigns.yml", new String[]{"", "Ostrov77 gameSigns config file", ""} );
@@ -95,6 +96,7 @@ public final class GM {
           games.put(g, new GameInfo(g));
         }
         signs.clear();
+        fromStamp = 0;
         loadArenaInfo(); // 2 !!
     }
 
@@ -215,6 +217,10 @@ public final class GM {
                 Ostrov.log_ok("§2GM - Загружены данные игр: "+games.size()+", арен: "+a);
             }
             fromStamp = ApiOstrov.currentTimeSec();
+            if (reload) {
+              reload = false;
+              Ostrov.sync( () -> onWorldsLoadDone());
+            }
             
         } catch (SQLException ex) { 
             
@@ -332,6 +338,46 @@ public final class GM {
 
 
 
+  public static void randomPlay(final Player p, final Game game, @Nullable final String serverName) {
+    if (Timer.has(p, "randomPlay")) return;
+    Timer.add(p, "randomPlay", 2);
+    final GameInfo gi = getGameInfo(game);
+    if (gi == null) {
+      p.sendMessage("§cНет данных для игры "+game.displayName+"§r§c, попробуйте позже!");
+      return;
+    }
+    if (gi.arenas.isEmpty()) {
+      p.sendMessage("§cНе найдено арен для игры "+game.displayName+"§r§c, попробуйте позже!");
+      return;
+    }
+    ArenaInfo arenaInfo = null;
+    int max = -1;
+    for (ArenaInfo ai : gi.arenas.values()) {
+      if (serverName!=null && !ai.server.equalsIgnoreCase(serverName)) continue;
+      if (ai.state == GameState.СТАРТ) {
+        arenaInfo = ai;
+        break;
+      }
+      if (ai.state != GameState.ОЖИДАНИЕ) continue;
+      if (ai.players>max) {
+        max = ai.players;
+        arenaInfo = ai;
+      }
+    }
+    if (arenaInfo == null) {
+      p.sendMessage("§cНе найдено арены, подходящей для быстрой игры, попробуйте найти на табличке!");
+      return;
+    }
+    if (arenaInfo.server.equalsIgnoreCase(Ostrov.MOT_D)) {
+      Bukkit.getPluginManager().callEvent(new BsignLocalArenaClick( p, arenaInfo.arenaName) );
+    } else {
+      p.performCommand("server "+arenaInfo.server+" "+arenaInfo.arenaName);
+    }
+
+  }
+
+
+
 
 
 
@@ -384,7 +430,7 @@ public final class GM {
 
 
 
-    public static void OnWorldsLoadDone () {
+    public static void onWorldsLoadDone() {
         signs.clear();
 
         if (gameSigns.getConfigurationSection("signs") !=null)   {

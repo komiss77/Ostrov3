@@ -69,7 +69,7 @@ public class Cuboid {
     }
 
     public Cuboid(final int sizeX, final int sizeY, final int sizeZ) { //создание кубоида, не привязанного к локации (от нуля по размерам)
-        //minX,minY,minZ,spawnAdd будут нули
+        //minX,minY,minZ будут нули, спавн ставится в центре
         maxX = sizeX;
         maxY = sizeY;
         maxZ = sizeZ;

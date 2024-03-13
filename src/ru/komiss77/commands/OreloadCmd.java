@@ -125,9 +125,12 @@ public class OreloadCmd implements Listener, CommandExecutor, TabCompleter {
                                 Perm.loadGroups(true); //2!!! сначала прогрузить allBungeeServersName, или не определяет пермы по серверам
                             }, 0 );
                 //Perm.loadGroups(true);
-                        case "gamemanager" -> Ostrov.async( ()-> GM.reload(), 0);
+                        case "gamemanager" -> {
+                          GM.reload = true;
+                          Ostrov.async( ()-> GM.reload(), 0);
+                        }
                         
-                        case "signs" -> GM.OnWorldsLoadDone();
+                        case "signs" -> GM.onWorldsLoadDone();
                         
                         default -> {
                             // cs.sendMessage( "§cМодули: all, moblimit/ml, pandora, servers, group, inform");
