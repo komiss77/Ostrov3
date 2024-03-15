@@ -9,15 +9,21 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.modules.bots.AfkBot;
+import ru.komiss77.modules.world.XYZ;
 import ru.komiss77.utils.TeleportLoc;
+import ru.komiss77.version.Nms;
+
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class TestLst implements Listener {
 
     private AfkBot bt;
+ XYZ xyz;
+ Set<XYZ> set = new HashSet<>();
 
-
-//  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+  //@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void test(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
         if (!ApiOstrov.isLocalBuilder(p) || e.getItem()==null) return;
@@ -52,7 +58,7 @@ public class TestLst implements Listener {
         
         if (e.getItem().getType()==Material.WOODEN_PICKAXE) {
 //            e.setCancelled(true);
-            //p.sendMessage("§8TestListener - interact cancel!");
+           p.sendMessage("§8TestListener - interact cancel!");
             
             if (e.getAction()==Action.RIGHT_CLICK_AIR ) {
               //Nms.colorGlow(p, NamedTextColor.DARK_AQUA, false);
@@ -67,10 +73,14 @@ public class TestLst implements Listener {
             }
             if (e.getAction()==Action.RIGHT_CLICK_BLOCK ) {
                 if (p.isSneaking()) {
-                   // p.sendMessage("tag reset");
+                  p.sendMessage("fakeBlock set");
+                  Nms.fakeBlock(p, e.getClickedBlock().getLocation(), Material.EMERALD_BLOCK.createBlockData());
+                  xyz = new XYZ(e.getClickedBlock().getLocation());
                 } else {
-
-                  //  p.sendMessage("tag set");
+                  Nms.fakeBlock(p, e.getClickedBlock().getLocation());
+                  XYZ x2 = new XYZ(e.getClickedBlock().getLocation());;
+                  p.sendMessage("==?"+(xyz==x2)+" equals?"+xyz.equals(x2)+" contains?"+set.contains(x2));
+                  set.add(x2);
                 }
 
             }

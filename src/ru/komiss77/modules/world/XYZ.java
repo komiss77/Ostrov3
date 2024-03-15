@@ -1,5 +1,6 @@
 package ru.komiss77.modules.world;
 
+import net.minecraft.core.BlockPos;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -58,7 +59,9 @@ public class XYZ implements Cloneable {
         this.z = z;
         this.worldName = worldName;
     }
-    
+    public static XYZ of(long packedPos) {
+      return new XYZ(null, (int) (packedPos >> 38), (int) ((packedPos << 52) >> 52), (int) ((packedPos << 26) >> 38)); // Paper - simplify/inline
+    }
     
     
     public int distSq(final Location to) {
@@ -142,7 +145,12 @@ public class XYZ implements Cloneable {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+      long l = asLong();
+      if (worldName == null) {
+        return (int) (l ^ (l >>> 32));//return toString().hashCode();
+      } else {
+        return (int) (l ^ (l >>> 32)) ^ worldName.hashCode();
+      }
     }
     
     @Override
@@ -162,4 +170,7 @@ public class XYZ implements Cloneable {
         return  y>>31<<30 ^ x>>31<<29 ^ z>>31<<28 ^ y<<20 ^ x<<10 ^ z;
     }
 
+    public long  asLong () {
+      return (((long) x & (long) 67108863) << 38) | (((long) y & (long) 4095)) | (((long) z & (long) 67108863) << 12);
+    }
 }

@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
@@ -66,6 +67,7 @@ public class Oplayer {
     protected final EnumMap<Stat,Integer> stat = new EnumMap<>(Stat.class);  //локальные снимки,сохранятьне надо. сохраняются в банжи
     protected final EnumMap<Stat,Integer> dailyStat = new EnumMap<>(Stat.class);  //локальные снимки,сохранятьне надо. сохраняются в банжи
     public final Set <Integer> missionIds=new HashSet<>();
+    public HashMap <Long, BlockData> fakeBlock;//=new HashMap<>();
     public final CustomScore score;
     public final CustomTag tag;
     
@@ -256,7 +258,7 @@ public class Oplayer {
     }
     
     //показать/скрыть ник этого оплеера от других
-    public void tag(final String tagPrefix, final String tagSuffix) {
+    public void tag(@Nullable final String tagPrefix, @Nullable final String tagSuffix) {
         if (tagPrefix!=null) this.tagPreffix = tagPrefix; //чтобы можно было поменять что-то одно, не трогая другое
         if (tagSuffix!=null) this.tagSuffix = tagSuffix;
         final String displayName = isGuest ? "§8(Гость) " + beforeName + getDataString(Data.FAMILY) : beforeName + nik;
