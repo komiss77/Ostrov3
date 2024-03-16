@@ -67,7 +67,7 @@ public class Oplayer {
     protected final EnumMap<Stat,Integer> stat = new EnumMap<>(Stat.class);  //локальные снимки,сохранятьне надо. сохраняются в банжи
     protected final EnumMap<Stat,Integer> dailyStat = new EnumMap<>(Stat.class);  //локальные снимки,сохранятьне надо. сохраняются в банжи
     public final Set <Integer> missionIds=new HashSet<>();
-    public HashMap <Long, BlockData> fakeBlock;//=new HashMap<>();
+    public boolean hasFakeBlock; public final HashMap <Long, BlockData> fakeBlock=new HashMap<>();
     public final CustomScore score;
     public final CustomTag tag;
     

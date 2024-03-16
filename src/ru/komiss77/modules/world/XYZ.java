@@ -173,4 +173,7 @@ public class XYZ implements Cloneable {
     public long  asLong () {
       return (((long) x & (long) 67108863) << 38) | (((long) y & (long) 4095)) | (((long) z & (long) 67108863) << 12);
     }
+    public static long  asLong (final Location loc) {
+      return (((long) loc.getBlockX() & (long) 67108863) << 38) | (((long) loc.getBlockY() & (long) 4095)) | (((long) loc.getBlockZ() & (long) 67108863) << 12);
+    }
 }

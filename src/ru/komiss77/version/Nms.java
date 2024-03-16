@@ -52,7 +52,7 @@ import java.util.function.Predicate;
 
 public class Nms {
   public static final List<String> vanilaCommandToDisable ;
-  protected static final BlockPos.MutableBlockPos mutableBlockPosition;
+  protected static final BlockPos.MutableBlockPos mutableBlockPosition; //не юзать при отправке пакетов напрямую! Пакет отправляется с задержкой, значение может уже измениться!
   private static final Key chatKey;
 
   static {
@@ -64,31 +64,32 @@ public class Nms {
       mutableBlockPosition = new BlockPos.MutableBlockPos(0, 0, 0);
   }
 
-  //ЛКМ и ПКМ на фейковый блок будут игнорироваться!
+  //ЛКМ и ПКМ на фейковый блок будут игнорироваться! Еще можно будет добавить подмену блока при получении чанка
   public static void fakeBlock (final Player p, final Location loc, final BlockData bd) {
-    mutableBlockPosition.set(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-    final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(mutableBlockPosition, ((CraftBlockData) bd).getState());
-    sendPacket(p, packet);//p.sendBlockChange(loc, bd); //1!! сначала отправить
-    final Oplayer op = PM.getOplayer(p);
-    if (op.fakeBlock==null) op.fakeBlock = new HashMap<>();
-    op.fakeBlock.put(mutableBlockPosition.asLong(), bd); //2! это заблочит исходящий пакет обновы
+    final long l = XYZ.asLong(loc);
+    fakeBlock(p, l, bd);
   }
 
   public static void fakeBlock (final Player p, final XYZ xyz, final BlockData bd) {
-    mutableBlockPosition.set(xyz.x, xyz.y, xyz.z);
-    final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(mutableBlockPosition, ((CraftBlockData) bd).getState());
-    sendPacket(p, packet);//p.sendBlockChange(loc, bd); //1!! сначала отправить
+    final long l = xyz.asLong();
+    fakeBlock(p, l, bd);
+  }
+
+  public static void fakeBlock (final Player p, final long l, final BlockData bd) {
+    final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(BlockPos.of(l), ((CraftBlockData) bd).getState());
+    sendPacket(p, packet);//mutableBlockPosition не катит, меняется пока пакет отправляется! надо BlockPos.of(l)
     final Oplayer op = PM.getOplayer(p);
-    if (op.fakeBlock==null) op.fakeBlock = new HashMap<>();
-    op.fakeBlock.put(mutableBlockPosition.asLong(), bd); //2! это заблочит исходящий пакет обновы
+    op.fakeBlock.put(l, bd); //2! это заблочит исходящий пакет обновы
+    op.hasFakeBlock = true;
   }
   public static void fakeBlock (final Player p, final Location loc) {
     final Oplayer op = PM.getOplayer(p);
-    mutableBlockPosition.set(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-    if ( op.fakeBlock!=null && op.fakeBlock.remove(mutableBlockPosition.asLong())!=null ) {
-      final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(mutableBlockPosition, ((CraftBlockData) loc.getBlock().getBlockData()).getState());
+    //mutableBlockPosition.set(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    final long l = XYZ.asLong(loc);
+    if ( op.hasFakeBlock && op.fakeBlock.remove(l)!=null ) {
+      final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(BlockPos.of(l), ((CraftBlockData) loc.getBlock().getBlockData()).getState());
       sendPacket(p, packet);//p.sendBlockChange(loc, loc.getBlock().getBlockData());
-      if (op.fakeBlock.isEmpty()) op.fakeBlock=null;
+      op.hasFakeBlock = !op.fakeBlock.isEmpty();
     }
     //PM.getOplayer(p).fakeBlock.remove(mutableBlockPosition.asLong());
   }

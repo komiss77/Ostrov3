@@ -358,10 +358,11 @@ public final class GM {
         arenaInfo = ai;
         break;
       }
-      if (ai.state != GameState.ОЖИДАНИЕ) continue;
-      if (ai.players>max) {
-        max = ai.players;
-        arenaInfo = ai;
+      if (ai.state == GameState.ОЖИДАНИЕ || ai.state == GameState.РАБОТАЕТ) {
+        if (ai.players > max) {
+          max = ai.players;
+          arenaInfo = ai;
+        }
       }
     }
     if (arenaInfo == null) {

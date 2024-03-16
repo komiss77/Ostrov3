@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import ru.komiss77.ApiOstrov;
+import ru.komiss77.Ostrov;
 import ru.komiss77.modules.bots.AfkBot;
 import ru.komiss77.modules.world.XYZ;
 import ru.komiss77.utils.TeleportLoc;
@@ -23,10 +24,11 @@ public class TestLst implements Listener {
  XYZ xyz;
  Set<XYZ> set = new HashSet<>();
 
-  //@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+//  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void test(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
-        if (!ApiOstrov.isLocalBuilder(p) || e.getItem()==null) return;
+      if (e.getItem()==null) return;
+      if (!ApiOstrov.isLocalBuilder(p)) return;
 //Ostrov.log("PlayerInteractEvent "+e.getMaterial());
         if (e.getItem().getType() == Material.DRAGON_BREATH) {
           p.sendMessage("§8TestListener - interact cancel!");
@@ -61,6 +63,10 @@ public class TestLst implements Listener {
            p.sendMessage("§8TestListener - interact cancel!");
             
             if (e.getAction()==Action.RIGHT_CLICK_AIR ) {
+              for (XYZ xyz : set) {
+                Ostrov.log("fakeBlock "+xyz+" : "+xyz.hashCode());
+                Nms.fakeBlock(p, xyz, Material.GOLD_BLOCK.createBlockData());
+              }
               //Nms.colorGlow(p, NamedTextColor.DARK_AQUA, false);
                 //final String name = "РоботДолбоёб";//+ApiOstrov.randInt(0, 10);
                // if (bot==null) {
@@ -79,7 +85,7 @@ public class TestLst implements Listener {
                 } else {
                   Nms.fakeBlock(p, e.getClickedBlock().getLocation());
                   XYZ x2 = new XYZ(e.getClickedBlock().getLocation());;
-                  p.sendMessage("==?"+(xyz==x2)+" equals?"+xyz.equals(x2)+" contains?"+set.contains(x2));
+                  p.sendMessage("==?"+(xyz==x2)+" equals?"+xyz.equals(x2)+" contains?"+set.contains(x2)+" size="+set.size());
                   set.add(x2);
                 }
 

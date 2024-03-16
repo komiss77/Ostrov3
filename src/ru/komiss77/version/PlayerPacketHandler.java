@@ -5,12 +5,10 @@ import java.util.Iterator;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData;
-import org.bukkit.craftbukkit.v1_20_R3.util.CraftLocation;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import ru.komiss77.Ostrov;
@@ -96,7 +94,7 @@ public class PlayerPacketHandler extends ChannelDuplexHandler {
 
           if (pa.getAction() ==  ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK) {
 //Ostrov.log("START_DESTROY_BLOCK fakeBlock?"+op.fakeBlock.containsKey(pa.getPos().asLong()));
-            if (op.fakeBlock!=null && op.fakeBlock.containsKey(pa.getPos().asLong())) {
+            if (op.hasFakeBlock && op.fakeBlock.containsKey(pa.getPos().asLong())) {
               return;
             }
           }
@@ -105,7 +103,7 @@ public class PlayerPacketHandler extends ChannelDuplexHandler {
         }  else if (packet instanceof ServerboundUseItemOnPacket uip) {
             if (uip.getHitResult() != null) {
 //Ostrov.log("UseItem fakeBlock?"+op.fakeBlock.containsKey(uip.getHitResult().getBlockPos().asLong()));
-              if (op.fakeBlock!=null && op.fakeBlock.containsKey(uip.getHitResult().getBlockPos().asLong())) {
+              if (op.hasFakeBlock && op.fakeBlock.containsKey(uip.getHitResult().getBlockPos().asLong())) {
                 return;
               }
             }
@@ -121,17 +119,19 @@ public class PlayerPacketHandler extends ChannelDuplexHandler {
     public void write(final ChannelHandlerContext chc, final Object packet, final ChannelPromise channelPromise) throws Exception {
 
     //при интеракт отправляет обнову блока после эвента. Чтобы не делать отправку с задержкой тик, нужно подменить исход.пакет
-      if (packet instanceof ClientboundBlockUpdatePacket bup && op.fakeBlock!=null) {
-        BlockData bd = op.fakeBlock.get(bup.getPos().asLong());
+      if (packet instanceof ClientboundBlockUpdatePacket bup && op.hasFakeBlock) {
+        final BlockData bd = op.fakeBlock.get(bup.getPos().asLong());
         if (bd!=null) {
           bup = new ClientboundBlockUpdatePacket(bup.getPos(), ((CraftBlockData) bd).getState());
           super.write(chc, bup, channelPromise);
-          //bup.blockState = ((CraftBlockData) bd).getState();
-        //if (op.fakeBlock.contains(bup.getPos().asLong())) {
 //Ostrov.log("replace ClientboundBlockUpdatePacket ");
           return;
         }
       }
+
+      //if (packet instanceof ClientboundLevelChunkPacketData lcp && op.hasFakeBlock) {
+      //  lcp.  - возможно добавить в будущем, но обработчик будет громоздкий!
+     // }
 
         if (BotManager.enable.get()) {
             int id = 0;
