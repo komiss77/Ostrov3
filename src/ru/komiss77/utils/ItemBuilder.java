@@ -84,12 +84,6 @@ public class ItemBuilder {
         item.setType(material);
         if (meta == null) return this;
         meta = Bukkit.getItemFactory().asMetaFor(meta, material);
-        /*if (oldMeta.hasDisplayName()) meta.displayName(oldMeta.displayName());
-        if (oldMeta.hasLore()) lore = oldMeta.lore();// meta.lore(oldMeta.lore());
-        if (oldMeta.hasCustomModelData()) meta.setCustomModelData(oldMeta.getCustomModelData());
-        if (oldMeta.hasEnchants()) {
-            oldMeta.getEnchants().keySet().forEach(enc -> meta.addEnchant(enc, oldMeta.getEnchantLevel(enc), true) );
-        }*/
         return this;
     }
 

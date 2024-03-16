@@ -368,25 +368,25 @@ public class Oplayer {
 
     public void addStat(final Stat st, final int value) {
       if (isGuest) return;
-        switch (st) {
-            case PLAY_TIME, REPUTATION, KARMA -> {
-                return;
-            }
-            case EXP -> {
-                addExp(getPlayer(), value);
-                return;
-            }
-            default -> {}
-        }
-        stat.put(st, getStat(st)+value);
-        dailyStat.put(st, getDaylyStat(st)+value);
-        SpigotChanellMsg.sendMessage(getPlayer(), Operation.ADD_BUNGEE_STAT, nik, st.tag, value, "", "");
-        MissionManager.onStatAdd(this, st, value);
-        //ApiOstrov.sendMessage(getPlayer(), Action.SET_DATA_TO_BUNGEE, st.tag+E_Stat.diff, getDaylyStat(st), "", ""); //надо отдельно, или вычислять старое значение ?
+      switch (st) {
+          case PLAY_TIME, REPUTATION, KARMA -> {
+              return;
+          }
+          case EXP -> {
+              addExp(getPlayer(), value);
+              return;
+          }
+          default -> {}
+      }
+      stat.put(st, getStat(st)+value);
+      dailyStat.put(st, getDaylyStat(st)+value);
+      SpigotChanellMsg.sendMessage(getPlayer(), Operation.ADD_BUNGEE_STAT, nik, st.tag, value, "", "");
+      MissionManager.onStatAdd(this, st, value);
+      //ApiOstrov.sendMessage(getPlayer(), Action.SET_DATA_TO_BUNGEE, st.tag+E_Stat.diff, getDaylyStat(st), "", ""); //надо отдельно, или вычислять старое значение ?
     }
     
     public void addExp(final Player p, int value) { //отдельным методом, т.к. надо ставить отдельно уровень и дневное накопление
-      if (isGuest) return;
+        if (isGuest) return;
         if (value<=0) return;
         int curr_level = getStat(Stat.LEVEL);
         int lvlAdd = 0; //расчёт, сколько добавится уровня
