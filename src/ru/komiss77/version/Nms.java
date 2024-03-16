@@ -20,11 +20,10 @@ import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.v1_20_R3.util.CraftLocation;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -40,6 +39,7 @@ import ru.komiss77.Ostrov;
 import ru.komiss77.modules.bots.BotEntity;
 import ru.komiss77.modules.games.GM;
 import ru.komiss77.modules.player.Oplayer;
+import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.world.WXYZ;
 import ru.komiss77.modules.world.XYZ;
 import ru.komiss77.scoreboard.SubTeam;
@@ -47,10 +47,7 @@ import ru.komiss77.utils.FastMath;
 import ru.komiss77.utils.TCUtils;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class Nms {
@@ -67,6 +64,34 @@ public class Nms {
       mutableBlockPosition = new BlockPos.MutableBlockPos(0, 0, 0);
   }
 
+  //ЛКМ и ПКМ на фейковый блок будут игнорироваться!
+  public static void fakeBlock (final Player p, final Location loc, final BlockData bd) {
+    mutableBlockPosition.set(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(mutableBlockPosition, ((CraftBlockData) bd).getState());
+    sendPacket(p, packet);//p.sendBlockChange(loc, bd); //1!! сначала отправить
+    final Oplayer op = PM.getOplayer(p);
+    if (op.fakeBlock==null) op.fakeBlock = new HashMap<>();
+    op.fakeBlock.put(mutableBlockPosition.asLong(), bd); //2! это заблочит исходящий пакет обновы
+  }
+
+  public static void fakeBlock (final Player p, final XYZ xyz, final BlockData bd) {
+    mutableBlockPosition.set(xyz.x, xyz.y, xyz.z);
+    final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(mutableBlockPosition, ((CraftBlockData) bd).getState());
+    sendPacket(p, packet);//p.sendBlockChange(loc, bd); //1!! сначала отправить
+    final Oplayer op = PM.getOplayer(p);
+    if (op.fakeBlock==null) op.fakeBlock = new HashMap<>();
+    op.fakeBlock.put(mutableBlockPosition.asLong(), bd); //2! это заблочит исходящий пакет обновы
+  }
+  public static void fakeBlock (final Player p, final Location loc) {
+    final Oplayer op = PM.getOplayer(p);
+    mutableBlockPosition.set(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    if ( op.fakeBlock!=null && op.fakeBlock.remove(mutableBlockPosition.asLong())!=null ) {
+      final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(mutableBlockPosition, ((CraftBlockData) loc.getBlock().getBlockData()).getState());
+      sendPacket(p, packet);//p.sendBlockChange(loc, loc.getBlock().getBlockData());
+      if (op.fakeBlock.isEmpty()) op.fakeBlock=null;
+    }
+    //PM.getOplayer(p).fakeBlock.remove(mutableBlockPosition.asLong());
+  }
 
   public static void chatFix() { // Chat Report fix  https://github.com/e-im/FreedomChat https://www.libhunt.com/r/FreedomChat
     final ServerOutPacketHandler handler = new ServerOutPacketHandler();
@@ -88,7 +113,7 @@ public class Nms {
 
 
   public static void addPlayerPacketSpy(final Player p, final Oplayer op) {
-    final PlayerInPacketHandler packetSpy = new PlayerInPacketHandler(op);
+    final PlayerPacketHandler packetSpy = new PlayerPacketHandler(op);
     final ChannelPipeline pipeline = Craft.toNMS(p).connection.connection.channel.pipeline();////EntityPlayer->PlayerConnection->NetworkManager->Chanell->ChannelPipeli
     pipeline.addBefore("packet_handler", "ostrov_"+p.getName(), packetSpy);
   }
@@ -206,7 +231,7 @@ public class Nms {
     SpigotConfig.restartMessage = "§4Перезагрузка...";
 
     switch (GM.GAME) {
-      case AR, DA, OB, SW, MI -> {
+      case AR, DA, OB, SK, SG, MI -> {
         SpigotConfig.disableAdvancementSaving = false;
         SpigotConfig.disabledAdvancements = Collections.emptyList();
         SpigotConfig.disableStatSaving = false;

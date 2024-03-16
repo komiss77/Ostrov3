@@ -5,8 +5,12 @@ import java.util.Iterator;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.v1_20_R3.util.CraftLocation;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import ru.komiss77.Ostrov;
@@ -16,8 +20,29 @@ import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.utils.PlayerInput;
 import ru.komiss77.utils.inventory.InputButton;
 
+/*
+ClientboundBlockUpdatePacket отправляется из
+ServerPlayerGameMode: handleBlockBreakAction при ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, destroyAndAck, destroyBlock,
+ServerGamePacketListenerImpl: handleUseItemOn(ServerboundUseItemOnPacket packet)
 
-public class PlayerInPacketHandler extends ChannelDuplexHandler {
+
+ServerGamePacketListenerImpl :
+	handleUseItemOn(ServerboundUseItemOnPacket packet)
+	handlePlayerAction(ServerboundPlayerActionPacket packet)
+	ServerboundPlayerActionPacket.Action packetplayinblockdig_enumplayerdigtype = packet.getAction(); (START_DESTROY_BLOCK, ABORT_DESTROY_BLOCK,STOP_DESTROY_BLOCK)
+
+	public static long asLong(int x, int y, int z) {
+        return (((long) x & (long) 67108863) << 38) | (((long) y & (long) 4095)) | (((long) z & (long) 67108863) << 12); // Paper - inline constants and simplify
+    }
+
+	public static BlockPos of(long packedPos) {
+        return new BlockPos((int) (packedPos >> 38), (int) ((packedPos << 52) >> 52), (int) ((packedPos << 26) >> 38)); // Paper - simplify/inline
+    }
+
+ */
+
+
+public class PlayerPacketHandler extends ChannelDuplexHandler {
 
     private final Oplayer op;
   public static Field interactIdField, moveIdField;
@@ -34,43 +59,79 @@ public class PlayerInPacketHandler extends ChannelDuplexHandler {
     }
   }
 
-
-
-    public PlayerInPacketHandler(final Oplayer op) {
+    public PlayerPacketHandler(final Oplayer op) {
         this.op = op;
     }
 
-    @Override
+
+
+  //входящие пакеты от клиента до получения ядром
+  @Override
     public void channelRead(final @NotNull ChannelHandlerContext chc, final @NotNull Object packet) throws Exception {
         
-        if (packet instanceof final ServerboundInteractPacket pk) { // Paper start - PlayerUseUnknownEntityEvent
+        if (packet instanceof final ServerboundInteractPacket ip) { // Paper start - PlayerUseUnknownEntityEvent
 //Ostrov.log(""+pk.);
             if (BotManager.enable.get()) {
-                final int id = pk.getEntityId();
+                final int id = ip.getEntityId();
                 for (final BotEntity bot : BotManager.botById.values()) {
                     if (bot.hashCode() == id) {
-                        interactIdField.set(pk, bot.rid);
+                        interactIdField.set(ip, bot.rid);
                         break;
                     }
                 }
 //                if (useEntityPacket.getActionType() == PacketPlayInUseEntity.b.b) {}
             }
             
-        } else if (packet instanceof ServerboundSignUpdatePacket signPacket) {
+        } else if (packet instanceof ServerboundSignUpdatePacket sup) {
             final Player p = op.getPlayer();//Bukkit.getPlayerExact(name);
             if (p!=null && PlayerInput.inputData.containsKey(p)) {  // в паспорте final String[] split = msg.split(" ");
-                final String result = signPacket.getLines()[0] + " " + signPacket.getLines()[1] + " " + signPacket.getLines()[2] + " " + signPacket.getLines()[3];
+                final String result = sup.getLines()[0] + " " + sup.getLines()[1] + " " + sup.getLines()[2] + " " + sup.getLines()[3];
                 Ostrov.sync(  () -> PlayerInput.onInput(p, InputButton.InputType.SIGN, result), 0 );
                 return; //пакет ввода с таблички не отдаём в сервер!
             }
+
+
+
+        } else if (packet instanceof ServerboundPlayerActionPacket pa) {
+
+          if (pa.getAction() ==  ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK) {
+//Ostrov.log("START_DESTROY_BLOCK fakeBlock?"+op.fakeBlock.containsKey(pa.getPos().asLong()));
+            if (op.fakeBlock!=null && op.fakeBlock.containsKey(pa.getPos().asLong())) {
+              return;
+            }
+          }
+
+
+        }  else if (packet instanceof ServerboundUseItemOnPacket uip) {
+            if (uip.getHitResult() != null) {
+//Ostrov.log("UseItem fakeBlock?"+op.fakeBlock.containsKey(uip.getHitResult().getBlockPos().asLong()));
+              if (op.fakeBlock!=null && op.fakeBlock.containsKey(uip.getHitResult().getBlockPos().asLong())) {
+                return;
+              }
+            }
+
         }
         
         super.channelRead(chc, packet);
     }
 
-    
-    @Override
+
+  //исходящие пакеты от ядра до отправки клиенту
+  @Override
     public void write(final ChannelHandlerContext chc, final Object packet, final ChannelPromise channelPromise) throws Exception {
+
+    //при интеракт отправляет обнову блока после эвента. Чтобы не делать отправку с задержкой тик, нужно подменить исход.пакет
+      if (packet instanceof ClientboundBlockUpdatePacket bup && op.fakeBlock!=null) {
+        BlockData bd = op.fakeBlock.get(bup.getPos().asLong());
+        if (bd!=null) {
+          bup = new ClientboundBlockUpdatePacket(bup.getPos(), ((CraftBlockData) bd).getState());
+          super.write(chc, bup, channelPromise);
+          //bup.blockState = ((CraftBlockData) bd).getState();
+        //if (op.fakeBlock.contains(bup.getPos().asLong())) {
+//Ostrov.log("replace ClientboundBlockUpdatePacket ");
+          return;
+        }
+      }
 
         if (BotManager.enable.get()) {
             int id = 0;

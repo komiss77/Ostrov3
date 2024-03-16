@@ -3,7 +3,7 @@ https://www.curseforge.com/minecraft/mc-mods/cmdcam?__cf_chl_jschl_tk__=pmd_r0uG
 кастомные биомы тема https://www.spigotmc.org/threads/how-to-create-custom-biomes.512105/page-2
 генератор биомов https://github.com/VolmitSoftware/Iris https://www.spigotmc.org/resources/iris-world-gen-custom-biome-colors.84586/
 
-тэг остался после смерти? скрывать в гм3
+менюитем can_interact на работает
 меню - ссылка на гуи скинов, сайт?
 нет отчёта о низком тпс
 !!!аркаимл - что лагает?? + читерские предметы
