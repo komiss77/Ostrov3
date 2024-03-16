@@ -133,7 +133,6 @@ public class DisplayManager implements Initiable, Listener {
 
 		final int ln = 20 * showForSec + msg.length();
 		Timer.add(pl, "FakeText", ln >> 5);
-
 		final TextDisplay tds = loc.getWorld().spawn(loc, TextDisplay.class, td -> {
       td.setBillboard(Display.Billboard.VERTICAL);
       td.setVisibleByDefault(false);
@@ -141,6 +140,7 @@ public class DisplayManager implements Initiable, Listener {
       td.setShadowed(shadow);
       td.setSeeThrough(xray);
       td.setGravity(false);
+      td.setLineWidth(160);
       td.setViewRange(160);
     });
 
