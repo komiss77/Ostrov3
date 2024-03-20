@@ -64,6 +64,11 @@ public class Nms {
       mutableBlockPosition = new BlockPos.MutableBlockPos(0, 0, 0);
   }
 
+  public static boolean isServerStopped() {
+    return Craft.toNMS().hasStopped();
+  }
+
+
   //ЛКМ и ПКМ на фейковый блок будут игнорироваться! Еще можно будет добавить подмену блока при получении чанка
   public static void fakeBlock (final Player p, final Location loc, final BlockData bd) {
     final long l = XYZ.asLong(loc);

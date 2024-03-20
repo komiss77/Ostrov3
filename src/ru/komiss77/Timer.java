@@ -86,7 +86,7 @@ public class Timer {
         if (reloadPermIntervalSec<10 || reloadPermIntervalSec > 10800) reloadPermIntervalSec = 600;
         if (perms_autoupdate) Ostrov.log_ok ("§5Автообновление прав с интервалом "+ApiOstrov.secondToTime(reloadPermIntervalSec));
         
-        Ostrov.async(()-> {
+        Ostrov.async( ()-> {
             try {
                 final NTPUDPClient timeClient = new NTPUDPClient();
                 final InetAddress inetAddress = InetAddress.getByName("ntp.ubuntu.com");
@@ -144,6 +144,7 @@ public class Timer {
                         }
                         if (time_left==0) {
                             this.cancel();
+                            Ostrov.SHUT_DOWN = true;
                             Bukkit.shutdown();
                             return;
                         }

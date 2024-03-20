@@ -16,6 +16,7 @@
  import org.bukkit.event.entity.EntityDeathEvent;
  import org.bukkit.event.entity.EntitySpawnEvent;
  import org.bukkit.event.player.PlayerRegisterChannelEvent;
+ import org.bukkit.event.server.PluginDisableEvent;
  import org.bukkit.event.server.PluginEnableEvent;
  import org.bukkit.event.server.ServerLoadEvent;
  import org.bukkit.event.world.EntitiesLoadEvent;
@@ -39,8 +40,18 @@
 
 
  public class ServerLst implements Listener {
-    
-    
+
+
+   @EventHandler(priority = EventPriority.HIGHEST)
+   public void onDisable(PluginDisableEvent e) { //надо отловить SHUT_DOWN, т.к. зависимые плагины отгружаются первыми!!
+//Ostrov.log_warn("PluginDisableEvent isServerStopped?"+Nms.isServerStopped()+" SHUT_DOWN="+Ostrov.SHUT_DOWN);
+     if (!Ostrov.SHUT_DOWN && Nms.isServerStopped()) {
+        Ostrov.SHUT_DOWN = true;
+     }
+   }
+
+
+
     @EventHandler (priority = EventPriority.MONITOR)
     public void onRestartWarning (final RestartWarningEvent e) {
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "clean");

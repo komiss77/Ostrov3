@@ -232,7 +232,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
             ai = GM.lookup("", arenaMane);//пытаться найти арену по названию
           } else { //игра была определена (это могло быть типа /server поле_брани арена)
             final GameInfo gi = GM.getGameInfo(game);
-            ai = gi.getArena(serverName, arenaMane);
+            ai = gi.getArena(game.serverName, arenaMane);
             if (ai==null) {
               ai = GM.lookup("", arenaMane);//пытаться найти арену по названию
             }
