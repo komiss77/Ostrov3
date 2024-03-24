@@ -3,21 +3,36 @@ https://www.curseforge.com/minecraft/mc-mods/cmdcam?__cf_chl_jschl_tk__=pmd_r0uG
 кастомные биомы тема https://www.spigotmc.org/threads/how-to-create-custom-biomes.512105/page-2
 генератор биомов https://github.com/VolmitSoftware/Iris https://www.spigotmc.org/resources/iris-world-gen-custom-biome-colors.84586/
 
-менюитем can_interact на работает
-меню - ссылка на гуи скинов, сайт?
-нет отчёта о низком тпс
 !!!аркаимл - что лагает?? + читерские предметы
-отчёты серверов - на хттп
 
 не загрузить незер (нет папки регион, там dim-1)
 https://multipaper.io/#pricing сохранение данных до перехода с сервера (по команде server??)
 
+Подвисает соединение с островом
+§с MissionManager onCustomStatAdd : No operations allowed after connection closed.
+[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
+[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
+[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
+[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
+[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
+[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
+[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
+
+в миссиях переделать [Остров] Timer querry executePstAsync INSERT INTO missionsProgress (recordId,name,missionId,taken)
+VALUES ('657673442', '_fruti_tuti_', '619', '1710085989');  : Duplicate entry '657673442' for key 'PRIMARY'
+
+saveLocalData error Danillisimo -> Duplicate entry 'Danillisimo' for key 'name'
+
+
+
+
+
 нет эвента PlayerCommandPreprocessEvent при performCommand
+менюитем can_interact на работает
+отчёты серверов, данные арен  - на хттп или редис
 
-glowing передлелать https://github.com/SkytAsul/GlowingEntities/blob/master/src/main/java/fr/skytasul/glowingentities/GlowingEntities.java
-фэйковые блоки : отсылать и не пропускать обратно интеракт
 
-
++меню - ссылка на гуи скинов, сайт?
 
 
 
@@ -28,15 +43,9 @@ glowing передлелать https://github.com/SkytAsul/GlowingEntities/blob/
 доделки WE: скан не сохран.текст табличек
 ресурспаки - на прокси?
 билдер не дает FAWE юзать
-штатные ачивки сохранять
-улучшить genLore
-ScoreBoardBelow показывает не под владельцем борды а под другими
 
 меню настроек - глобальные и по мирам отдешльно, сохранять с миром?
-
-пролопатить все плагины, иправить высоту мира (особенно где использовано cLoc - кланы,лобби)
 игры возможно - при входе сразу в игру, везде систему голосований на свободные арены!
-слизать сайт https://minecraft.rtgame.co.uk/
 
 везде проверять, или ставят ' и запросы ломаются!
 if (!ApiOstrov.checkString(strip, true, true, true)) {

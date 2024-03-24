@@ -5,10 +5,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Tag;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.DoubleChest;
-import org.bukkit.block.Sign;
+import org.bukkit.block.*;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
@@ -33,6 +30,7 @@ import org.bukkit.inventory.InventoryHolder;
 import ru.komiss77.*;
 import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.player.PM;
+import ru.komiss77.modules.translate.Lang;
 import ru.komiss77.utils.inventory.SmartInventory;
 
 import java.util.Collection;
@@ -202,8 +200,12 @@ public class SignProtectLst implements Initiable, Listener {
           Sign current = SignProtect.findBlockProtection(attachedTo);
           if (e.getPlayer().isSneaking()) {
             if (current==null) {
-              Sign s = (Sign) placed.getState();
               final Oplayer op = PM.getOplayer(e.getPlayer());
+              if (op.isGuest) {
+                e.getPlayer().sendMessage("§5Гости не могут ставить защитные таблички!");
+                return;
+              }
+              Sign s = (Sign) placed.getState();
               int curr = 1;
               if (op.mysqlData.containsKey("signProtect") && !op.mysqlData.get("signProtect").isEmpty()) {
                 curr = Integer.parseInt(op.mysqlData.get("signProtect"));
@@ -220,6 +222,12 @@ public class SignProtectLst implements Initiable, Listener {
               ApiOstrov.sendActionBarDirect(e.getPlayer(), "§6Защита уже установлена!");
             }
           }
+        }
+      } else if ( SignProtect.lockables.contains(e.getBlock().getType())) {
+        final Oplayer op = PM.getOplayer(e.getPlayer());
+        if (!op.isGuest && !op.mysqlData.containsKey("signProtect") && Timer.has(e.getPlayer(), "signProtect")) {
+          e.getPlayer().sendMessage("§eЗащити "+ Lang.t(e.getBlock().getType(), e.getPlayer())+" - для этого присесть и правый клик табличкой!");
+          Timer.add(e.getPlayer(), "signProtect", 900);
         }
       }
     }

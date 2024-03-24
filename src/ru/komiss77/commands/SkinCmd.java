@@ -27,7 +27,7 @@ public class SkinCmd implements CommandExecutor {
             return false; 
         }
 
-        SkinRestorerHook.requestPage (p, 0);
+        SkinRestorerHook.openGui (p, 0);
                 
         return true;
     }

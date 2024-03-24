@@ -1,5 +1,6 @@
 package ru.komiss77.modules.player.profile;
 
+import ru.komiss77.hook.SkinRestorerHook;
 import ru.komiss77.modules.player.mission.ProfileWithdrawMenu;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -173,24 +174,27 @@ public class ProfileSection implements InventoryProvider {
         
         
         content.set(1 ,7, ClickableItem.of(new ItemBuilder(Material.BEACON)
-            .name(op.eng ? "§7Groups and perms" : "§7Группы и права")
-            .addLore("")
+            .name(op.eng ? "§bGroups and perms" : "§bГруппы и права")
             .addLore(op.eng ? "§7Detailed information" : "§7Подробная информация")
             .addLore(op.eng ? "§7about your groups" : "§7о ваших группах")
             .addLore(op.eng ? "§7and personal perms." : "§7и личных правах.")
+            .addLore((op.eng ? "§fActive groups found: §a" : "§fНайдено активных групп: §a")+op.getGroups().size())
+            .addLore(op.eng ? "§7LMB - get data from the DB" : "§7ЛКМ - показать данные из БД")
             .addLore("")
-            .addLore((op.eng ? "§7Active groups found: " : "§7Найдено активных групп: ")+op.getGroups().size())
-            .addLore("")
-            .addLore(op.eng ? "§7LMB - get data from the DB" : "§7ЛКМ - данные из БД")
+            .addLore(op.eng ? "§6Show permissions" : "§6Показать права (пермишены)")
+            .addLore(op.eng ? "§7loaded for" : "§7загруженные для")
+            .addLore(op.eng ? "§7this server" : "§7этого сервера")
+            .addLore(op.eng ? "§7LMB - details" : "§7ЛКМ - подробно")
             .addLore("")
             .build(), e-> {
+              if (e.isLeftClick()) {
                 pm.openGroupsAndPermsDB(p, 0);
+              } else if (e.isRightClick()) {
+                pm.openPerms(p, 0);
+              }
             }));
 
 
-        
-        
-        
         
         
         
@@ -285,19 +289,13 @@ public class ProfileSection implements InventoryProvider {
         );
                 
                 
-        content.set(2 ,6, ClickableItem.of(new ItemBuilder(Material.LIME_DYE)
-            .name(op.eng ? "§7Check permissions" : "§7Проверить права")
+        content.set(2 ,6, ClickableItem.of(new ItemBuilder(Material.PITCHER_PLANT)
+            .name(op.eng ? "§5Change skin" : "§5Сменить скин")
             .addLore("")
-            .addLore(op.eng ? "§7Show permissions" : "§7Показать права (пермишены)")
-            .addLore(op.eng ? "§7loaded for" : "§7загруженные для")
-            .addLore(op.eng ? "§7this server" : "§7этого сервера")
-            .addLore("")
-            .addLore((op.eng ? "§7Records found: §6" : "§7Найдено записей: §6")+op.user_perms.size())
-            .addLore("")
-            .addLore(op.eng ? "§7LMB - details" : "§7ЛКМ - подробно")
+            .addLore(op.eng ? "§7LMB - open skin menu" : "§7ЛКМ - открыть меню скинов")
             .addLore("")
             .build(), e-> {
-                pm.openPerms(p, 0);
+              SkinRestorerHook.openGui(p, 0);
             }));
 
         

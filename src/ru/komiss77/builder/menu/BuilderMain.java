@@ -145,7 +145,7 @@ public class BuilderMain implements InventoryProvider {
         content.set(1, 4, ClickableItem.of(new ItemBuilder(Material.GOLD_INGOT)
                 .name("§7Редактор миссий")
           .addLore("§7ЛКМ - редактор")
-          .addLore("§7ПКМ - debug addCustomStat")
+          //.addLore("§7ПКМ - debug addCustomStat")
                 .addLore(StatManager.DEBUG ? "§7ПКМ - §cdisable §7addCustomStat debug" : "§7ПКМ - §aenable §7addCustomStat debug")
                 .build(), e -> {
                   if (e.isLeftClick()) {

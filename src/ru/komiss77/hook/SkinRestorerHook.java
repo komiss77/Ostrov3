@@ -2,28 +2,57 @@ package ru.komiss77.hook;
 
 import java.io.*;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import com.google.common.io.ByteArrayDataInput;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
+import ru.komiss77.ApiOstrov;
 import ru.komiss77.Ostrov;
+import ru.komiss77.Timer;
 import ru.komiss77.enums.Chanell;
+import ru.komiss77.enums.Data;
 import ru.komiss77.utils.ItemBuilder;
 import ru.komiss77.utils.ItemUtils;
-import ru.komiss77.utils.inventory.ClickableItem;
-import ru.komiss77.utils.inventory.InventoryContent;
-import ru.komiss77.utils.inventory.InventoryProvider;
-import ru.komiss77.utils.inventory.SmartInventory;
+import ru.komiss77.utils.TCUtils;
+import ru.komiss77.utils.inventory.*;
 
 public class SkinRestorerHook {
 
-  protected static final String TEXTURES_NAME = "textures";
+  protected static final String TEXTURES_NAME;
+  private static final Map<Integer, Map<String, String>> cache;
+
+  static {
+    TEXTURES_NAME = "textures";
+    cache = new HashMap<>();
+  }
+
+  public static void openGui (final Player p, final int page) {
+    final Map<String, String> skinList = cache.get(page);
+    if (skinList == null) {
+      requestPage(p, page);
+      return;
+    }
+    SmartInventory
+      .builder()
+      .id(p.getName()+"skins")
+      .provider(new SkinGui(page, skinList))
+      .size(6, 9)
+      .title("§fНастройка скина"+(page==0?"":" §7стр."+page))
+      .build()
+      .open(p);
+  }
 
   public static void onMsg(final Player p, final ByteArrayDataInput in) {
     if (p==null || !p.isOnline()) {
@@ -41,15 +70,9 @@ public class SkinRestorerHook {
         final byte[] msgBytes = new byte[len];
         in.readFully(msgBytes);
         final Map<String, String> skinList = convertToMap(msgBytes);
+        cache.put(page, skinList);
+        openGui(p, page);
 
-        SmartInventory
-          .builder()
-          .id(p.getName()+"skins")
-          .provider(new SkinGui(page, skinList))
-          .size(6, 9)
-          .title("§fНастройка скина"+(page==0?"":" §7стр."+page))
-          .build()
-          .open(p);
 
       } else if (subChannel.equalsIgnoreCase("SkinUpdateV2")) {
 
@@ -86,13 +109,44 @@ public class SkinRestorerHook {
   }
 
 
-  public static void requestPage(Player p, int page) {
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    DataOutputStream out = new DataOutputStream(bytes);
+  public static void requestPage(final Player p, final int page) {
+    final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    final DataOutputStream out = new DataOutputStream(bytes);
     try {
       out.writeUTF("getSkins");
       out.writeUTF(p.getName());
       out.writeInt(page);
+      p.sendPluginMessage(Ostrov.instance, Chanell.SKIN.name, bytes.toByteArray());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static void setSkin(final Player p, final String skinName) {
+    if (Timer.has(p, "skin")) {
+      p.sendMessage("§6Вы сможете сменить скин через "+Timer.getLeft(p, "skin")+" сек.!");
+      return;
+    } else {
+      Timer.add(p, "skin", 20);
+    }
+    final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    final DataOutputStream out = new DataOutputStream(bytes);
+    try {
+      out.writeUTF("setSkin");
+      out.writeUTF(p.getName());
+      out.writeUTF(skinName);
+      p.sendPluginMessage(Ostrov.instance, Chanell.SKIN.name, bytes.toByteArray());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static void resetSkin(final Player p) {
+    final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    final DataOutputStream out = new DataOutputStream(bytes);
+    try {
+      out.writeUTF("clearSkin");
+      out.writeUTF(p.getName());
       p.sendPluginMessage(Ostrov.instance, Chanell.SKIN.name, bytes.toByteArray());
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -135,7 +189,6 @@ public class SkinRestorerHook {
     p.playSound(p.getLocation(), Sound.BLOCK_COMPARATOR_CLICK, 5, 5);
 
     content.fillRow(4, fill);
-  //  final Oplayer op = PM.getOplayer(p);
 
 
 
@@ -154,13 +207,24 @@ public class SkinRestorerHook {
           Ostrov.log_warn("SkinsGUI: Skin count is more than 36, skipping...");
           break;
         }
+        final String skinName = en.getKey();
         final ItemStack is = new ItemBuilder(Material.PLAYER_HEAD)
-          .name(en.getKey())
-            .setCustomHeadTexture(en.getValue())
-              .build();
+          .name(skinName)
+          .addLore("ЛКМ - посмотреть на сайте")
+          .addLore("ПКМ - одеть")
+          .setCustomHeadTexture(en.getValue())
+          .build();
 
         content.add(ClickableItem.of( is, e-> {
-
+            if (e.getClick() == ClickType.LEFT) {
+              p.closeInventory();
+              //https://ru.namemc.com/profile/Whaut
+              p.sendMessage(Component.text("§f§l* Клик сюда - посмотреть на сайте *", NamedTextColor.WHITE)
+                .hoverEvent(HoverEvent.showText(Component.text("§f§l* Клик сюда - посмотреть на сайте *")))
+                .clickEvent(ClickEvent.openUrl("https://ru.namemc.com/profile/"+skinName)));
+            } else if (e.getClick() == ClickType.RIGHT) {
+                SkinRestorerHook.setSkin(p, skinName);
+            }
           } )
         );
         skinCount++;
@@ -168,31 +232,43 @@ public class SkinRestorerHook {
 
     }
 
+    content.set(5, 2,  new InputButton( InputButton.InputType.ANVILL, new ItemBuilder(Material.NAME_TAG)
+        .name("§3Скин по нику")
+        .addLore("")
+        .addLore("§7Ввести название")
+        .addLore("§7лицензионного аккаунта")
+        .addLore("")
+        .build(),  "alex", msg -> {
 
+        if (msg.length()>16) {
+          p.sendMessage("§сНе более 16 символов!");
+          return;
+        }
+        if (!ApiOstrov.checkString(msg, true, false)) {
+          p.sendMessage("§сНедопустимые символы! Можно только A-Z/a-z/0-9");
+          return;
+        }
+        SkinRestorerHook.setSkin(p, msg);
+      }
+      )
+    );
 
-                /*
-                case HEAD -> {
-                    String skinName = event.displayName();
-                    adapter.runAsync(() -> adapter.sendToMessageChannel(event.player(), out -> {
-                        out.writeUTF("setSkin");
-                        out.writeUTF(player.getName());
-                        out.writeUTF(skinName);
-                    }));
-                    player.closeInventory();
-                }
-                case RED_PANE -> {
-                    adapter.runAsync(() -> adapter.sendToMessageChannel(event.player(), out -> {
-                        out.writeUTF("clearSkin");
-                        out.writeUTF(player.getName());
-                    }));
-                    player.closeInventory();
-                }
- */
+    final ItemStack is = new ItemBuilder(Material.REDSTONE)
+      .name("§6Удалить скин")
+      .build();
+
+    content.set(5, 6, ClickableItem.of( is, e-> {
+        if (e.getClick() == ClickType.LEFT) {
+          p.closeInventory();
+          SkinRestorerHook.resetSkin(p);
+        }
+      })
+    );
 
     if (page>0) {
       content.set(5, 0, ClickableItem.of(ItemUtils.previosPage, e
           -> {
-        SkinRestorerHook.requestPage(p, page-1);
+        SkinRestorerHook.openGui(p, page-1);
         })
       );
     }
@@ -200,7 +276,7 @@ public class SkinRestorerHook {
     if (page<999 && skinList.size()==36) {
       content.set(5, 8, ClickableItem.of(ItemUtils.nextPage, e
           -> {
-          SkinRestorerHook.requestPage(p, page+1);
+          SkinRestorerHook.openGui(p, page+1);
         }
       ));
     }
