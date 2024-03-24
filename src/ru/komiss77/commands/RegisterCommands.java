@@ -42,6 +42,7 @@ public class RegisterCommands {
         plugin.getCommand("tpr").setExecutor(new TprCmd());
         plugin.getCommand("analytics").setExecutor(new AnalyticsCmd());
         plugin.getCommand("home").setExecutor(new HomeCmd());
+        plugin.getCommand("skin").setExecutor(new SkinCmd());
 
         plugin.getCommand("builder").setExecutor(new BuilderCmd());
         plugin.getCommand("admin").setExecutor(new AdminCmd());

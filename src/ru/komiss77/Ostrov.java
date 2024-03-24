@@ -40,12 +40,12 @@ public class Ostrov extends JavaPlugin {
     
     private static final Map <String, Initiable> modules;
     public static boolean newDay, vault, dynmap, wg, advance;
-   
+    public static boolean SHUT_DOWN; //по этому плагу другие плагины не будут сохранять данные асинх   org.bukkit.plugin.IllegalPluginAccessException: Plugin attempted to register task while disabled
+    public static boolean STARTUP = true; //до окончания прогрузки всех миров
     public static final Calendar calendar;
     private static final Date date;
     private static final SimpleDateFormat full_sdf;
-  public static boolean SHUT_DOWN; //по этому плагу другие плагины не будут сохранять данные асинх   org.bukkit.plugin.IllegalPluginAccessException: Plugin attempted to register task while disabled
-  public static boolean STARTUP = true; //до окончания прогрузки всех миров
+
 
   static {
         random = new Random();

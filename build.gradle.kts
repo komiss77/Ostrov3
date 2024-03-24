@@ -11,6 +11,15 @@ description = "ostrov77"
 dependencies {
   paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
   implementation(fileTree("libs"))
+  compileOnly("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
+  annotationProcessor("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
+}
+
+repositories {
+  maven {
+    name = "papermc"
+    url = uri("https://repo.papermc.io/repository/maven-public/")
+  }
 }
 
 sourceSets {

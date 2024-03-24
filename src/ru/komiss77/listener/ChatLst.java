@@ -531,7 +531,31 @@ public class ChatLst implements Listener {
 
   //с прокси пришло сообшение от другого сервера по новому каналу
   //приходят 2 волны - на русском и английком
-  public static void onProxyChat(final Chanell ch, final String senderName, final String gsonMsg) {
+  public static void onProxyChat(final Chanell ch, final int proxyId, final String serverName, final String senderName, final String gsonMsg) {
+//Ostrov.log_warn("serverName="+serverName+" senderName="+senderName+" msg="+msg);
+    final Component c = GsonComponentSerializer.gson().deserialize(gsonMsg);
+
+    Oplayer oplayerTo;
+    for (Player p : Bukkit.getOnlinePlayers())   {
+      oplayerTo = PM.getOplayer(p);
+      if (oplayerTo != null) {
+        if (oplayerTo.isBlackListed(senderName) || oplayerTo.isLocalChat()) {
+          continue;
+        }
+        if (oplayerTo.eng && ch == Chanell.CHAT_EN) { //русским русский чат
+          p.sendMessage(c);
+        } else if (!oplayerTo.eng && ch==Chanell.CHAT_RU) { //остальным показываем английскую версию
+          p.sendMessage(c);
+        }
+      }
+    }
+
+  }
+
+
+}
+
+  /*public static void onProxyChat(final Chanell ch, final String senderName, final String gsonMsg) {
     final Component c = GsonComponentSerializer.gson().deserialize(gsonMsg);
     for (Player p : Bukkit.getOnlinePlayers()) {
       final Oplayer oplayerTo = PM.getOplayer(p);
@@ -546,34 +570,4 @@ public class ChatLst implements Listener {
         }
       }
     }
-  }
-
-  @Deprecated
-  public static void onProxyChat(final Chanell ch, final int proxyId, final String serverName, final String senderName, final String gsonMsg) {
-//Ostrov.log_warn("serverName="+serverName+" senderName="+senderName+" msg="+msg);
-    final Component c = GsonComponentSerializer.gson().deserialize(gsonMsg);
-
-    Oplayer oplayerTo;
-    for (Player p : Bukkit.getOnlinePlayers())   {
-      oplayerTo = PM.getOplayer(p);
-      if (oplayerTo != null) {
-        if (oplayerTo.isBlackListed(senderName) || oplayerTo.isLocalChat()) {
-          continue;
-        }
-        //if (p.getClientOption(ClientOption.LOCALE).equals("ru_ru") && ch == Chanell.CHAT_RU) { //русским русский чат
-        if (oplayerTo.eng && ch == Chanell.CHAT_EN) { //русским русский чат
-          p.sendMessage(c);
-        } else if (!oplayerTo.eng && ch==Chanell.CHAT_RU) { //остальным показываем английскую версию
-          p.sendMessage(c);
-        }
-      }
-      //if (ch==Chanell.CHAT) { //пришло от сервера без перевода
-      // p.sendMessage(c);
-      // } else {
-      //}
-    }
-
-  }
-
-
-}
+  }*/

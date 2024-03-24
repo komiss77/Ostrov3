@@ -22,6 +22,7 @@ import ru.komiss77.enums.Operation;
 import ru.komiss77.enums.Stat;
 import ru.komiss77.events.FriendTeleportEvent;
 import ru.komiss77.events.OstrovChanelEvent;
+import ru.komiss77.hook.SkinRestorerHook;
 import ru.komiss77.modules.games.GM;
 import ru.komiss77.modules.games.GameInfo;
 import ru.komiss77.modules.player.Oplayer;
@@ -197,7 +198,7 @@ public class SpigotChanellMsg implements Listener, PluginMessageListener {
 	@Override
     public void onPluginMessageReceived(final String chanelName, Player msgTransport, byte[] msg) {
         final Chanell ch = Chanell.fromName(chanelName);
-//Ostrov.log_warn("1 >>>>MessageReceived: chanelName="+chanelName+" Chanell="+ch);  
+//Ostrov.log_warn("1 >>>>MessageReceived: chanelName="+chanelName+" Chanell="+ch+" msgTransport="+msgTransport.getName());
         if (ch == null) {
             Ostrov.log_err("onPluginMessage Chanell=null : "+chanelName);
             return; 
@@ -211,6 +212,9 @@ public class SpigotChanellMsg implements Listener, PluginMessageListener {
             if (ch == Chanell.CHAT_EN || ch == Chanell.CHAT_RU) {
                 ChatLst.onProxyChat (ch, in.readInt(), in.readUTF(), in.readUTF(), in.readUTF());
                 return;
+            } else if (ch==Chanell.SKIN) { //перехват skinrestorer
+              SkinRestorerHook.onMsg(msgTransport, in);
+              return;
             }
             
             final Operation operation = Operation.byTag(in.readInt());

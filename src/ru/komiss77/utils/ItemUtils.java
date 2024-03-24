@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import java.net.URI;
-
+import com.google.gson.Gson;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Color;
 import org.bukkit.EntityEffect;
@@ -60,10 +60,14 @@ public class ItemUtils {
   public static final NamespacedKey key;
   private static final CaseInsensitiveMap<com.destroystokyo.paper.profile.PlayerProfile> playerProfilesCache;
   public static final ItemStack air, book, add, nextPage, previosPage;
+  private static final Pattern regex;
+  private static final Gson GSON;
 
   static {
     key = new NamespacedKey(Ostrov.instance, "ostrov");
     playerProfilesCache = new CaseInsensitiveMap<>();
+    regex = Pattern.compile("(.{1,24}(?:\\s|$))|(.{0,24})", Pattern.DOTALL);
+    GSON = new Gson();
     air = new ItemStack(Material.AIR);
     book = new ItemStack(Material.WRITTEN_BOOK);
     add = new ItemBuilder(Material.PLAYER_HEAD)
@@ -126,15 +130,6 @@ public class ItemUtils {
     return is;
   }
 
-  public static ItemMeta setHeadTexture(final SkullMeta skullMeta, String skullTexture) {
-    if (skullTexture.length() > 72) { //определяяем зашифрованную ссылку
-      final String decoded = new String(Base64.getDecoder().decode(skullTexture));
-      skullTexture = decoded.substring("{\"textures\":{\"SKIN\":{\"url\":\"".length(), decoded.length() - "\"}}}".length());
-    }
-    com.destroystokyo.paper.profile.PlayerProfile profile = ItemUtils.getProfile(skullTexture);
-    skullMeta.setPlayerProfile(profile);
-    return skullMeta;
-  }
 
   public enum Texture {
     nextPage("c2f910c47da042e4aa28af6cc81cf48ac6caf37dab35f88db993accb9dfe516"),
@@ -166,27 +161,49 @@ public class ItemUtils {
     }
   }
 
+  public static ItemMeta setHeadTexture(final SkullMeta skullMeta, String skinData) {
+    if (skinData.length() > 72) { //определяяем зашифрованную ссылку
+      skinData = new String(Base64.getDecoder().decode(skinData));
+      int idx = skinData.indexOf("SKIN");
+      if (idx>0) {
+        skinData = skinData.substring(idx + 25);
+        idx = skinData.indexOf("\"");
+        if (idx>0) {
+          skinData = skinData.substring(0, idx);
+        }
+      }
+//Ostrov.log("skinData="+skinData);
+      //skullTexture = decoded.substring("{\"textures\":{\"SKIN\":{\"url\":\"".length(), decoded.length() - "\"}}}".length());
+      //value = getSkinTextureUrlStripped(value);
+    }
+    com.destroystokyo.paper.profile.PlayerProfile profile = getProfile(skinData);
+    skullMeta.setPlayerProfile(profile);
+    return skullMeta;
+  }
 
-  public static com.destroystokyo.paper.profile.PlayerProfile getProfile(String minecraftURL) {
-    if (playerProfilesCache.containsKey(minecraftURL)) {
-      return playerProfilesCache.get(minecraftURL);
+  public static com.destroystokyo.paper.profile.PlayerProfile getProfile(String SHA_or_URL) {
+    if (playerProfilesCache.containsKey(SHA_or_URL)) {
+      return playerProfilesCache.get(SHA_or_URL);
     }
     final UUID uuid = UUID.randomUUID();
     final com.destroystokyo.paper.profile.PlayerProfile profile = Bukkit.createProfile(uuid);
     final PlayerTextures textures = profile.getTextures();
-    if (!minecraftURL.startsWith("http://")) {
-      minecraftURL = "https://textures.minecraft.net/texture/" + minecraftURL;
+    if (!SHA_or_URL.startsWith("http://")) {
+      SHA_or_URL = "https://textures.minecraft.net/texture/" + SHA_or_URL;
     }
     try {
-      final URL url = URI.create(minecraftURL).toURL();
+      final URL url = URI.create(SHA_or_URL).toURL();
       textures.setSkin(url);
-    } catch (MalformedURLException ex) {
-      Ostrov.log_warn("Invalid trxture minecraftURL");
+      profile.setTextures(textures);
+      playerProfilesCache.put(SHA_or_URL, profile);
+    } catch (MalformedURLException | IllegalArgumentException ex) {
+      Ostrov.log_warn("Invalid texture SHA_or_URL");
     }
-    profile.setTextures(textures);
-    playerProfilesCache.put(minecraftURL, profile);
     return profile;
   }
+
+
+
 
 
   /**
@@ -196,7 +213,6 @@ public class ItemUtils {
    * @param color   null или осносной цвет текста
    * @return
    */
-  private static final Pattern regex = Pattern.compile("(.{1,24}(?:\\s|$))|(.{0,24})", Pattern.DOTALL);
   public static List<Component> lore (@Nullable List<Component> current, final String text, @Nullable String color) {
     if (current == null) current = new ArrayList<>();
     if (text==null) return current;
@@ -1310,6 +1326,61 @@ public class ItemUtils {
   }
 
 }
+
+
+/*
+  // Only returns the id at the end of the url.
+  // Example:
+  // <a href="https://textures.minecraft.net/texture/cb50beab76e56472637c304a54b330780e278decb017707bf7604e484e4d6c9f">
+  // https://textures.minecraft.net/texture/cb50beab76e56472637c304a54b330780e278decb017707bf7604e484e4d6c9f
+  // </a>
+  // Would return: cb50beab76e56472637c304a54b330780e278decb017707bf7604e484e4d6c9f
+  public static String getSkinTextureUrlStripped(String value) {//@NotNull SkinProperty property) {
+    //return getSkinProfileData(value).getTextures().getSKIN().getStrippedUrl();
+    return getSkinProfileData(value).textures.SKIN.getStrippedUrl();
+  }
+
+  // Returns the decoded profile data from the profile property.
+  // This is useful for getting the skin data from the property and other information like cape.
+  // The user stored in this property may not be the same as the player who has the skin.
+  // APIs like MineSkin use multiple shared accounts to generate these properties.
+  // Or it could be the property of another player that the player set their skin to.
+  public static MojangProfileResponse getSkinProfileData(String value) {//SkinProperty property) {
+    //String decodedString = new String(Base64.getDecoder().decode(property.getValue()), StandardCharsets.UTF_8);
+    String decodedString = new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
+    return GSON.fromJson(decodedString, MojangProfileResponse.class);
+  }
+
+
+
+class MojangProfileResponse {
+    public long timestamp;
+    public String profileId;
+    public String profileName;
+    public boolean signatureRequired;
+    public MojangProfileTextures textures;
+  }
+  class MojangProfileTextures {
+    public MojangProfileTexture SKIN;
+    public MojangProfileTexture CAPE;
+  }
+  class MojangProfileTexture {
+    public static final Pattern URL_STRIP_PATTERN = Pattern.compile("^https?://textures\\.minecraft\\.net/texture/");
+    public String url;
+    public MojangProfileTextureMeta metadata;
+    public String getStrippedUrl() {
+      return URL_STRIP_PATTERN.matcher(url).replaceAll("");
+    }
+  }
+  class MojangProfileTextureMeta {
+    public String model;
+  }
+*/
+
+
+
+
+
 
 
 /*

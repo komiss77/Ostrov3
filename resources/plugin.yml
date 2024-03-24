@@ -73,6 +73,8 @@ commands:
     description: Шлемофон
   protocol:
     description: $!@PH@f,v?
+  skin:
+    description: шкурка
 
     
     
