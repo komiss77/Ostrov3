@@ -1,39 +1,21 @@
 package ru.komiss77.commands;
 
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.List;
-import org.bukkit.Bukkit;
-import org.bukkit.EntityEffect;
-import org.bukkit.GameMode;
-import org.bukkit.GameRule;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandException;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mob;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import com.destroystokyo.paper.event.player.PlayerAttackEntityCooldownResetEvent;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import org.bukkit.*;
+import org.bukkit.block.Container;
+import org.bukkit.command.*;
+import org.bukkit.entity.*;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityResurrectEvent;
-import org.bukkit.event.entity.EntityToggleGlideEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.entity.PotionSplashEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -44,12 +26,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import com.destroystokyo.paper.event.player.PlayerAttackEntityCooldownResetEvent;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Config;
 import ru.komiss77.Ostrov;
@@ -61,20 +37,19 @@ import ru.komiss77.modules.menuItem.MenuItemsManager;
 import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.translate.Lang;
-import ru.komiss77.utils.EntityUtil;
+import ru.komiss77.utils.*;
 import ru.komiss77.utils.EntityUtil.EntityGroup;
-import ru.komiss77.utils.ItemBuilder;
-import ru.komiss77.utils.ItemUtils;
-import ru.komiss77.utils.OstrovConfig;
-import ru.komiss77.utils.TCUtils;
 import ru.komiss77.utils.inventory.ClickableItem;
 import ru.komiss77.utils.inventory.InventoryContent;
 import ru.komiss77.utils.inventory.InventoryProvider;
 import ru.komiss77.utils.inventory.SmartInventory;
 
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+
 public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
 
-    private static PvpCmd pvpCmd;
     private static OstrovConfig config;
 
     private static int battle_time;  //после первого удара - заносим обоих в режим боя
@@ -111,14 +86,13 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
 
     public enum PvpFlag {
         enable, allow_pvp_command, antirelog, drop_inv_inbattle, display_pvp_tag, block_fly_on_pvp_mode, advanced_pvp, disable_self_hit,
-        block_elytra_on_pvp_mode, block_command_on_pvp_mode, disable_creative_attack_to_mobs, disable_creative_attack_to_player;
+        block_elytra_on_pvp_mode, block_command_on_pvp_mode, disable_creative_attack_to_mobs, disable_creative_attack_to_player
     }
 
     public PvpCmd() {
-        pvpCmd = this;
         loadConfig(); //загружаем только один раз при старте, потом меняется через ГУИ
         //PlayerDeathEvent слушаем всегда!!!
-        Bukkit.getPluginManager().registerEvents(pvpCmd, Ostrov.getInstance());
+        Bukkit.getPluginManager().registerEvents(this, Ostrov.getInstance());
         init();
     }
 
@@ -246,7 +220,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                                         }
                                     }
                                 } else {
-                                    final BotEntity dbe = BotManager.enable.get() ? BotManager.getBot(e.getDamager().getEntityId(), BotEntity.class) : null;
+                                    final BotEntity dbe = BotManager.enable ? BotManager.getBot(e.getDamager().getEntityId(), BotEntity.class) : null;
                                     if (dbe != null) {//B v P
                                         targetHand = targetPlayer.getInventory().getItemInMainHand();
                                         final Material mt = targetHand.getType();
@@ -295,7 +269,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                                     }
                                 }
                             } else {
-                                final BotEntity tbe = BotManager.enable.get() ? BotManager.getBot(target.getEntityId(), BotEntity.class) : null;
+                                final BotEntity tbe = BotManager.enable ? BotManager.getBot(target.getEntityId(), BotEntity.class) : null;
                                 if (tbe != null) {// # v B
                                     if (e.getDamager().getType() == EntityType.PLAYER) {// P v B
                                         final Player damagerPlayer = (Player) e.getDamager();
@@ -346,7 +320,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                                             }
                                         }
                                     } else {
-                                        final BotEntity dbe = BotManager.enable.get() ? BotManager.getBot(e.getDamager().getEntityId(), BotEntity.class) : null;
+                                        final BotEntity dbe = BotManager.enable ? BotManager.getBot(e.getDamager().getEntityId(), BotEntity.class) : null;
                                         if (dbe != null) {// B v B
                                             targetHand = tbe.item(EquipmentSlot.HAND);
                                             if (targetHand != null) {
@@ -432,7 +406,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                                             }
                                         }
                                     } else {
-                                        final BotEntity dbe = BotManager.enable.get() ? BotManager.getBot(e.getDamager().getEntityId(), BotEntity.class) : null;
+                                        final BotEntity dbe = BotManager.enable ? BotManager.getBot(e.getDamager().getEntityId(), BotEntity.class) : null;
                                         if (dbe != null) {// B v M
                                             final LivingEntity dle = (LivingEntity) e.getDamager();
                                             final ItemStack hnd = dbe.item(EquipmentSlot.HAND);
@@ -464,31 +438,21 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                         }
                     }
 
-                    final Entity damager;
-                    if (e.getDamager() instanceof final Projectile pj) { //при попадании снаряда принимаем стреляющего за атакующего
-                        if (pj.getShooter() != null && pj.getShooter() instanceof Entity) {
-                            damager = (Entity) pj.getShooter();
-                        } else {
-                            damager = null;// java.lang.NullPointerException: Cannot invoke "org.bukkit.entity.Entity.getEntityId()" because "damager" is null
-                        }
-                    } else {
-                        damager = e.getDamager();
-                    }
+                  final Entity damager = ApiOstrov.getDamager(e, true);
 
-                    if (damager!=null && damager.getEntityId() == e.getEntity().getEntityId() && flags.get(PvpFlag.disable_self_hit)) {
+                  if (damager!=null && damager.getEntityId() == e.getEntity().getEntityId() && flags.get(PvpFlag.disable_self_hit)) {
                         e.setCancelled(true);
                         return;
                     }
 
                     if (battle_time > 0 && damager!=null && disablePvpDamage(damager, e.getEntity(), e.getCause())) {
                         e.setCancelled(true);
-                        return;
                     }
                 }
 
-                private boolean isParying(final Player dp) {
+              private boolean isParying(final Player dp) {
                     final PotionEffect pre = dp.getPotionEffect(PotionEffectType.SLOW_DIGGING);
-                    return pre == null ? false : pre.getAmplifier() == slw.getAmplifier();
+                    return pre != null && pre.getAmplifier() == slw.getAmplifier();
                 }
 
                 @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -574,7 +538,6 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                     if (PvpCmd.battle_time > 1 && op.pvp_time > 0 && !ApiOstrov.isLocalBuilder(p)) {
                         p.sendMessage("§c"+Lang.t(p, "Режим боя - команды заблокированы! Осталось ") + PM.getOplayer(p.getName()).pvp_time + Lang.t(p, " сек."));
                         e.setCancelled(true);
-                        return;
                     }
                 }
             };
@@ -596,35 +559,36 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                     }
 
                     switch (e.getAction()) {
-                        case RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK -> {
-                            final Player p = e.getPlayer();
-                            final ItemStack it = e.getItem();
-                            if (!ItemUtils.isBlank(it, false)) {
-                                final Material mt = it.getType();
-                                if (e.getHand() == EquipmentSlot.HAND && !p.hasCooldown(mt)
-                                        && ItemClass.MELEE_AXE.has(mt) && p.getAttackCooldown() == 1f) {
-                                    final ItemStack ofh = p.getInventory().getItemInOffHand();
-                                    if (ofh.getType() == Material.AIR) {
-                                        p.getWorld().playSound(p.getEyeLocation(), Sound.BLOCK_AMETHYST_CLUSTER_PLACE, 1f, 0.6f);
-                                        p.getWorld().spawnParticle(Particle.ELECTRIC_SPARK,
-                                                p.getLocation().add(0d, 1.2d, 0d), 24, 0.4d, 0.5d, 0.4d, -0.25d);
-                                        p.addPotionEffect(slw);
-                                        p.setCooldown(mt, 36);
-                                        p.getInventory().setItemInMainHand(ItemUtils.air);
-                                        p.getInventory().setItemInMainHand(it);
-                                    }
-                                }
-                            }
-                        }
-                        default -> {
-                        }
+                      case RIGHT_CLICK_BLOCK:
+                          if (e.getClickedBlock().getState() instanceof Container) break;
+                      case RIGHT_CLICK_AIR:
+                          final Player p = e.getPlayer();
+                          final ItemStack it = e.getItem();
+                          if (!ItemUtils.isBlank(it, false)) {
+                              final Material mt = it.getType();
+                              if (e.getHand() == EquipmentSlot.HAND && !p.hasCooldown(mt)
+                                      && ItemClass.MELEE_AXE.has(mt) && p.getAttackCooldown() == 1f) {
+                                  final ItemStack ofh = p.getInventory().getItemInOffHand();
+                                  if (ofh.getType() == Material.AIR) {
+                                      p.getWorld().playSound(p.getEyeLocation(), Sound.BLOCK_AMETHYST_CLUSTER_PLACE, 1f, 0.6f);
+                                      p.getWorld().spawnParticle(Particle.ELECTRIC_SPARK,
+                                              p.getLocation().add(0d, 1.2d, 0d), 24, 0.4d, 0.5d, 0.4d, -0.25d);
+                                      p.addPotionEffect(slw);
+                                      p.setCooldown(mt, 36);
+                                      p.getInventory().setItemInMainHand(ItemUtils.air);
+                                      p.getInventory().setItemInMainHand(it);
+                                  }
+                              }
+                          }
+                          break;
+                      default:
+                          break;
                     }
                 }
 
                 @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
                 public void onHit(final ProjectileHitEvent e) {
-                    if (e.getHitEntity() instanceof Player) {
-                        final Player pl = (Player) e.getHitEntity();
+                    if (e.getHitEntity() instanceof final Player pl) {
                         final ItemStack hnd = pl.getInventory().getItemInMainHand();
                         final Material mt = hnd.getType();
                         if (pl.hasCooldown(mt) && ItemClass.MELEE_AXE.has(mt)) {
@@ -634,7 +598,6 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                             pl.setCooldown(mt, 0);
                             pl.swingMainHand();
                             e.setCancelled(true);
-                            return;
                         }
                     }
                 }
@@ -712,16 +675,8 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender cs, Command cmnd, String command, String[] arg) {
 //System.out.println("l="+strings.length+" 0="+strings[0]);
-        switch (arg.length) {
-
-            case 1 -> {
-                if (ApiOstrov.canBeBuilder(cs)) {
-                    return PvpCmd.sugg;
-                } else {
-                    return PvpCmd.sugg;
-                }
-            }
-
+        if (arg.length == 1) {
+            return PvpCmd.sugg;
         }
         //0- пустой (то,что уже введено)
 
@@ -731,7 +686,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender cs, Command cmd, String string, String[] arg) {
 
-        if (!(cs instanceof Player)) {
+        if (!(cs instanceof final Player p)) {
             if (arg.length == 1 && arg[0].equals("reload")) {
                 init();
             } else {
@@ -740,7 +695,6 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
             return true;
         }
 
-        final Player p = (Player) cs;
         final Oplayer op = PM.getOplayer(p);
 
         if (arg.length == 0) {
@@ -748,26 +702,18 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                 p.sendMessage("§cУправление режимом ПВП отключено!");
                 return true;
             }
-            Component msg;
+            final Component msg;
             if (op.pvp_allow) {
-                //pvpOff(op);
                 msg = TCUtils.format(Lang.t(p, "§7Сейчас ПВП §4Разрешен§7  §6[§7Клик - §2ВЫКЛЮЧИТЬ§6]"))
-                        .hoverEvent(HoverEvent.showText(Component.text("Клик - выключить")))
-                        .clickEvent(ClickEvent.runCommand("/pvp off"));//Component.text("Сейчас ПВП ", NamedTextColor.GRAY)
-                //.append(Component.text("Разрешен", NamedTextColor.DARK_RED)
-                // );
-                p.sendMessage(msg);//p.sendMessage("§2ПВП выключен!");
-                return true;
+                  .hoverEvent(HoverEvent.showText(Component.text("Клик - выключить")))
+                  .clickEvent(ClickEvent.runCommand("/pvp off"));//Component.text("Сейчас ПВП ", NamedTextColor.GRAY)
             } else {
-                //pvpOn(op);
                 msg = TCUtils.format(Lang.t(p, "§7Сейчас ПВП §2Запрещён§7 §6[§7Клик - §4ВКЛЮЧИТЬ§6]"))
-                        .hoverEvent(HoverEvent.showText(Component.text("Клик - включить")))
-                        .clickEvent(ClickEvent.runCommand("/pvp on"));//Component.text("Сейчас ПВП ", NamedTextColor.GRAY)
-                //.append(Component.text("Разрешен", NamedTextColor.DARK_RED)
-                // );
-                p.sendMessage(msg);//p.sendMessage("§4ПВП включен!");
-                return true;
+                  .hoverEvent(HoverEvent.showText(Component.text("Клик - включить")))
+                  .clickEvent(ClickEvent.runCommand("/pvp on"));//Component.text("Сейчас ПВП ", NamedTextColor.GRAY)
             }
+            p.sendMessage(msg);//p.sendMessage("§2ПВП выключен!");
+            return true;
         }
 
         switch (arg[0]) {
@@ -896,12 +842,12 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                 pvpBeginFor(damagerOp, damager, battle_time);//damagerOp.pvpBattleModeBegin(battle_time);
                 pvpBeginFor(targetOp, target, battle_time);//targetOp.pvpBattleModeBegin(battle_time);
             } else if (target != null && atackEntity instanceof Monster) {//жертва игрок нападает монстр
-                if (!new PlayerPVPEnterEvent(target, damager, cause, false).callEvent()) {
+                if (!new PlayerPVPEnterEvent(target, null, cause, false).callEvent()) {
                     return false;
                 }
                 pvpBeginFor(targetOp, target, battle_time);//targetOp.pvpBattleModeBegin(battle_time);
             } else if (damager != null && targetEntity instanceof Monster) {//нападает игрок жертва монстр 
-                if (!new PlayerPVPEnterEvent(damager, target, cause, true).callEvent()) {
+                if (!new PlayerPVPEnterEvent(damager, null, cause, true).callEvent()) {
                     return false;
                 }
                 pvpBeginFor(damagerOp, damager, battle_time);//damagerOp.pvpBattleModeBegin(battle_time);
@@ -968,7 +914,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
         return flags.get(f);
     }
 
-    private class PvpSetupMenu implements InventoryProvider {
+    private static class PvpSetupMenu implements InventoryProvider {
 
         @Override
         public void init(final Player p, final InventoryContent content) {
@@ -1156,9 +1102,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
         //enable = config.getBoolean("enable");
         battle_time = config.getInt("battle_time", -1);
         no_damage_on_tp = config.getInt("no_damage_on_tp", -1);
-        for (PvpFlag f : flags.keySet()) {
-            flags.put(f, config.getBoolean(f.name(), false));
-        }
+        flags.replaceAll((f, v) -> config.getBoolean(f.name(), false));
         saveConfig();
     }
 

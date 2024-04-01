@@ -20,10 +20,11 @@ import ru.komiss77.utils.TCUtils;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 public class DisplayManager implements Initiable, Listener {
 	
-	public static final HashMap<Integer, HashSet<FakeItemDis>> animations = new HashMap<>();
+	protected static final Map<Integer, HashSet<FakeItemDis>> animations = new HashMap<>();
 	
 	public DisplayManager() {
 		reload();

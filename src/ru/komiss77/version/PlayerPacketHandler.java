@@ -1,7 +1,5 @@
 package ru.komiss77.version;
 
-import java.lang.reflect.Field;
-import java.util.Iterator;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -17,6 +15,9 @@ import ru.komiss77.modules.bots.BotManager;
 import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.utils.PlayerInput;
 import ru.komiss77.utils.inventory.InputButton;
+
+import java.lang.reflect.Field;
+import java.util.Iterator;
 
 /*
 ClientboundBlockUpdatePacket отправляется из
@@ -66,10 +67,9 @@ public class PlayerPacketHandler extends ChannelDuplexHandler {
   //входящие пакеты от клиента до получения ядром
   @Override
     public void channelRead(final @NotNull ChannelHandlerContext chc, final @NotNull Object packet) throws Exception {
-        
         if (packet instanceof final ServerboundInteractPacket ip) { // Paper start - PlayerUseUnknownEntityEvent
 //Ostrov.log(""+pk.);
-            if (BotManager.enable.get()) {
+            if (BotManager.enable) {
                 final int id = ip.getEntityId();
                 for (final BotEntity bot : BotManager.botById.values()) {
                     if (bot.hashCode() == id) {
@@ -133,7 +133,7 @@ public class PlayerPacketHandler extends ChannelDuplexHandler {
       //  lcp.  - возможно добавить в будущем, но обработчик будет громоздкий!
      // }
 
-        if (BotManager.enable.get()) {
+        if (BotManager.enable) {
             int id = 0;
             if (packet instanceof final ClientboundAddEntityPacket p) {
                 id = p.getId();

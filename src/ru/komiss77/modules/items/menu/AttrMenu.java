@@ -1,4 +1,4 @@
-package ru.komiss77.modules.items;
+package ru.komiss77.modules.items.menu;
 
 import java.util.Collection;
 import java.util.Collections;

@@ -11,8 +11,8 @@ description = "ostrov77"
 dependencies {
   paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
   implementation(fileTree("libs"))
-  compileOnly("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
-  annotationProcessor("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
+  compileOnly("com.velocitypowered:velocity-api:3.1.1")
+  annotationProcessor("com.velocitypowered:velocity-api:3.1.1")
 }
 
 repositories {

@@ -2,6 +2,7 @@ package ru.komiss77.modules.items;
 
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -31,7 +32,7 @@ public class CustomItems {
 	}
 	
 	public static CustomItems[] values() {
-		return VALUES.values().toArray(new CustomItems[VALUES.size()]);
+		return VALUES.values().toArray(new CustomItems[0]);
 	}
 	
 	public @Nullable ItemStack getItem(final Material mt) {
@@ -49,12 +50,13 @@ public class CustomItems {
 
     public static ItemStack[] getCustomMats(final ItemMeta im) {
     	final CustomItems cis = getCstmItm(im);
-        return cis.mits.values().toArray(new ItemStack[cis.mits.size()]);
+        return cis.mits.values().toArray(new ItemStack[0]);
     }
     
     @Override
     public boolean equals(final Object o) {
-    	return o instanceof CustomItems && ((CustomItems) o).cmd == cmd;
+    	return o instanceof CustomItems
+        && Objects.equals(((CustomItems) o).cmd, cmd);
     }
 	
     @Override

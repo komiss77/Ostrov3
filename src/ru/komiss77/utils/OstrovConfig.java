@@ -38,14 +38,22 @@ import ru.komiss77.Config;
             //this.config = YamlConfiguration.loadConfiguration(configStream);
             this.config = YamlConfiguration.loadConfiguration(configFile);
         }
-     
+
         public Object get(String path) {
-            return this.config.get(path);
-        }
-     
+        return this.config.get(path);
+      }
+
         public Object get(String path, Object def) {
-            return this.config.get(path, def);
+        return this.config.get(path, def);
+      }
+     
+        public <T> T getObject(String path, Class<T> clazz) {
+            return this.config.getObject(path, clazz);
         }
+
+        public <T> T getObject(String path, Class<T> clazz, final T def) {
+        return this.config.getObject(path, clazz, def);
+      }
      
         public String getString(String path) {
             return this.config.getString(path);
@@ -95,7 +103,7 @@ import ru.komiss77.Config;
             return this.config.getList(path, def);
         }
      
-        public Collection<? extends String> getStringList(String path) {
+        public Collection<String> getStringList(String path) {
             return this.config.getStringList(path);
         }
      
@@ -113,8 +121,7 @@ import ru.komiss77.Config;
         }
      
         public void addDefault(String path, Object value) {
-                if (this.config.get(path) == null) this.config.set(path, value);
-     
+            if (this.config.get(path) == null) this.config.set(path, value);
         }
         
         public void addDefault(String path, Object value, String comment) {

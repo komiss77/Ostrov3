@@ -13,7 +13,7 @@ import ru.komiss77.Config;
 import ru.komiss77.Ostrov;
 import ru.komiss77.listener.PlayerLst;
 import ru.komiss77.modules.displays.DisplayMenu;
-import ru.komiss77.modules.items.ItemMenu;
+import ru.komiss77.modules.items.menu.ItemMenu;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.world.WXYZ;
 import ru.komiss77.utils.ItemBuilder;

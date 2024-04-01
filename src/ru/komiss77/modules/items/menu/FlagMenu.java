@@ -1,4 +1,4 @@
-package ru.komiss77.modules.items;
+package ru.komiss77.modules.items.menu;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

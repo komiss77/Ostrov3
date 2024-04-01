@@ -438,7 +438,7 @@ public final class Crafts implements Initiable, Listener {
 				final HashMap<CMDMatChoice, String> gridIts = new HashMap<>();
 				for (final Entry<Character, RecipeChoice> en : ((ShapedRecipe) rc).getChoiceMap().entrySet()) {
 					final RecipeChoice ch = en.getValue();
-					if (ch != null && ch instanceof CMDMatChoice) {
+					if (ch instanceof CMDMatChoice) {
 						final String gs = gridIts.get(ch);
 						gridIts.put((CMDMatChoice) ch, gs == null ? 
 							String.valueOf(en.getKey()) : gs + en.getKey());
@@ -492,7 +492,7 @@ public final class Crafts implements Initiable, Listener {
 			} else if (rc instanceof ShapelessRecipe) {//магия бля
 				final HashMap<CMDMatChoice, Integer> gridIts = new HashMap<>();
 				for (final RecipeChoice ch : ((ShapelessRecipe) rc).getChoiceList()) {
-					if (ch != null && ch instanceof CMDMatChoice) {
+					if (ch instanceof CMDMatChoice) {
 						final Integer gs = gridIts.get(ch);
 						gridIts.put((CMDMatChoice) ch, gs == null ? 1 : gs + 1);
 					}

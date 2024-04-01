@@ -8,7 +8,7 @@ import org.bukkit.Material;
 
 public class ItemClass {
 	
-	public static final Map<String, ItemClass> VALUES = new HashMap<>();
+	protected static final Map<String, ItemClass> VALUES = new HashMap<>();
 	
 	public static final ItemClass RANGED = new ItemClass("RANGED", Material.BOW, Material.CROSSBOW);
 	public static final ItemClass MELEE = new ItemClass("MELEE", Material.DIAMOND_SWORD, 
@@ -82,8 +82,8 @@ public class ItemClass {
 		VALUES.put(name, this);
 	}
 	
-	public static ItemClass[] values() {
-		return VALUES.values().toArray(new ItemClass[VALUES.size()]);
+	public static Map<String, ItemClass> values() {
+		return VALUES;
 	}
 	
 	public boolean has(final Material mt) {
