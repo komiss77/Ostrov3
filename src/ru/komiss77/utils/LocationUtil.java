@@ -234,26 +234,24 @@ public class LocationUtil {
     public static boolean isPassable(final Material mat) {
       if (mat.isAir()) return true;
       return switch (mat) {
-          case BARRIER, STRUCTURE_VOID, CHORUS_FLOWER,
-            CHORUS_PLANT, SWEET_BERRY_BUSH, BAMBOO, VINE, WEEPING_VINES,
-            MOSS_CARPET, TWISTING_VINES, LADDER, LILY_PAD -> true;
-          default -> !mat.isCollidable();
+        case BARRIER, STRUCTURE_VOID, CHORUS_FLOWER, COBWEB,
+          CHORUS_PLANT, SWEET_BERRY_BUSH, BAMBOO, VINE, WEEPING_VINES,
+          MOSS_CARPET, TWISTING_VINES, LADDER, LILY_PAD -> true;
+        default -> !mat.isCollidable();
       };
     }
 
     @Deprecated
-    public static boolean isFeetAllow(Material mat) {
+    public static boolean isFeetAllow(final Material mat) {
       return isPassable(mat);
     }
 
-    public static boolean canStand(Material mat) {
-      switch (mat) {
-        case LAVA:
-        case WATER:
-        case BEDROCK:
-
-      }
-      return mat.isSolid();
+    public static boolean canStand(final Material mat) {
+      return switch (mat) {
+        case SNOW, MOSS_CARPET -> true;
+        case LAVA, WATER, BEDROCK -> false;
+        default -> mat.isSolid();
+      };
     }
 
     @Slow(priority = 1)
@@ -407,16 +405,12 @@ public class LocationUtil {
         while (true) {
             to.add(vec);
             final Material mt = Nms.getFastMat(w, to.getBlockX(), to.getBlockY(), to.getBlockZ());
-            switch (mt) {
-                default:
-                    if (mt.isCollidable() && mt.isOccluding()) {
-                        if (w.getBlockAt(to.getBlockX(), to.getBlockY(), to.getBlockZ()).getBoundingBox().contains(to)) {
-                            return false;
-                        }
-                    }
-                    break;
-                case POWDER_SNOW:
+            if (mt == Material.POWDER_SNOW) {
+                return false;
+            } else {
+                if (mt.isCollidable() && mt.isOccluding() && w.getBlockAt(to.getBlockX(), to.getBlockY(), to.getBlockZ()).getBoundingBox().contains(to)) {
                     return false;
+                }
             }
             if (Math.abs(to.getX() - org.getX()) < inc && Math.abs(to.getY() - org.getY()) < inc && Math.abs(to.getZ() - org.getZ()) < inc) {
                 return true;
@@ -435,71 +429,71 @@ public class LocationUtil {
         while (true) {
             to.add(vec);
             switch (Nms.getFastMat(w, to.getBlockX(), to.getBlockY(), to.getBlockZ())) {
-                default:
-                    if (w.getBlockAt(to.getBlockX(), to.getBlockY(), to.getBlockZ()).getBoundingBox().contains(to)) {
-                        return false;
-                    }
                 case OAK_LEAVES, ACACIA_LEAVES, BIRCH_LEAVES, JUNGLE_LEAVES, 
-			SPRUCE_LEAVES, DARK_OAK_LEAVES, MANGROVE_LEAVES, AZALEA_LEAVES,
-			FLOWERING_AZALEA_LEAVES, 
-			
-			GLASS, WHITE_STAINED_GLASS, GLASS_PANE, 
-			WHITE_STAINED_GLASS_PANE, DIAMOND_ORE, 
-			COAL_ORE, IRON_ORE, EMERALD_ORE, 
-			
-			ACACIA_SLAB, BIRCH_SLAB, CRIMSON_SLAB, SPRUCE_SLAB, WARPED_SLAB, 
-			DARK_OAK_SLAB, OAK_SLAB, JUNGLE_SLAB, PETRIFIED_OAK_SLAB, MANGROVE_SLAB, 
-			
-			ACACIA_STAIRS, BIRCH_STAIRS, CRIMSON_STAIRS, SPRUCE_STAIRS, 
-			WARPED_STAIRS, DARK_OAK_STAIRS, OAK_STAIRS, JUNGLE_STAIRS, MANGROVE_STAIRS, 
-			
-			ACACIA_PLANKS, BIRCH_PLANKS, CRIMSON_PLANKS, SPRUCE_PLANKS, 
-			WARPED_PLANKS, DARK_OAK_PLANKS, OAK_PLANKS, JUNGLE_PLANKS, MANGROVE_PLANKS, 
-			
-			ACACIA_TRAPDOOR, BIRCH_TRAPDOOR, CRIMSON_TRAPDOOR, DARK_OAK_TRAPDOOR, 
-			JUNGLE_TRAPDOOR, MANGROVE_TRAPDOOR, OAK_TRAPDOOR, SPRUCE_TRAPDOOR, WARPED_TRAPDOOR, 
-			
-			ACACIA_WOOD, BIRCH_WOOD, CRIMSON_HYPHAE, SPRUCE_WOOD, 
-			WARPED_HYPHAE, DARK_OAK_WOOD, OAK_WOOD, JUNGLE_WOOD, MANGROVE_WOOD, 
-			
-			ACACIA_LOG, BIRCH_LOG, CRIMSON_STEM, SPRUCE_LOG, 
-			WARPED_STEM, DARK_OAK_LOG, OAK_LOG, JUNGLE_LOG, MANGROVE_LOG, 
-			
-			ACACIA_SIGN, ACACIA_WALL_SIGN, BIRCH_SIGN, BIRCH_WALL_SIGN, CRIMSON_SIGN, 
-			CRIMSON_WALL_SIGN, SPRUCE_SIGN, SPRUCE_WALL_SIGN, WARPED_SIGN, 
-			WARPED_WALL_SIGN, DARK_OAK_SIGN, DARK_OAK_WALL_SIGN, OAK_SIGN, 
-			OAK_WALL_SIGN, JUNGLE_SIGN, JUNGLE_WALL_SIGN, MANGROVE_SIGN, MANGROVE_WALL_SIGN, 
-			
-			STRIPPED_ACACIA_WOOD, STRIPPED_BIRCH_WOOD, STRIPPED_CRIMSON_HYPHAE, STRIPPED_SPRUCE_WOOD, 
-			STRIPPED_WARPED_HYPHAE, STRIPPED_DARK_OAK_WOOD, STRIPPED_OAK_WOOD, STRIPPED_JUNGLE_WOOD, 
-			STRIPPED_MANGROVE_WOOD, 
-			
-			STRIPPED_ACACIA_LOG, STRIPPED_BIRCH_LOG, STRIPPED_CRIMSON_STEM, STRIPPED_SPRUCE_LOG, 
-			STRIPPED_WARPED_STEM, STRIPPED_DARK_OAK_LOG, STRIPPED_OAK_LOG, STRIPPED_JUNGLE_LOG, 
-			STRIPPED_MANGROVE_LOG, 
-			
-			ACACIA_FENCE, BIRCH_FENCE, CRIMSON_FENCE, SPRUCE_FENCE, WARPED_FENCE, DARK_OAK_FENCE, 
-			OAK_FENCE, JUNGLE_FENCE, MANGROVE_FENCE, ACACIA_FENCE_GATE, BIRCH_FENCE_GATE, CRIMSON_FENCE_GATE, 
-			SPRUCE_FENCE_GATE, WARPED_FENCE_GATE, DARK_OAK_FENCE_GATE, OAK_FENCE_GATE, JUNGLE_FENCE_GATE, MANGROVE_FENCE_GATE,
-			
-			OAK_DOOR, ACACIA_DOOR, BIRCH_DOOR, CRIMSON_DOOR, DARK_OAK_DOOR, 
-			JUNGLE_DOOR, MANGROVE_DOOR, WARPED_DOOR, SPRUCE_DOOR, 
-			
-			BARREL, BEEHIVE, BEE_NEST, NOTE_BLOCK, JUKEBOX, CRAFTING_TABLE, 
-			
-			AIR, CAVE_AIR, VOID_AIR, 
-			
-			SEAGRASS, TALL_SEAGRASS, WEEPING_VINES, TWISTING_VINES, 
-			
-			BLACK_CARPET, BLUE_CARPET, BROWN_CARPET, CYAN_CARPET, GRAY_CARPET, 
-			GREEN_CARPET, LIGHT_BLUE_CARPET, LIGHT_GRAY_CARPET, LIME_CARPET, 
-			MAGENTA_CARPET, MOSS_CARPET, ORANGE_CARPET, PINK_CARPET, 
-			PURPLE_CARPET, RED_CARPET, WHITE_CARPET, YELLOW_CARPET, 
-			
-			WATER, IRON_BARS, CHAIN, STRUCTURE_VOID, COBWEB, SNOW, 
-			POWDER_SNOW, BARRIER, TRIPWIRE, LADDER, RAIL, POWERED_RAIL, 
-			DETECTOR_RAIL, ACTIVATOR_RAIL, CAMPFIRE, SOUL_CAMPFIRE:
+                SPRUCE_LEAVES, DARK_OAK_LEAVES, MANGROVE_LEAVES, AZALEA_LEAVES,
+                FLOWERING_AZALEA_LEAVES,
+
+                GLASS, WHITE_STAINED_GLASS, GLASS_PANE,
+                WHITE_STAINED_GLASS_PANE, DIAMOND_ORE,
+                COAL_ORE, IRON_ORE, EMERALD_ORE,
+
+                ACACIA_SLAB, BIRCH_SLAB, CRIMSON_SLAB, SPRUCE_SLAB, WARPED_SLAB,
+                DARK_OAK_SLAB, OAK_SLAB, JUNGLE_SLAB, PETRIFIED_OAK_SLAB, MANGROVE_SLAB,
+
+                ACACIA_STAIRS, BIRCH_STAIRS, CRIMSON_STAIRS, SPRUCE_STAIRS,
+                WARPED_STAIRS, DARK_OAK_STAIRS, OAK_STAIRS, JUNGLE_STAIRS, MANGROVE_STAIRS,
+
+                ACACIA_PLANKS, BIRCH_PLANKS, CRIMSON_PLANKS, SPRUCE_PLANKS,
+                WARPED_PLANKS, DARK_OAK_PLANKS, OAK_PLANKS, JUNGLE_PLANKS, MANGROVE_PLANKS,
+
+                ACACIA_TRAPDOOR, BIRCH_TRAPDOOR, CRIMSON_TRAPDOOR, DARK_OAK_TRAPDOOR,
+                JUNGLE_TRAPDOOR, MANGROVE_TRAPDOOR, OAK_TRAPDOOR, SPRUCE_TRAPDOOR, WARPED_TRAPDOOR,
+
+                ACACIA_WOOD, BIRCH_WOOD, CRIMSON_HYPHAE, SPRUCE_WOOD,
+                WARPED_HYPHAE, DARK_OAK_WOOD, OAK_WOOD, JUNGLE_WOOD, MANGROVE_WOOD,
+
+                ACACIA_LOG, BIRCH_LOG, CRIMSON_STEM, SPRUCE_LOG,
+                WARPED_STEM, DARK_OAK_LOG, OAK_LOG, JUNGLE_LOG, MANGROVE_LOG,
+
+                ACACIA_SIGN, ACACIA_WALL_SIGN, BIRCH_SIGN, BIRCH_WALL_SIGN, CRIMSON_SIGN,
+                CRIMSON_WALL_SIGN, SPRUCE_SIGN, SPRUCE_WALL_SIGN, WARPED_SIGN,
+                WARPED_WALL_SIGN, DARK_OAK_SIGN, DARK_OAK_WALL_SIGN, OAK_SIGN,
+                OAK_WALL_SIGN, JUNGLE_SIGN, JUNGLE_WALL_SIGN, MANGROVE_SIGN, MANGROVE_WALL_SIGN,
+
+                STRIPPED_ACACIA_WOOD, STRIPPED_BIRCH_WOOD, STRIPPED_CRIMSON_HYPHAE, STRIPPED_SPRUCE_WOOD,
+                STRIPPED_WARPED_HYPHAE, STRIPPED_DARK_OAK_WOOD, STRIPPED_OAK_WOOD, STRIPPED_JUNGLE_WOOD,
+                STRIPPED_MANGROVE_WOOD,
+
+                STRIPPED_ACACIA_LOG, STRIPPED_BIRCH_LOG, STRIPPED_CRIMSON_STEM, STRIPPED_SPRUCE_LOG,
+                STRIPPED_WARPED_STEM, STRIPPED_DARK_OAK_LOG, STRIPPED_OAK_LOG, STRIPPED_JUNGLE_LOG,
+                STRIPPED_MANGROVE_LOG,
+
+                ACACIA_FENCE, BIRCH_FENCE, CRIMSON_FENCE, SPRUCE_FENCE, WARPED_FENCE, DARK_OAK_FENCE,
+                OAK_FENCE, JUNGLE_FENCE, MANGROVE_FENCE, ACACIA_FENCE_GATE, BIRCH_FENCE_GATE, CRIMSON_FENCE_GATE,
+                SPRUCE_FENCE_GATE, WARPED_FENCE_GATE, DARK_OAK_FENCE_GATE, OAK_FENCE_GATE, JUNGLE_FENCE_GATE, MANGROVE_FENCE_GATE,
+
+                OAK_DOOR, ACACIA_DOOR, BIRCH_DOOR, CRIMSON_DOOR, DARK_OAK_DOOR,
+                JUNGLE_DOOR, MANGROVE_DOOR, WARPED_DOOR, SPRUCE_DOOR,
+
+                BARREL, BEEHIVE, BEE_NEST, NOTE_BLOCK, JUKEBOX, CRAFTING_TABLE,
+
+                AIR, CAVE_AIR, VOID_AIR,
+
+                SEAGRASS, TALL_SEAGRASS, WEEPING_VINES, TWISTING_VINES,
+
+                BLACK_CARPET, BLUE_CARPET, BROWN_CARPET, CYAN_CARPET, GRAY_CARPET,
+                GREEN_CARPET, LIGHT_BLUE_CARPET, LIGHT_GRAY_CARPET, LIME_CARPET,
+                MAGENTA_CARPET, MOSS_CARPET, ORANGE_CARPET, PINK_CARPET,
+                PURPLE_CARPET, RED_CARPET, WHITE_CARPET, YELLOW_CARPET,
+
+                WATER, IRON_BARS, CHAIN, STRUCTURE_VOID, COBWEB, SNOW,
+                POWDER_SNOW, BARRIER, TRIPWIRE, LADDER, RAIL, POWERED_RAIL,
+                DETECTOR_RAIL, ACTIVATOR_RAIL, CAMPFIRE, SOUL_CAMPFIRE:
                     break;
+                default:
+                  if (w.getBlockAt(to.getBlockX(), to.getBlockY(), to.getBlockZ()).getBoundingBox().contains(to)) {
+                    return false;
+                  }
             }
 
             if (Math.abs(to.getX() - org.getX()) < inc && Math.abs(to.getY() - org.getY()) < inc && Math.abs(to.getZ() - org.getZ()) < inc) {

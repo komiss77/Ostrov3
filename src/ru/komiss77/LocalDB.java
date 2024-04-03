@@ -1,11 +1,5 @@
 package ru.komiss77;
 
-import java.sql.*;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map.Entry;
-import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -24,8 +18,15 @@ import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.quests.Quest;
 import ru.komiss77.modules.quests.progs.IProgress;
+import ru.komiss77.modules.world.LocFinder;
 import ru.komiss77.utils.LocationUtil;
-import ru.komiss77.utils.TeleportLoc;
+
+import java.sql.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map.Entry;
+import java.util.Set;
 
 
 public class LocalDB {
@@ -244,10 +245,9 @@ public class LocalDB {
             sb = new StringBuilder("UPDATE `playerData` SET ");
             
             for (final String key : op.mysqlData.keySet()) {
-                if (!fieldsExist.contains(key)) {
-                    if (!addField(key)) { //не удалось добавить столбец - игнорим его данные
-                        continue;
-                    }
+                if (!fieldsExist.contains(key) && !addField(key)) { //не удалось добавить столбец - игнорим его данные
+                    continue;
+
 //Ostrov.log_warn("добавить поле "+key);   
                 }
                 sb.append(",`").append(key).append("`='").append(op.mysqlData.get(key)).append("'");
@@ -275,10 +275,8 @@ public class LocalDB {
             final StringBuilder values = new StringBuilder(" VALUES (");
             
             for (final String key : op.mysqlData.keySet()) {
-                if (!fieldsExist.contains(key)) {
-                    if (!addField(key)) { //не удалось добавить столбец - игнорим его данные
-                        continue;
-                    }
+                if (!fieldsExist.contains(key) && !addField(key)) { //не удалось добавить столбец - игнорим его данные
+                  continue;
 //Ostrov.log_warn("добавить поле "+key);   
                 }
                 sb.append(",`").append(key).append("`");
@@ -321,10 +319,10 @@ public class LocalDB {
   
 
     private static boolean addField (final String fieldName) {
-        try {
+        try (final Statement stm = connection.createStatement()) {
             //ALTER TABLE `playerData` ADD `ааа` VARCHAR(2) NOT NULL DEFAULT '' AFTER `validTo`;
             //connection.createStatement().executeUpdate( "ALTER TABLE `playerData` ADD COLUMN `"+fieldName+"` text NOT NULL;" );
-            connection.createStatement().executeUpdate( "ALTER TABLE `playerData` ADD COLUMN `"+fieldName+"` VARCHAR(1024) NOT NULL DEFAULT '';" );
+            stm.executeUpdate( "ALTER TABLE `playerData` ADD COLUMN `"+fieldName+"` VARCHAR(1024) NOT NULL DEFAULT '';" );
             fieldsExist.add(fieldName);
             Ostrov.log_ok("§5Модификация таблицы `playerData` добавление столбца : "+fieldName);
             return true;
@@ -376,12 +374,10 @@ public class LocalDB {
 
         final long l = System.currentTimeMillis();
         
-       
-        Statement stmt = null;
+
         ResultSet rs = null;
         
-        try {
-            stmt = LocalDB.getConnection().createStatement(); 
+        try (final Statement stmt = LocalDB.getConnection().createStatement()) {
 
             rs = stmt.executeQuery( "SELECT * FROM `playerData` WHERE `name` = '"+op.nik+"' LIMIT 1" );
 
@@ -452,7 +448,7 @@ public class LocalDB {
                 for (String info : split) {
                     splitterIndex = info.indexOf(W_SPLIT);
                     if (splitterIndex>0) {
-                        stamp = ApiOstrov.getInteger(info.substring(splitterIndex+1));
+                        stamp = ApiOstrov.getInteger(info.substring(splitterIndex+1), 0);
                         if (stamp>0) {
                             op.kits_use_timestamp.put( info.substring(0, splitterIndex), stamp );
                         }
@@ -554,7 +550,7 @@ public class LocalDB {
                 final LocalDataLoadEvent e = new LocalDataLoadEvent(p, op, logout);
                 Bukkit.getPluginManager().callEvent(e); //нормальный вызов с данными
                 if (e.getLogoutLocation()!=null) { //плагины могут изменять
-                  final Location loc = TeleportLoc.findSafeLoc(e.getLogoutLocation(), (byte) 2, false, (byte) 5);
+                  final Location loc = new LocFinder(e.getLogoutLocation(), LocFinder.DEFAULT_CHECKS).find(false, 5, 1);
                   if (loc != null) p.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
 //                    ApiOstrov.teleportSave(p, e.getLogoutLocation(), true);
                 }
@@ -610,7 +606,6 @@ public class LocalDB {
             
             try{
                 if (rs!=null && !rs.isClosed()) rs.close();
-                if (stmt!=null) stmt.close();
             } catch (SQLException ex) {
                 Ostrov.log_err("loadLocalData close error - "+ex.getMessage());
             }
@@ -719,7 +714,7 @@ public class LocalDB {
                 try { p.setFoodLevel(Integer.parseInt(s[1]) ); } catch (NumberFormatException ex) { Ostrov.log_err("applyLocalSettings "+p.getName()+" setFoodLevel"); }
             case 1:
                 try { health = Double.parseDouble(s[0]) / 100 ; } catch (NumberFormatException ex) { Ostrov.log_err("applyLocalSettings "+p.getName()+" health"); }
-
+            default: break;
         }
         
         if (maxhealth!=0) {
@@ -872,8 +867,8 @@ public class LocalDB {
 
         
         if (tableExist.contains("data")) {
-            try {
-                connection.createStatement().executeUpdate(
+            try (final Statement stm = connection.createStatement()) {
+                stm.executeUpdate(
                     "DROP TABLE `data` ; "
                 );
             } catch (SQLException e) {
