@@ -6,6 +6,7 @@ import io.papermc.paper.event.entity.EntityLoadCrossbowEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -13,15 +14,23 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.persistence.PersistentDataAdapterContext;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import ru.komiss77.Initiable;
 import ru.komiss77.Ostrov;
+import ru.komiss77.modules.world.AreaSpawner;
+import ru.komiss77.modules.world.WXYZ;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 public class EntityManager implements Initiable, Listener {
 
   public static boolean enable;
+  public static BukkitTask spawnTask = null;
   protected static final HashMap<String, CustomEntity> custom = new HashMap<>();
+  protected static final ArrayList<CustomEntity> spawns = new ArrayList<>();
   protected static final NamespacedKey key = NamespacedKey.minecraft("o.ent");
   protected static final PersistentDataType<String, CustomEntity> data = new PersistentDataType<>() {
     @Override
@@ -49,17 +58,45 @@ public class EntityManager implements Initiable, Listener {
 		reload();
 	}
 
+  public static void register(final CustomEntity ce) {
+    custom.put(ce.id(), ce);
+    if (ce.spawner() != null) spawns.add(ce);
+  }
+
   @Override
   public void postWorld() { //обход модулей после загрузки миров, т.к. не всё можно сделать onEnable
   }
     
 	@Override
 	public void reload() {
+    if (spawnTask != null) spawnTask.cancel();
     HandlerList.unregisterAll(this);
     if (!enable) return;
 
     Ostrov.log_ok("§2Сущности включены!");
     Bukkit.getPluginManager().registerEvents(this, Ostrov.getInstance());
+    spawnTask = new BukkitRunnable() {
+      @Override
+      public void run() {
+        final Collection<? extends Player> pls = Bukkit.getOnlinePlayers();
+        if (pls.isEmpty()) return;
+        final ArrayList<WXYZ> locs = new ArrayList<>(pls.size());
+        for (final Player p : pls) locs.add(new WXYZ(p.getLocation()));
+
+        for (final CustomEntity ce : spawns) {
+          final AreaSpawner as = ce.spawner();
+          if (as == null || ce.cd < 0) continue;
+          if (ce.cd == 0) {
+            ce.cd = ce.spawnCd();
+            for (final WXYZ lc : locs) {
+              as.trySpawn(lc, ce.getEntClass());
+            }
+            continue;
+          }
+          ce.cd--;
+        }
+      }
+    }.runTaskTimer(Ostrov.instance, 1, 1);
 	}
 	
 	@Override

@@ -248,7 +248,4 @@ public class BotManager implements Initiable, Listener {
             } catch (NullPointerException | IOException | ParseException e) {}
         });
     }
-
-
-
 }

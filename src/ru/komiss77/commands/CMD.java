@@ -1,30 +1,19 @@
 package ru.komiss77.commands;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
-import ru.komiss77.ApiOstrov;
-import ru.komiss77.Config;
-import ru.komiss77.Ostrov;
-import ru.komiss77.Perm;
-import ru.komiss77.Timer;
+import ru.komiss77.*;
 import ru.komiss77.builder.menu.Sounds;
 import ru.komiss77.builder.menu.ViewPerm;
 import ru.komiss77.modules.DelayTeleport;
@@ -40,36 +29,7 @@ import ru.komiss77.modules.warp.WarpManager;
 import ru.komiss77.utils.LocationUtil;
 import ru.komiss77.utils.inventory.SmartInventory;
 
-@SuppressWarnings("deprecation")
 public class CMD  {
-
-
-    //public static List <String> ostrov_commands;
-    //public static Set <String> all_server_commands;
-    
-    static {
-       // ostrov_commands = new ArrayList<>( Ostrov.instance.getDescription().getCommands().keySet() );
-       // all_server_commands = new HashSet<>();
-      //  for (Plugin plugin:Bukkit.getServer().getPluginManager().getPlugins()){
-      //      all_server_commands.addAll(plugin.getDescription().getCommands().keySet());
-      //  }
-    }
-    
-   /* @Override
-    public List<String> onTabComplete(CommandSender cs, Command cmd, String string, String[] input) {
-        List <String> sugg = new ArrayList<>();
-        if (input.length==1) {
-           sugg.addAll( Arrays.asList("list") );
-        } else if (input.length==2) {
-            //sugg.addAll(AM.getArenasNames());
-        }
-        return sugg;
-    }*/
-    
-
-
-
-
 
 
     public static boolean CommandHamdler(CommandSender sender, Command cmd, String label, String[] arg) {
@@ -393,7 +353,7 @@ public class CMD  {
                         if (i.getType() == Material.AIR) {
                             Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "give "+p.getName()+" "+arg[0]+" "+arg[1] );
                         } else {
-                            Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "give "+p.getName()+" "+i.getType().toString().toLowerCase().replaceAll("_", "")+" "+arg[1] );
+                            Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "give "+p.getName()+" "+i.getType().toString().toLowerCase().replace("_", "")+" "+arg[1] );
                         }
                     } else p.sendMessage("§cФормат: get <ид/название> <кол-во>");
                 } else p.sendMessage("§cУ Вас нет пава ostrov.get !");
