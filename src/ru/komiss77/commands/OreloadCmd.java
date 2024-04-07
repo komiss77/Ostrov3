@@ -126,8 +126,8 @@ public class OreloadCmd implements Listener, CommandExecutor, TabCompleter {
                             }, 0 );
                 //Perm.loadGroups(true);
                         case "gamemanager" -> {
-                          GM.reload = true;
-                          Ostrov.async( ()-> GM.reload(), 0);
+                          //GM.reload = true;
+                          Ostrov.async( ()-> GM.load(GM.State.RELOAD), 0);
                         }
                         
                         case "signs" -> GM.onWorldsLoadDone();

@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v1_20_R3.util.CraftLocation;
 import org.bukkit.entity.Entity;
@@ -46,6 +47,8 @@ import ru.komiss77.scoreboard.SubTeam;
 import ru.komiss77.utils.FastMath;
 import ru.komiss77.utils.TCUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Predicate;
@@ -247,6 +250,20 @@ public class Nms {
         SpigotConfig.disabledAdvancements = Arrays.asList("*", "minecraft:story/disabled");
         SpigotConfig.disableStatSaving = true;
       }
+    }
+
+    //отключить устаревшие тайминги
+    try {
+      final File cfg = new File(Bukkit.getWorldContainer().getPath()+"/config/paper-global.yml");
+      final YamlConfiguration yml = YamlConfiguration.loadConfiguration(cfg);
+      if (yml.getConfigurationSection("timings") != null) {
+        if (yml.getConfigurationSection("timings").getBoolean("enabled")) {
+          yml.getConfigurationSection("timings").set("enabled", false);
+          yml.save(cfg);
+        }
+      }
+    } catch (IOException | NullPointerException ex) {
+          Ostrov.log_err("не удалось изменить timings : "+ex.getMessage());
     }
 
     Ostrov.log_ok("§bСервер сконфигурирован, отключено ванильных команд: " + vanilaCommandToDisable.size());

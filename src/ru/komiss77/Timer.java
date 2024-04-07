@@ -55,8 +55,7 @@ public class Timer {
 
     private static final AtomicBoolean lockQuery = new AtomicBoolean(false);
     private static final AtomicBoolean lockSecond = new AtomicBoolean(false);
-    private static OstrovDB.Qinfo qInfo;
-    private static CommandSender cs;
+    //private static OstrovDB.Qinfo qInfo;
     private static final Map <Integer, OstrovDB.Qinfo> map;
     private static int count;
     
@@ -273,7 +272,7 @@ public class Timer {
                         //если игры еще не пытались грузиться, fromStamp = 0
                         //если игры уже прогрузились, fromStamp > 0
                         //если была ошибка при первой загрузке, fromStamp = -1
-                        if (GM.fromStamp!=0 && second%GM.LOAD_INTERVAL==0) { 
+                      if (GM.state!= GM.State.STARTUP && second%GM.LOAD_INTERVAL==0) {//if (GM.fromStamp!=0 && second%GM.LOAD_INTERVAL==0) {
                             GM.loadArenaInfo(); //там же подгрузит обновы Lang
                         }
                         
@@ -354,7 +353,44 @@ public class Timer {
 
     private static void sendQuery() {
 //final long l = System.currentTimeMillis();
-        try (Statement stmt = OstrovDB.getConnection().createStatement()) {
+      Statement stmt = null;
+      OstrovDB.Qinfo qInfo;
+      try {
+        stmt = OstrovDB.getConnection().createStatement();
+
+        while ( (qInfo = OstrovDB.QUERY.poll() ) != null) {
+
+          try {
+
+            stmt.execute(qInfo.query);
+//Ostrov.log_warn("execute "+qInfo.query);
+
+          } catch (SQLException | NullPointerException ex) {
+
+            CommandSender cs = qInfo.senderName==null ? null : qInfo.senderName.equals("console") ? Bukkit.getConsoleSender() : Bukkit.getPlayerExact(qInfo.senderName);
+            if (cs!=null) cs.sendMessage("§cОшибка выполнения запроса "+qInfo.query+" : "+ex.getMessage());
+            Ostrov.log_err("Timer executeQuery "+qInfo.query+" : "+ex.getMessage());
+
+          }
+        }
+
+      } catch (SQLException ex) {
+
+        Ostrov.log_err("Timer sendQuery createStatement : "+ex.getMessage());
+
+      } finally {
+        try {
+          if (stmt!=null && !stmt.isClosed()) {
+            stmt.close();
+          }
+        } catch (SQLException ex) {
+          Ostrov.log_err("Timer sendQuery stmt.close : "+ex.getMessage());
+        }
+        lockQuery.set(false);//lock = false;
+      }
+
+
+      /*try (Statement stmt = OstrovDB.getConnection().createStatement()) {
             while ((qInfo = OstrovDB.QUERY.poll()) != null) {
                 stmt.addBatch(qInfo.query);
                 map.put(count, qInfo);
@@ -381,11 +417,11 @@ public class Timer {
         } catch (SQLException ex) {
             Ostrov.log_err("Timer querry executePstAsync : "+ex.getMessage());
         }
-
         count=0;
-        map.clear();
+        map.clear();*/
+
 //Ostrov.log_ok("POLL time:"+(System.currentTimeMillis()-l)+"мс.");
-        lockQuery.set(false);//lock = false;
+
     }
     
      

@@ -29,7 +29,9 @@ import org.bukkit.potion.PotionEffectType;
 import ru.komiss77.*;
 import ru.komiss77.builder.menu.EntitySetup;
 import ru.komiss77.commands.PvpCmd;
+import ru.komiss77.enums.ServerType;
 import ru.komiss77.events.FriendTeleportEvent;
+import ru.komiss77.modules.games.GM;
 import ru.komiss77.modules.menuItem.MenuItem;
 import ru.komiss77.modules.menuItem.MenuItemsManager;
 import ru.komiss77.modules.player.Oplayer;
@@ -379,8 +381,9 @@ public class PlayerLst implements Listener {
     
     
     @EventHandler ( ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onWorldChange(final PlayerTeleportEvent e) {//перед тп в другой мир
-        
+    public void onTeleport(final PlayerTeleportEvent e) {//перед тп в другой мир
+        if (GM.GAME.type == ServerType.ARENAS || GM.GAME.type == ServerType.LOBBY) return;
+
         final Player p = e.getPlayer();
         final Oplayer op = PM.getOplayer(p);
         if (op==null) return;

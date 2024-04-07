@@ -105,8 +105,8 @@ public class PM {
         return oplayersByName.keySet();
     }
 
-    //@Dep иногда очень надо найти по имени, напр. при сообщении, или когда UUID передавать неудобно
-    public static Oplayer getOplayer(final String nik) {
+
+    public static Oplayer getOplayer(final String nik) { //@Dep иногда очень надо найти по имени, напр. при сообщении, или когда UUID передавать неудобно
         return oplayersByName.get(nik);
     }
 

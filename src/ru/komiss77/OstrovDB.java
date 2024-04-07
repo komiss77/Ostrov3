@@ -80,7 +80,7 @@ public class OstrovDB {
         connect();
         if (connection!=null) {
             getBungeeServerInfo(); //1!!!  Perm.loadGroups(false);
-            GM.reload();//+прогрузит Lang
+            GM.load(GM.State.STARTUP);//+прогрузит Lang
             Perm.loadGroups(false);
         }
     }
@@ -219,15 +219,12 @@ public class OstrovDB {
        //     return;
        // }
 
-       final String querry = "UPDATE "+Table.BUNGEE_SERVERS.table_name+" SET "
-                    + "`online`='"+Bukkit.getOnlinePlayers().size()+"',"
-                    + "`onlineLimit`='"+Bukkit.getMaxPlayers()+"',"
-                    + "`tps`='"+ Nms.getTps()+"',"
-                    + "`memory`='"+(int)(Runtime.getRuntime().totalMemory()/1024/1024 )+"',"
-                    + "`memoryLimit`='"+(int)(Runtime.getRuntime().maxMemory()/1024/1024)+"',"
-                    + "`freeMemory`='"+(int)(Runtime.getRuntime().freeMemory()/1024/1024)+"',"
-                    + "`stamp`='"+ApiOstrov.currentTimeSec()+"'"
-                    + " WHERE `serverId`='"+Ostrov.server_id+"' ";
+       final String querry = "UPDATE "+Table.BUNGEE_SERVERS.table_name+
+         " SET `online`='"+Bukkit.getOnlinePlayers().size()+"', `onlineLimit`='"
+         +Bukkit.getMaxPlayers()+"', `tps`='"+ Nms.getTps()+"', `memory`='"
+         +(int)(Runtime.getRuntime().totalMemory()/1024/1024 )+"', `memoryLimit`='"
+         +(int)(Runtime.getRuntime().maxMemory()/1024/1024)+"', `freeMemory`='"
+         +(int)(Runtime.getRuntime().freeMemory()/1024/1024)+"',`ts`= NOW()+0 WHERE `serverId`='"+Ostrov.server_id+"'; ";
         executePstAsync(Bukkit.getConsoleSender(), querry);
        
       /*  PreparedStatement pst = null;

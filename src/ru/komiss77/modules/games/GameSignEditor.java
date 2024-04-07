@@ -61,7 +61,7 @@ public class GameSignEditor implements InventoryProvider {
                 
                     contents.add(ClickableItem.of(is, e -> {
                         if (g.type == ServerType.ONE_GAME) {
-                            GM.addGameSign(p, sign, game, game.serverName, "");
+                            GM.addGameSign(p, sign, game, game.defaultServer, "");
                         } else {
                             game = g;
                             reopen(p, contents);

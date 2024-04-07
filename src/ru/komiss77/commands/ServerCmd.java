@@ -1,15 +1,12 @@
 package ru.komiss77.commands;
 
 import com.google.common.collect.ImmutableList;
-import me.rerere.matrix.internal.s;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.bukkit.entity.Player;
 import org.bukkit.command.Command;
@@ -71,7 +68,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                     final GameInfo gi = GM.getGameInfo(game);
 //Ostrov.log("GameInfo="+gi);
                     if (gi!=null) {
-                        return (gi.getArenaNames(game.serverName));
+                        return (gi.getArenaNames(game.defaultServer));
                     }
                 } else if (game.type==ServerType.LOBBY) {
                     final GameInfo gi = GM.getGameInfo(game);
@@ -184,7 +181,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                 }
 //p.sendMessage("to Sedna:"+serverName);
               } else {
-                serverName = game.serverName; //могло быть набрано /server Даария
+                serverName = game.defaultServer; //могло быть набрано /server Даария
               }
 
             } else if (game.type == ServerType.LOBBY) {
@@ -198,11 +195,12 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
             } else if (game.type == ServerType.ARENAS) { //переход типа /server wz или /server поле_брани, без арены
               final GameInfo gi = GM.getGameInfo(game);
               if (gi==null) {
-                p.sendMessage("§5Нет данных для игры "+game.name()+"!");
-                return true;
+                p.sendMessage("§5Нет данных для игры "+game.name()+" - пробуем подключиться к §e"+game.defaultServer);
+                serverName = game.defaultServer;
+                //return true;
               } else if (gi.arenas.isEmpty()) {
-                p.sendMessage("§5Для игры §6"+game.name()+" §5не найдено арен - редирект на §e"+game.serverName);
-                serverName = game.serverName;
+                p.sendMessage("§5Для игры §6"+game.name()+" §5не найдено арен - пробуем подключиться к §e"+game.defaultServer);
+                serverName = game.defaultServer;
                 //return true;
               } else {
                 serverName = gi.arenas.get(0).server;
@@ -232,7 +230,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
             ai = GM.lookup("", arenaMane);//пытаться найти арену по названию
           } else { //игра была определена (это могло быть типа /server поле_брани арена)
             final GameInfo gi = GM.getGameInfo(game);
-            ai = gi.getArena(game.serverName, arenaMane);
+            ai = gi.getArena(game.defaultServer, arenaMane);
             if (ai==null) {
               ai = GM.lookup("", arenaMane);//пытаться найти арену по названию
             }

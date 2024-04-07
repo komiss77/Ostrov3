@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.WeakHashMap;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
@@ -35,7 +36,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Config;
-import ru.komiss77.Ostrov;
 import ru.komiss77.Timer;
 import ru.komiss77.commands.PassportCmd;
 import ru.komiss77.enums.ServerType;
@@ -133,6 +133,15 @@ public class InteractLst implements Listener {
         if ( e.getAction()==Action.PHYSICAL ) return;
         
         final Player p = e.getPlayer();
+        if (p.getGameMode() == GameMode.SPECTATOR && (e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK)) {
+          if (p.getOpenInventory().getType() != InventoryType.CHEST) {
+            if (PM.getOplayer(p.getUniqueId()).setup!=null) {
+              PM.getOplayer(p.getUniqueId()).setup.openSetupMenu(p);
+            } //else {
+              //p.performCommand("menu"); может перекрыть в минииграх
+            //}
+          }
+        }
         final ItemStack inHand = e.getItem();
   
         //фикс для NAME_TAG

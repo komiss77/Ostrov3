@@ -225,8 +225,11 @@ public class SignProtectLst implements Initiable, Listener {
         }
       } else if ( SignProtect.lockables.contains(e.getBlock().getType())) {
         final Oplayer op = PM.getOplayer(e.getPlayer());
-        if (!op.isGuest && !op.mysqlData.containsKey("signProtect") && Timer.has(e.getPlayer(), "signProtect")) {
-          e.getPlayer().sendMessage("§eЗащити "+ Lang.t(e.getBlock().getType(), e.getPlayer())+" - для этого присесть и правый клик табличкой!");
+        if (!op.isGuest && (!op.mysqlData.containsKey("signProtect") || op.mysqlData.get("signProtect").isEmpty()) && !Timer.has(e.getPlayer(), "signProtect")) {
+          e.getPlayer().sendMessage(Component.text("§6§k***§r §eЗащити ")
+            .append(Lang.t(e.getBlock().getType(), e.getPlayer()))
+            .append(Component.text(" §e- для этого присесть и §bправый клик табличкой! §6§k***"))
+          );
           Timer.add(e.getPlayer(), "signProtect", 900);
         }
       }

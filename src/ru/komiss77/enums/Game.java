@@ -1,11 +1,8 @@
 package ru.komiss77.enums;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import ru.komiss77.Ostrov;
 import ru.komiss77.objects.CaseInsensitiveMap;
 
 // !!!!!!!  не ставить ничего от бакита, не грузит банжик!!!
@@ -62,7 +59,7 @@ public enum Game {
     public final int menuPage;
     public final int menuSlot;
     public final String suggestName;
-    public final String serverName;
+    public final String defaultServer;
     public final ServerType type;
     public final String mat;
     public final String displayName;
@@ -74,13 +71,13 @@ public enum Game {
     private static final CaseInsensitiveMap<Game> nameMap; //напихать максимально для распознавания
     
     
-    Game(final String defaultlogo, final int statSlot, final int menuPage, final int menuSlot, final String suggestName, final String serverName, final ServerType type, final String mat, final String displayName, final List<String> description, final int level, final int reputation){
+    Game(final String defaultlogo, final int statSlot, final int menuPage, final int menuSlot, final String suggestName, final String defaultServer, final ServerType type, final String mat, final String displayName, final List<String> description, final int level, final int reputation){
         this.defaultlogo = defaultlogo;
         this.statSlot = statSlot;
         this.menuPage = menuPage;
         this.menuSlot = menuSlot;
         this.suggestName = suggestName;
-        this.serverName = serverName;
+        this.defaultServer = defaultServer;
         this.type = type;
         this.mat = mat;
         this.displayName = displayName;
@@ -99,7 +96,7 @@ public enum Game {
           }
           nameMap.put(game.name(), game); //lobby da pa bw bb sg
           nameMap.put(game.suggestName, game);
-          nameMap.put(game.serverName, game);
+          nameMap.put(game.defaultServer, game);
         }
 
         nameMap.put("хаб", LOBBY);

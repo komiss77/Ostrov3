@@ -2,6 +2,8 @@ package ru.komiss77.listener;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -22,10 +24,17 @@ public class TestLst implements Listener {
  XYZ xyz;
  Set<XYZ> set = new HashSet<>();
 
-//  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+  //@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void test(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
       if (e.getItem()==null) return;
+
+    if (e.getItem().getType()==Material.WOODEN_PICKAXE) {
+      ApiOstrov.teleportSave(p, p.getLocation().clone().add(0,200,0), false);
+      p.sendMessage("teleportSave");
+      return;
+    }
+
       if (!ApiOstrov.isLocalBuilder(p)) return;
 //Ostrov.log("PlayerInteractEvent "+e.getMaterial());
         if (e.getItem().getType() == Material.DRAGON_BREATH) {

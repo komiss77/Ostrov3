@@ -6,7 +6,6 @@ import org.bukkit.WeatherType;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
-
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Config;
 import ru.komiss77.Ostrov;
@@ -21,19 +20,10 @@ import ru.komiss77.utils.inventory.InventoryContent;
 import ru.komiss77.utils.inventory.InventoryProvider;
 
 
-
-
-
 public class LocalSettings implements InventoryProvider {
-    
-    
-    
-   private static final ClickableItem fill = ClickableItem.empty(new ItemBuilder(Section.ВОЗМОЖНОСТИ.glassMat).name("§8.").build());
-    
 
-    
-    public LocalSettings() {
-    }
+   private static final ClickableItem fill = ClickableItem.empty(new ItemBuilder(Section.ВОЗМОЖНОСТИ.glassMat).name("§8.").build());
+
     
     @Override
     public void onClose(final Player p, final InventoryContent content) {
@@ -62,7 +52,7 @@ public class LocalSettings implements InventoryProvider {
         
         
         
-        if (ApiOstrov.isLocalBuilder(p) || PvpCmd.getFlag(PvpCmd.PvpFlag.allow_pvp_command)) {
+        if (PvpCmd.getFlag(PvpCmd.PvpFlag.allow_pvp_command)) {
             
             content.set(1,1, ClickableItem.of(new ItemBuilder(op.pvp_allow ? Material.DIAMOND_SWORD : Material.SHIELD)
                 .name("§7Разрешение ПВП")
@@ -75,7 +65,7 @@ public class LocalSettings implements InventoryProvider {
                 .addLore( "§7ЛКМ - менять" )
                 .addLore("")
                 .build(), e-> {
-                    op.pvp_allow = !op.pvp_allow;
+                    p.performCommand("pvp "+(op.pvp_allow ? "off" : "on"));
                     reopen(p, content);
                 }));
 

@@ -122,8 +122,8 @@
     
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
     public void onPostWorld(final ServerLoadEvent e) { //прилетает 1: после загрузки всех миров server.enablePlugins(PluginLoadOrder.POSTWORLD); либо после перезагрузки командой
-        if (e.getType() == ServerLoadEvent.LoadType.STARTUP) {
-            Ostrov.postWorld();
+        if (Ostrov.STARTUP && e.getType() == ServerLoadEvent.LoadType.STARTUP) {
+            Ostrov.sync( () -> Ostrov.postWorld(), 60);
         }
     }
     
@@ -176,14 +176,14 @@
 
 
      @EventHandler(priority = EventPriority.LOWEST)
-     public void onSpawn(final EntitySpawnEvent e) {
+     public void onEntitySpawn(final EntitySpawnEvent e) {
        if (Config.clear_old_ents) {
          e.getEntity().setPersistent(false);
        }
      }
 
      @EventHandler(priority = EventPriority.LOWEST)
-     public void onBlockFade(final EntitiesLoadEvent e) {
+     public void onEntitiesLoad(final EntitiesLoadEvent e) {
        if (Config.clear_old_ents) {
          for (final Entity ent : e.getEntities()) {
            if (!ent.isPersistent()) ent.remove();
@@ -192,18 +192,18 @@
      }
 
      @EventHandler(priority = EventPriority.LOWEST)
-     public void onBlockFade(final EntitiesUnloadEvent e) {
+     public void onEntitiesUnload(final EntitiesUnloadEvent e) {
        if (Config.clear_old_ents) {
          for (final Entity ent : e.getEntities()) {
            if (!ent.isPersistent()) ent.remove();
          }
        }
      }
+
         
         
         
-        
-        
+     /*
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockFade(BlockFadeEvent e) {
         if (Config.disable_ice_melt) {
@@ -236,7 +236,7 @@
     public void onBlockGrowth(BlockGrowEvent e) { 
         if ( Config.disable_blockspread ) e.setCancelled(true);
     }
-
+*/
   
 // ----------------------------------------------------------
 

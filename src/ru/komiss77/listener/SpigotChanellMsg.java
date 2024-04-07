@@ -423,6 +423,7 @@ public class SpigotChanellMsg implements Listener, PluginMessageListener {
                 //s2,s3,s4,s5 - строки
                 //s6 - game.name()
                 final Game game = Game.fromServerName(s6);//Game.fromServerName(senderInfo);
+//Ostrov.log("GAME_INFO_TO_OSTROV s6="+s6+" game="+game+" arena="+s1);
                 if (game!=null) {
                     final GameInfo gi = GM.getGameInfo(game);
                     if (gi!=null) {

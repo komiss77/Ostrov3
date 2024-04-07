@@ -572,7 +572,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
                     final Oplayer op = PM.getOplayer(p);
 
                     if (PvpCmd.battle_time > 1 && op.pvp_time > 0 && !ApiOstrov.isLocalBuilder(p)) {
-                        p.sendMessage("§c"+Lang.t(p, "Режим боя - команды заблокированы! Осталось ") + PM.getOplayer(p.getName()).pvp_time + Lang.t(p, " сек."));
+                        p.sendMessage("§c"+Lang.t(p, "Режим боя - команды заблокированы! Осталось ") + PM.getOplayer(p.getUniqueId()).pvp_time + Lang.t(p, " сек."));
                         e.setCancelled(true);
                         return;
                     }
@@ -669,7 +669,7 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
             return;
         }
         final Player p = e.getEntity();
-        final Oplayer op = PM.getOplayer(p.getName());
+        final Oplayer op = PM.getOplayer(p.getUniqueId());
         if (op == null) {
             return;
         }
@@ -822,12 +822,12 @@ public final class PvpCmd implements Listener, CommandExecutor, TabCompleter {
         Player damager = null;
         Player target = null;
 
-        final Oplayer damagerOp = PM.getOplayer(atackEntity.getName());
+        final Oplayer damagerOp = PM.getOplayer(atackEntity.getUniqueId());
         if (damagerOp != null) {//if (atackEntity.getType() == EntityType.PLAYER && damagerOp != null) { - раз есть Oplayer, значит точно игрок
             damager = (Player) atackEntity;
         }
 
-        final Oplayer targetOp = PM.getOplayer(targetEntity.getName());
+        final Oplayer targetOp = PM.getOplayer(targetEntity.getUniqueId());
         if (targetOp != null) {//if (targetEntity.getType() == EntityType.PLAYER && targetOp != null) { - раз есть Oplayer, значит точно игрок
             target = (Player) targetEntity;
         }

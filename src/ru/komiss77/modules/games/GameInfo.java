@@ -116,7 +116,7 @@ public class GameInfo {
                        final GameState state,
                        final int players,
                        final String line0, final String line1, final String line2, final String line3) {
-//Bukkit.broadcastMessage("updateMulti server="+server+" arena="+arenaName); 
+//Ostrov.log("update "+serverName+","+arenaName+","+state+","+players);
         ArenaInfo ai = getArena(serverName, arenaName);
         if (ai==null) {
             //неи инфо - кинуть пустышку для обновы табличек
@@ -146,9 +146,9 @@ public class GameInfo {
                 break;
                 
             case ARENAS:
-                gameOnline-=ai.players;
+                gameOnline-=ai.players; //убавить на старый онлайн арены
                 if (gameOnline<0) gameOnline=0;
-                gameOnline+=players;
+                gameOnline+=players; //добавить новый онлайн арены
                 ai.update(state, players, line0, line1, line2, line3);
                 break;
 			default:

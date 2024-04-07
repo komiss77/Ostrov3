@@ -424,9 +424,9 @@ public class ChatLst implements Listener {
         viewerResultEN = ce.getViewerGameInfo() == null ? GM.getLogo().append(resultEN) :
           GM.getLogo().append(ce.getViewerGameInfo()).append(resultEN);
 
-        //на минииграх - показать подготовленное сообщение всем, кто в одном мире
+        //на минииграх - показать подготовленное сообщение всем, кто в одном мире или в лобби
         for (Player p : ce.viewers()) {
-          if (p.getWorld().getName().equals(senderWorldName)) {
+          if (p.getWorld().getName().equals(senderWorldName) || p.getWorld().getName().equals("lobby")) {
             if (p.getClientOption(ClientOption.LOCALE).equals("ru_ru")) {
               p.sendMessage(viewerResultRU);
             } else {

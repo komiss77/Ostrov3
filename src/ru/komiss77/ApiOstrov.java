@@ -266,14 +266,25 @@ public class ApiOstrov {
         }
 
         final World w = feetLoc.getWorld();
+
+        if (w.getEnvironment() == World.Environment.NETHER) { //фикс - тэпешит над верхним бедроком
+          int y_max =  w.getHighestBlockYAt(feetLoc.getBlockX(), feetLoc.getBlockZ())-3;
+          if (feetLoc.getBlockY()>y_max) {
+            feetLoc.setY(y_max);
+          }
+        }
         final int x = feetLoc.getBlockX();
         int feet_y = feetLoc.getBlockY();
         final int y_ori = feet_y;
         final int z = feetLoc.getBlockZ();
 
+
+
         Material headMat = Nms.getFastMat(w, x, feet_y+1, z);
         Material feetMat = Nms.getFastMat(w, x, feet_y, z);
         Material downMat = Nms.getFastMat(w, x, feet_y-1, z);
+
+
 
         //проверка указанного места
         boolean safe = TeleportLoc.isSafePlace(headMat, feetMat, downMat);
@@ -302,14 +313,14 @@ public class ApiOstrov {
             feet_y = w.getMaxHeight()-2;
             for (; feet_y>w.getMinHeight()+1; feet_y--) {
                 //в аду или при генерации как в аду (определяем потолок из бедрока)
-                if ( (nether || feet_y>0) && downMat==Material.BEDROCK ) {
-                    continue;
-                }
+
                 headMat = feetMat; //VM.getNmsServer().getFastMat(w, x, y-1, z);
                 feetMat = downMat;//VM.getNmsServer().getFastMat(w, x, y, z);
                 downMat = Nms.getFastMat(w, x, feet_y-1, z);
 //Ostrov.log("find y="+y+" "+headMat+" "+feetMat+" "+downMat);
-                //если над нижним блоком нет 2 блока для тела, пропускаем ниже
+              if ( (nether || feet_y>0) && downMat==Material.BEDROCK ) {
+                continue;
+              }                //если над нижним блоком нет 2 блока для тела, пропускаем ниже
                 //if (!LocationUtil.isPassable(headMat) || !LocationUtil.isPassable(feetMat)) {
                 //    continue;
                 //}

@@ -23,6 +23,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import ru.komiss77.Ostrov;
 import ru.komiss77.builder.menu.BuilderMain;
+import ru.komiss77.builder.menu.EntityWorldMenu;
 import ru.komiss77.events.BuilderMenuEvent;
 import ru.komiss77.modules.world.Cuboid;
 import ru.komiss77.modules.world.SchemEditorMenu;
@@ -231,8 +232,10 @@ public class SetupMode implements Listener{
                 
             case "SchemMain" -> openSchemMainMenu(p);
 
-            case "", "Main" -> openMainSetupMenu(p);
-            
+          case "", "Main" -> openMainSetupMenu(p);
+
+          case "entity" -> openEntityWorldMenu(p, null, -1);
+
             default -> openLocalGameMenu(p);
         }
         //case "LocalGame" :
@@ -242,9 +245,21 @@ public class SetupMode implements Listener{
         
         
     }
-    
-    
-    
+
+
+  public void openEntityWorldMenu(final Player p, World world, final int radius) {
+    lastEdit = "entity";
+    if (world==null) {
+      world = p.getWorld();
+    }
+    SmartInventory.builder()
+      .id("EntityMain"+p.getName())
+      .provider(new EntityWorldMenu(world, radius))
+      .size(6, 9)
+      .title("§2Сущности "+world.getName())
+      .build()
+      .open(p);
+  }
     
     public void openMainSetupMenu(final Player p) {
         lastEdit = "";

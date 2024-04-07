@@ -23,6 +23,7 @@ import ru.komiss77.OstrovDB;
 import ru.komiss77.Timer;
 import ru.komiss77.events.ChatPrepareEvent;
 import ru.komiss77.listener.ChatLst;
+import ru.komiss77.modules.games.GM;
 
 //https://github.com/DeepLcom/deepl-java?tab=readme-ov-file
 //https://github.com/AsyncHttpClient/async-http-client
@@ -36,7 +37,7 @@ import ru.komiss77.listener.ChatLst;
 public class Lang {
 
   private static final Map<String, String> ruToEng;//Map<Integer, HashMap<String, String>> ruToEng;-возможно потом добавить сортировку по длинне
-  public static int updateStamp;
+  //public static int updateStamp;
   private static final HttpClient HTTP;
   private static HttpRequest.Builder rb;
   public static final Locale RU, EN;
@@ -61,8 +62,12 @@ public class Lang {
       while (rs.next()) {
         ruToEng.put(rs.getString("rus"), rs.getString("eng"));
         add++;
+        if (rs.getLong("ts") > GM.tsLang) {// (GM.tsLang.getTime() < rs.getTimestamp("ts").getTime()) {//запоминаем наибольший последний апдейт - в след.раз прогрузим с него
+          GM.tsLang = rs.getLong("ts");
+        }
       }
-      updateStamp = Timer.getTime();
+
+      //updateStamp = Timer.getTime();
       if (add>0) {
         Ostrov.log_ok("Lang loadBase добавлено записей : §b"+add+" (всего:"+ruToEng.size()+")");
       }
@@ -164,7 +169,9 @@ public class Lang {
 
   public static void upd(final String ruMsg, final String translateResult) {
     ruToEng.put(ruMsg, translateResult);
-    OstrovDB.executePstAsync(Bukkit.getConsoleSender(), "INSERT INTO `lang` (`lenght`, `rus`, `eng`, `stamp`) VALUES ('"+ruMsg.length()+"', '"+ruMsg+"', '"+translateResult+"', '"+Timer.getTime()+"')  ON DUPLICATE KEY UPDATE eng=VALUES(eng), stamp=VALUES(stamp)");
+    OstrovDB.executePstAsync(Bukkit.getConsoleSender(),
+      "INSERT INTO `lang` (`lenght`, `rus`, `eng`, `ts`) VALUES ('"+ruMsg.length()+"', '"+ruMsg+"', '"+translateResult
+        +"', NOW()+0)  ON DUPLICATE KEY UPDATE eng=VALUES(eng), ts=NOW()+0;");
   }
 
 

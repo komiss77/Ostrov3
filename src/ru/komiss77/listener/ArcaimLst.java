@@ -45,6 +45,7 @@ import ru.komiss77.modules.bots.BotEntity;
 import ru.komiss77.modules.bots.BotManager;
 import ru.komiss77.modules.games.GM;
 import ru.komiss77.modules.player.Oplayer;
+import ru.komiss77.modules.player.PM;
 import ru.komiss77.utils.EntityUtil;
 import ru.komiss77.utils.EntityUtil.EntityGroup;
 import ru.komiss77.utils.ItemUtils;
@@ -61,122 +62,20 @@ public class ArcaimLst implements Listener {
         BotManager.regSkin(admin);
     }
 
-    private static class AdminBot extends BotEntity {
-
-        protected final Player tgt;
-
-        protected AdminBot(final Player tgt) {
-            super(admin, tgt.getWorld());
-            this.tgt = tgt;
-        }
-
-        @Override
-        public void onDamage(final EntityDamageEvent e) {
-            e.setCancelled(true);
-            e.setDamage(0d);
-        }
-
-        @Override
-        public Goal<Mob> getGoal(final Mob org) {
-            return new AdminGoal(this);
-        }
-    }
-
-    private static class AdminGoal implements Goal<Mob> {
-
-        private static final GoalKey<Mob> key = GoalKey.of(Mob.class, new NamespacedKey(Ostrov.instance, "bot"));
-
-        private final AdminBot bot;
-        private final WeakReference<Player> trf;
-
-        private int tick;
-
-        public AdminGoal(final AdminBot bot) {
-            this.trf = new WeakReference<>(bot.tgt);
-            this.bot = bot;
-            this.tick = 0;
-        }
-
-        @Override
-        public boolean shouldActivate() {
-            return true;
-        }
-
-        @Override
-        public boolean shouldStayActive() {
-            return true;
-        }
-
-        @Override
-        public void start() {}
-
-        @Override
-        public void stop() {bot.remove();}
-
-        @Override
-        public void tick() {
-            final Mob rplc = (Mob) bot.getEntity();
-            if (rplc == null || !rplc.isValid()) {
-                bot.remove();
-                return;
-            }
-
-            final Player tgt = trf.get();
-            if (tgt == null || !tgt.isValid() || !tgt.isOnline()) {
-                bot.remove();
-                return;
-            }
-            //Bukkit.broadcast(Component.text("le-" + rplc.getName()));
-            final Location loc = rplc.getLocation();
-
-            final Vector vc;
-            if ((tick++ & 7) == 0 && Ostrov.random.nextBoolean()) {
-                vc = tgt.getLocation().add(Ostrov.random.nextDouble() - 0.5d,
-                    Ostrov.random.nextDouble() - 0.5d, Ostrov.random.nextDouble() - 0.5d)
-                    .subtract(loc).toVector();
-                if (vc.lengthSquared() < 10) {
-                  Nms.sendWorldPackets(bot.world, new ClientboundAnimatePacket(bot, 0));
-                    tgt.playSound(loc, Sound.ENTITY_PLAYER_ATTACK_WEAK, 1f, 1f);
-                }
-            } else vc = tgt.getLocation().subtract(loc).toVector();
-            bot.move(loc, vc.normalize(), true);
-        }
-
-        @Override
-        public @NotNull GoalKey<Mob> getKey() {
-            return key;
-        }
-
-        @Override
-        public @NotNull EnumSet<GoalType> getTypes() {
-            return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
-        }
-    }
-
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
     public static void onInteract(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
 
         if (p.getGameMode() == GameMode.SPECTATOR && (e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK)) {
             if (p.getOpenInventory().getType() != InventoryType.CHEST) {
+              if (PM.getOplayer(p.getUniqueId()).setup==null) {
                 p.performCommand("menu");
+              }
             }
         }
     }
 
-    // ------------ No build outside -------------
-    //@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onPlace(final BlockPlaceEvent e) {
-        if (ApiOstrov.isLocalBuilder(e.getPlayer(), false)) {
-            return;
-        }
-        //if (nobuild.wg.getRegionManager(e.getPlayer().getWorld()).getApplicableRegions(e.getBlock().getLocation()).size()==0 ) {
-        if (WGhook.getRegionsOnLocation(e.getBlock().getLocation()).size() == 0) {
-            e.setBuild(false);
-//            e.setCancelled(true);
-            e.getPlayer().sendMessage("§cСтроить можно только в приватах!");
-        }
-    }
+
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlace(final PlayerBucketEmptyEvent e) {
@@ -191,22 +90,9 @@ public class ArcaimLst implements Listener {
         }
     }
 
-    //@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onBreak(final BlockBreakEvent e) {
-        if (ApiOstrov.isLocalBuilder(e.getPlayer(), false)) {
-            return;
-        }
-//System.out.println("size="+WGutils.getRegionsOnLocation(e.getBlock().getLocation()).size()+" --"+WGutils.getRegionsOnLocation(e.getBlock().getLocation()) );
-        if (WGhook.getRegionsOnLocation(e.getBlock().getLocation()).size() == 0) {
-            e.setCancelled(true);
-            e.getPlayer().sendMessage("§cСтроить можно только в приватах!");
-        }
-    }
-
     //--------------------------------
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockFromTo(final BlockFromToEvent e) {
-//System.out.println("onBlockFromTo type="+e.getBlock().getType()+" isLiquid?"+e.getToBlock().isLiquid()+" to="+e.getToBlock().getType()+" isLiquid?"+e.getBlock().isLiquid());
         if (e.getBlock().getType() == Material.LAVA || e.getBlock().getType() == Material.WATER) {
             final ApplicableRegionSet fromRegionSet = WGhook.getRegionsOnLocation(e.getBlock().getLocation());
             final ApplicableRegionSet toRegionSet = WGhook.getRegionsOnLocation(e.getToBlock().getLocation());
@@ -235,8 +121,10 @@ public class ArcaimLst implements Listener {
     public void onSpawn(final CreatureSpawnEvent e) {
        
         switch (e.getEntityType()) {
-            case ENDER_DRAGON ->
-                e.getEntity().remove();
+            case ENDER_DRAGON -> {
+              if (e.getSpawnReason()!= CreatureSpawnEvent.SpawnReason.NATURAL) e.getEntity().remove();
+            }
+
             default -> {
                  if (e.getSpawnReason()==CreatureSpawnEvent.SpawnReason.DISPENSE_EGG || e.getSpawnReason()==CreatureSpawnEvent.SpawnReason.EGG) {
                      e.setCancelled(WGhook.getRegionsOnLocation(e.getEntity().getLocation()).size() == 0);
@@ -246,13 +134,13 @@ public class ArcaimLst implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+   /* @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onSpawn(final EntitySpawnEvent e) {
         switch (e.getEntityType()) {
             case ENDER_DRAGON -> e.getEntity().remove();
             default -> e.setCancelled(WGhook.getRegionsOnLocation(e.getEntity().getLocation()).size() == 0);
         }
-    }
+    }*/
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onExplode(final EntityExplodeEvent e) {
@@ -296,23 +184,6 @@ public class ArcaimLst implements Listener {
                 e.setCursor(new ItemStack(cr.getType(), cr.getAmount()));
                 e.getWhoClicked().sendMessage(Ostrov.PREFIX + "§cДанные предмета были очищены!");
                 break;
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onDrop(final EntityDropItemEvent e) {
-        if (e.getEntityType() == EntityType.PLAYER) {
-            final ItemStack it = e.getItemDrop().getItemStack();
-            if (ItemUtils.isBlank(it, true) || ApiOstrov.isLocalBuilder(e.getEntity(), true)) return;
-            if (!ItemUtils.isBlank(it, true)) {
-                switch (it.getType()) {
-                    case POTION, SPLASH_POTION, LINGERING_POTION, TIPPED_ARROW, ENCHANTED_BOOK: break;
-                    default:
-                        e.getItemDrop().setItemStack(new ItemStack(it.getType(), it.getAmount()));
-                        e.getEntity().sendMessage(Ostrov.PREFIX + "§cДанные предмета были очищены!");
-                        break;
-                }
-            }
         }
     }
 
@@ -361,7 +232,145 @@ public class ArcaimLst implements Listener {
         }
     }
 
-    /*@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+
+  private static class AdminBot extends BotEntity {
+
+    protected final Player tgt;
+
+    protected AdminBot(final Player tgt) {
+      super(admin, tgt.getWorld());
+      this.tgt = tgt;
+    }
+
+    @Override
+    public void onDamage(final EntityDamageEvent e) {
+      e.setCancelled(true);
+      e.setDamage(0d);
+    }
+
+    @Override
+    public Goal<Mob> getGoal(final Mob org) {
+      return new AdminGoal(this);
+    }
+  }
+
+  private static class AdminGoal implements Goal<Mob> {
+
+    private static final GoalKey<Mob> key = GoalKey.of(Mob.class, new NamespacedKey(Ostrov.instance, "bot"));
+
+    private final AdminBot bot;
+    private final WeakReference<Player> trf;
+
+    private int tick;
+
+    public AdminGoal(final AdminBot bot) {
+      this.trf = new WeakReference<>(bot.tgt);
+      this.bot = bot;
+      this.tick = 0;
+    }
+
+    @Override
+    public boolean shouldActivate() {
+      return true;
+    }
+
+    @Override
+    public boolean shouldStayActive() {
+      return true;
+    }
+
+    @Override
+    public void start() {}
+
+    @Override
+    public void stop() {bot.remove();}
+
+    @Override
+    public void tick() {
+      final Mob rplc = (Mob) bot.getEntity();
+      if (rplc == null || !rplc.isValid()) {
+        bot.remove();
+        return;
+      }
+
+      final Player tgt = trf.get();
+      if (tgt == null || !tgt.isValid() || !tgt.isOnline()) {
+        bot.remove();
+        return;
+      }
+      //Bukkit.broadcast(Component.text("le-" + rplc.getName()));
+      final Location loc = rplc.getLocation();
+
+      final Vector vc;
+      if ((tick++ & 7) == 0 && Ostrov.random.nextBoolean()) {
+        vc = tgt.getLocation().add(Ostrov.random.nextDouble() - 0.5d,
+            Ostrov.random.nextDouble() - 0.5d, Ostrov.random.nextDouble() - 0.5d)
+          .subtract(loc).toVector();
+        if (vc.lengthSquared() < 10) {
+          Nms.sendWorldPackets(bot.world, new ClientboundAnimatePacket(bot, 0));
+          tgt.playSound(loc, Sound.ENTITY_PLAYER_ATTACK_WEAK, 1f, 1f);
+        }
+      } else vc = tgt.getLocation().subtract(loc).toVector();
+      bot.move(loc, vc.normalize(), true);
+    }
+
+    @Override
+    public @NotNull GoalKey<Mob> getKey() {
+      return key;
+    }
+
+    @Override
+    public @NotNull EnumSet<GoalType> getTypes() {
+      return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
+    }
+  }
+
+
+
+
+  // ------------ No build outside -------------
+  //@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+/*  public void onPlace(final BlockPlaceEvent e) {
+    if (ApiOstrov.isLocalBuilder(e.getPlayer(), false)) {
+      return;
+    }
+    //if (nobuild.wg.getRegionManager(e.getPlayer().getWorld()).getApplicableRegions(e.getBlock().getLocation()).size()==0 ) {
+    if (WGhook.getRegionsOnLocation(e.getBlock().getLocation()).size() == 0) {
+      e.setBuild(false);
+//            e.setCancelled(true);
+      e.getPlayer().sendMessage("§cСтроить можно только в приватах!");
+    }
+  }
+  //@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  public void onBreak(final BlockBreakEvent e) {
+    if (ApiOstrov.isLocalBuilder(e.getPlayer(), false)) {
+      return;
+    }
+    if (WGhook.getRegionsOnLocation(e.getBlock().getLocation()).size() == 0) {
+      e.setCancelled(true);
+      e.getPlayer().sendMessage("§cСтроить можно только в приватах!");
+    }
+  }*/
+
+   /* @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onDrop(final EntityDropItemEvent e) {
+        if (e.getEntityType() == EntityType.PLAYER) {
+            final ItemStack it = e.getItemDrop().getItemStack();
+            if (ItemUtils.isBlank(it, true) || ApiOstrov.isLocalBuilder(e.getEntity(), true)) return;
+            if (!ItemUtils.isBlank(it, true)) {
+                switch (it.getType()) {
+                    case POTION, SPLASH_POTION, LINGERING_POTION, TIPPED_ARROW, ENCHANTED_BOOK:
+                      break;
+                    default:
+                        e.getItemDrop().setItemStack(new ItemStack(it.getType(), it.getAmount()));
+                        e.getEntity().sendMessage(Ostrov.PREFIX + "§cДанные предмета были очищены!");
+                        break;
+                }
+            }
+        }
+    }*/
+
+   /*@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void Interact(PlayerInteractEvent e) { 
         if (ApiOstrov.isLocalBuilder(e.getPlayer(), false) ) return;
 //System.out.println("size="+WGutils.getRegionsOnLocation(e.getClickedBlock().getLocation()).size()+" --"+WGutils.getRegionsOnLocation(e.getClickedBlock().getLocation()) );

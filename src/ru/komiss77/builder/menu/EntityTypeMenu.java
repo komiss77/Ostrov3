@@ -30,7 +30,7 @@ import ru.komiss77.utils.inventory.SmartInventory;
 
 
 
-public class EntityByType implements InventoryProvider {
+public class EntityTypeMenu implements InventoryProvider {
     
     
     private static final ItemStack fill = new ItemBuilder(Material.YELLOW_STAINED_GLASS_PANE).name("§8.").build();;
@@ -39,7 +39,7 @@ public class EntityByType implements InventoryProvider {
     private final EntityType type;
 
     
-    public EntityByType(final World world, final int radius, final EntityType type) {
+    public EntityTypeMenu(final World world, final int radius, final EntityType type) {
         this.world = world;
         this.radius = radius;
         this.type = type;
@@ -50,7 +50,7 @@ public class EntityByType implements InventoryProvider {
     @Override
     public void init(final Player p, final InventoryContent contents) {
         p.playSound(p.getLocation(), Sound.BLOCK_COMPARATOR_CLICK, 5, 5);
-        contents.fillRow(4, ClickableItem.empty(EntityByType.fill));
+        contents.fillRow(4, ClickableItem.empty(EntityTypeMenu.fill));
         
         final Pagination pagination = contents.pagination();
         final ArrayList<ClickableItem> menuEntry = new ArrayList<>();
@@ -200,7 +200,7 @@ public class EntityByType implements InventoryProvider {
         contents.set( 5, 4, ClickableItem.of( new ItemBuilder(Material.OAK_DOOR).name("назад").build(), e -> 
             SmartInventory.builder()
                     .id("EntityByGroup"+p.getName())
-                    . provider(new EntityByGroup(world, radius, EntityUtil.group(type)))
+                    . provider(new EntityGroupMenu(p.getLocation(), radius, EntityUtil.group(type)))
                     . size(6, 9)
                     . title("§2"+world.getName()+" "+type+" §1r="+radius).build() .open(p)
         ));

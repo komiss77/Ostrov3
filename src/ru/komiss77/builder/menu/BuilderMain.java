@@ -252,7 +252,7 @@ public class BuilderMain implements InventoryProvider {
                 .addLore("§eна сущность - §bнастроить§e!")
                 .addLore("")
                 .build(), e -> {
-                    p.performCommand("entity");
+                  PM.getOplayer(p).setup.openEntityWorldMenu(p, p.getWorld(), -1);
                 }));
 
         content.set(2, 5, ClickableItem.of(new ItemBuilder(Material.ARMOR_STAND)

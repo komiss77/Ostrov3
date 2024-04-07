@@ -4,6 +4,7 @@ https://www.curseforge.com/minecraft/mc-mods/cmdcam?__cf_chl_jschl_tk__=pmd_r0uG
 генератор биомов https://github.com/VolmitSoftware/Iris https://www.spigotmc.org/resources/iris-world-gen-custom-biome-colors.84586/
 
 !!!аркаимл - что лагает?? + читерские предметы
+https://www.dmosk.ru/miniinstruktions.php?mini=redis-ubuntu
 
 не загрузить незер (нет папки регион, там dim-1)
 https://multipaper.io/#pricing сохранение данных до перехода с сервера (по команде server??)
@@ -24,15 +25,13 @@ VALUES ('657673442', '_fruti_tuti_', '619', '1710085989');  : Duplicate entry '6
 saveLocalData error Danillisimo -> Duplicate entry 'Danillisimo' for key 'name'
 
 
-
+макгазин на WanderingTrades inventory
 
 
 нет эвента PlayerCommandPreprocessEvent при performCommand
 менюитем can_interact на работает
 отчёты серверов, данные арен  - на хттп или редис
 
-
-+меню - ссылка на гуи скинов, сайт?
 
 
 

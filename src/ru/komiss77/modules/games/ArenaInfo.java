@@ -20,7 +20,7 @@ public final class ArenaInfo {
     public GameInfo gameInfo; //araim daaria bw bb sg
     public String server; //araim daaria bw01 bb01 sg02
     public String arenaName;
-    public GameState state;
+    public GameState state = GameState.НЕОПРЕДЕЛЕНО;
     public int level;
     public int reputation;
     
@@ -51,20 +51,22 @@ public final class ArenaInfo {
         final boolean hasLevel =  op.getStat(Stat.LEVEL)>=level;
         final boolean hasReputation =  op.reputationCalc>=reputation;
         
-        final List<Component>lore = Arrays.asList(
-                        Component.text(players>0 ? (op.eng?"Players":"Игроки: ")+players : (op.eng?"nobody here":"никого нет")),
+        final List<Component>lore = List.of(
+                        Component.text(players>0 ? (op.eng?"§7Players: §b":"§7Игроки: §b")+players : (op.eng?"nobody here":"никого нет")),
                         Component.text(state.displayColor + (op.eng ? Lang.translate(state.name(), Lang.EN):state.name()) ),
+                        Component.empty(),
                         Component.text(line0),
                         Component.text(line1),
                         Component.text(line2),
                         Component.text(line3),
+                        Component.empty(),
                         Component.text( hasLevel && hasReputation ?  (op.eng?"§a⊳ Click - to arena":"§a⊳ Клик - на арену")  : (op.eng?"§eNot available !":"§eНедоступна !")),
                         Component.text(hasLevel ? (op.eng?"§7Required level : §6":"§7Требуемый уровень : §6") +level : (op.eng?"§cAvailable from level §e":"§cБудет доступна с уровня §e")+level),
                         Component.text(hasReputation ? (op.eng?"§7Required reputation : §a>":"§7Требуемая репутация : §a>") +reputation : (op.eng?"§cAvailable with reputation §a>":"§cДоступна при репутации §a>")+reputation)
                     );
         final ItemStack is = new ItemStack(mat);
         final ItemMeta im = is.getItemMeta();
-        im.displayName(Component.text(op.eng ? Lang.translate(arenaName, Lang.EN) : arenaName));
+        im.displayName(Component.text("§l" + (op.eng ? Lang.translate(arenaName, Lang.EN) : arenaName)) );
         im.lore(lore);
         is.setItemMeta(im);
         return is;
@@ -88,13 +90,17 @@ public final class ArenaInfo {
     
     protected void update(final GameState state, final int players, final String line0, final String line1, final String line2, final String line3) {
         this.players=players;
-        this.state=state;
+        this.state=state==null? GameState.НЕОПРЕДЕЛЕНО : state;
         this.line0 = line0;
         this.line1 = line1;
         this.line2 = line2;
         this.line3 = line3;
 
-        this.mat = state.iconMat;
+        if (state == GameState.ОЖИДАНИЕ && players > 0) {
+          mat = Material.AXOLOTL_BUCKET;
+        } else {
+          mat = state.iconMat;
+        }
         
         if (!signs.isEmpty()) {
             GM.updateSigns(this);

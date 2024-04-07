@@ -1309,13 +1309,15 @@ public class ItemUtils {
   public static ItemBuilder buildEntityIcon(final EntityType type) {
     final ItemBuilder builder = new ItemBuilder(Material.PLAYER_HEAD);
 
-    // VM.getNmsServer().getCustomHead("6d865aae2746a9b8e9a4fe629fb08d18d0a9251e5ccbe5fa7051f53eab9b94", "§fдалее", "");
     switch (type) {
-      case ARMOR_STAND -> builder.setType(Material.STRIPPED_OAK_WOOD);
-      case ZOMBIE -> builder.setCustomHeadTexture("6d865aae2746a9b8e9a4fe629fb08d18d0a9251e5ccbe5fa7051f53eab9b94");
+      case ARMOR_STAND -> builder.setType(Material.ARMOR_STAND);
+      case ZOMBIE -> builder.setType(Material.ZOMBIE_HEAD);
+      case CREEPER -> builder.setType(Material.CREEPER_HEAD);
+      case PIGLIN -> builder.setType(Material.PIGLIN_HEAD);
+      case ENDER_DRAGON -> builder.setType(Material.DRAGON_HEAD);
+      //case  -> builder.setCustomHeadTexture("6d865aae2746a9b8e9a4fe629fb08d18d0a9251e5ccbe5fa7051f53eab9b94");
       default -> builder.setType(Material.NAME_TAG);
     }
-    //
 
     builder.name(Lang.t(type, Lang.RU));
     return builder;

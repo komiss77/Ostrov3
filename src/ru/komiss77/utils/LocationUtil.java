@@ -14,6 +14,7 @@ import org.bukkit.util.Vector;
 import ru.komiss77.Ostrov;
 import ru.komiss77.modules.world.WXYZ;
 import ru.komiss77.modules.world.WorldManager;
+import ru.komiss77.modules.world.XYZ;
 import ru.komiss77.notes.Slow;
 import ru.komiss77.version.Nms;
 
@@ -237,6 +238,7 @@ public class LocationUtil {
           case BARRIER, STRUCTURE_VOID, CHORUS_FLOWER,
             CHORUS_PLANT, SWEET_BERRY_BUSH, BAMBOO, VINE, WEEPING_VINES,
             MOSS_CARPET, TWISTING_VINES, LADDER, LILY_PAD -> true;
+        case LAVA -> false;
           default -> !mat.isCollidable();
       };
     }
@@ -247,13 +249,13 @@ public class LocationUtil {
     }
 
     public static boolean canStand(Material mat) {
-      switch (mat) {
-        case LAVA:
-        case WATER:
-        case BEDROCK:
-
-      }
-      return mat.isSolid();
+      //switch (mat) {
+        //case LAVA:
+        //case WATER:
+        //case BEDROCK:
+          //return false;
+      //}
+      return mat!=Material.LAVA && mat.isSolid();
     }
 
     @Slow(priority = 1)
@@ -515,4 +517,39 @@ public class LocationUtil {
             }
         }
     }
+
+
+
+  public static int cLoc(final Chunk chunk) {
+    return cLoc(chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
+  }
+
+  public static int cLoc(final XYZ xyz) {
+    return cLoc(xyz.worldName, xyz.x>>4, xyz.z>>4);
+  }
+
+  public static int cLoc(final Location loc) {
+    return cLoc(loc.getWorld().getName(), loc.getChunk().getX(), loc.getChunk().getZ());
+  }
+
+  public static int cLoc(final String worldName, final int cX, final int cZ) {
+    //return worldName.length()<<26 | (cX+4096)<<13 | (cZ+4096);
+    return (cX+4096)<<13 | (cZ+4096);
+  }
+
+  public static Chunk getChunk(final String worldName, final int cLoc) {
+    return Bukkit.getWorld(worldName).getChunkAt(getChunkX(cLoc), getChunkZ(cLoc));
+  }
+
+  public static int getChunkX(int cLoc) { //len<<26 | (x+4096)<<13 | (z+4096);
+    return ((cLoc>>13 & 0x1FFF)-4096); //8191 = 1FFF = 0b00000000_00000000_00011111_11111111
+  }
+
+  public static int getChunkZ(int cLoc) { //len<<26 | (x+4096)<<13 | (z+4096);
+    return ((cLoc & 0x1FFF)-4096); //8191 = 1FFF = 0b00000000_00000000_00011111_11111111
+  }
+
+
+
+
 }

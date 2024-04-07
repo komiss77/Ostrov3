@@ -1,8 +1,11 @@
 
 package ru.komiss77.utils;
 
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.SpawnCategory;
 
 
 public class EntityUtil {
@@ -175,18 +178,22 @@ public class EntityUtil {
     
     public enum EntityGroup {
     	/**Монстры, могут агрится на игрока*/
-        MONSTER ("§4Монстры"), //не переименовывать! или придётся переделывать конфиги лимитера!!
+        MONSTER ("§4Монстры", Material.ZOMBIE_HEAD), //не переименовывать! или придётся переделывать конфиги лимитера!!
     	/**Животные, могут быть скрещеными*/
-        CREATURE ("§2Сухопутные животные"),
+        CREATURE ("§2Сухопутные животные", Material.LEATHER_HORSE_ARMOR),
     	/**Обитатели, улучшают атмосферу*/
-        AMBIENT ("§5Сухопутные обитатели"),
+        AMBIENT ("§5Сухопутные обитатели",Material.COAL),
     	/**Спруты и делифины, декор*/
-        WATER_CREATURE ("§bВодные животные"),
+        WATER_CREATURE ("§bВодные животные", Material.NAUTILUS_SHELL),
     	/**Рибки с которых падает рыба*/
-        WATER_AMBIENT ("§1Водные обитатели"),
+        WATER_AMBIENT ("§1Водные обитатели", Material.TROPICAL_FISH),
     	/**Прочие сущности, не мобы*/
-        UNDEFINED ("§6Прочие")
-        ;
+      UNDEFINED ("§6Прочие", Material.ARMOR_STAND),
+
+      TILE ("§3TileEntity", Material.ITEM_FRAME),
+
+      TICKABLE_TILE ("§3TickableTile", Material.BLUE_SHULKER_BOX)
+      ;
 
         public static EntityGroup matchGroup(String groupName) {
             for(EntityGroup g: EntityGroup.values()){
@@ -196,11 +203,36 @@ public class EntityUtil {
             }
             return EntityGroup.UNDEFINED;
         }
-        
-        public String displayName;
-        
-        private EntityGroup (final String displayName) {
-            this.displayName = displayName;
+
+      public final String displayName;
+      public final Material displayMat;
+
+        private EntityGroup (final String displayName, final Material displayMat) {
+          this.displayName = displayName;
+          this.displayMat = displayMat;
+        }
+
+        public static int getWorldSpawnLimit (final World world, final EntityGroup group) {
+          switch (group) {
+            case MONSTER -> {
+              return world.getSpawnLimit(SpawnCategory.MONSTER);
+            }
+            case CREATURE -> {
+              return world.getSpawnLimit(SpawnCategory.ANIMAL) + world.getSpawnLimit(SpawnCategory.AXOLOTL);
+            }
+            case AMBIENT -> {
+              return world.getSpawnLimit(SpawnCategory.AMBIENT);
+            }
+            case WATER_CREATURE -> {
+              return world.getSpawnLimit(SpawnCategory.WATER_ANIMAL);
+            }
+            case WATER_AMBIENT -> {
+              return world.getSpawnLimit(SpawnCategory.WATER_AMBIENT) + world.getSpawnLimit(SpawnCategory.WATER_UNDERGROUND_CREATURE);
+            }
+            default -> {
+              return 0; //world.getSpawnLimit(SpawnCategory.MISC); IllegalArgumentException: SpawnCategory.MISC are not supported
+            }
+          }
         }
 
     }

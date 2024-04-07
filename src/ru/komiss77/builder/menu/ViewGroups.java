@@ -19,23 +19,12 @@ import ru.komiss77.utils.inventory.InventoryProvider;
 
 
 public class ViewGroups implements InventoryProvider {
-    
-    
-    
-    
 
-    
-    public ViewGroups() {
-    }
-    
-    
     
     @Override
     public void init(final Player p, final InventoryContent contents) {
         p.playSound(p.getLocation(), Sound.BLOCK_COMPARATOR_CLICK, 5, 5);
 
-
-        
 
 
         Material mat;
