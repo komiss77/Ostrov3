@@ -1,4 +1,4 @@
-package ru.komiss77.modules.items;
+package ru.komiss77.modules.items.menu;
 
 import java.util.Arrays;
 import java.util.List;
@@ -139,6 +139,7 @@ public class ItemMenu implements InventoryProvider {
 
         prep = new ItemBuilder(Material.BOOK).name("§dЗачарования");
         if (im.hasEnchants()) {
+
             prep.addEnchant(CustomEnchant.GLINT, 1);
             prep.addLore(" ", "§aЕсть зачарования,", "§8ЛКМ §7- Выдать 'cвечение'", "§cПКМ §7- Снять все зачары");
         } else {

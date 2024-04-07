@@ -154,10 +154,10 @@ public class ItemUtils {
     none(""),
     ;
 
-    public final String texture;
+    public final String value;
 
     Texture(final String texture) {
-      this.texture = texture;
+      this.value = texture;
     }
   }
 
@@ -236,11 +236,11 @@ public class ItemUtils {
     if (current == null) current = new ArrayList<>();
     final String clr = color == null ? "§7" : color;
 
-    final String[] блоки = text.replaceAll("&", "§").split("<br>");
+    final String[] blocks = text.replace('&', '§').split("<br>");
     //else блоки = {text};
-    for (final String блок : блоки) {
-      final List<String> нарезка = split(блок, 25);
-      for (String строчка : нарезка) {
+    for (final String блок : blocks) {
+      final List<String> split = split(блок, 25);
+      for (String строчка : split) {
         current.add(clr + строчка);
       }
     }
@@ -268,16 +268,16 @@ public class ItemUtils {
 
 
   @Deprecated
-  public static List<String> split(String block, int line_lenght) {
+  public static List<String> split(String block, int lineLenght) {
     List<String> split = new ArrayList<>();
-    if (block.length() <= line_lenght) {
+    if (block.length() <= lineLenght) {
       split.add(block);
       return split;
     }
 
     boolean nextLine = false;
     //int index = 0;
-    int current_line_lenght = line_lenght;
+    int currentLineLenght = lineLenght;
 
     StringBuilder sb = new StringBuilder();
     char[] blockArray = block.toCharArray();
@@ -289,16 +289,14 @@ public class ItemUtils {
 //System.out.println("skip § 111 position="+position );        
         sb.append(blockArray[position]);
         //position++;
-        current_line_lenght++;
-        if (position < blockArray.length) {
-          position++;
-          sb.append(blockArray[position]);
-          current_line_lenght++;
-        }
-//System.out.println("skip § 222 position="+position );       
+        currentLineLenght++;
+        position++;
+        sb.append(blockArray[position]);
+        currentLineLenght++;
+          //System.out.println("skip § 222 position="+position );
       } else {
 //System.out.println("222 index="+index+"  position="+position );        
-        if (position != 0 && position % current_line_lenght == 0) {
+        if (position != 0 && position % currentLineLenght == 0) {
 //System.out.println("nextLine 111 position="+position+"  current_line_lenght="+current_line_lenght );        
           nextLine = true;
         }
@@ -307,7 +305,7 @@ public class ItemUtils {
           split.add(sb.toString());
           //index++;
           sb = new StringBuilder();
-          current_line_lenght = line_lenght;
+          currentLineLenght = lineLenght;
 //System.out.println("nextLine 222 index="+index+" position="+position+"  current_line_lenght="+current_line_lenght );        
         } else {
           sb.append(blockArray[position]);
@@ -339,7 +337,7 @@ public class ItemUtils {
   }
 
   public static boolean getItems(Player player, int count, Material mat) {
-    Map<Integer, ? extends ItemStack> ammo = player.getInventory().all(mat);
+    final Map<Integer, ? extends ItemStack> ammo = player.getInventory().all(mat);
 
     int found = 0;
     for (ItemStack stack : ammo.values()) {
@@ -349,12 +347,12 @@ public class ItemUtils {
       return false;
     }
 
-    for (int index : ammo.keySet()) {
-      ItemStack stack = ammo.get(index);
+    for (final Entry<Integer, ? extends ItemStack> en : ammo.entrySet()) {
+      ItemStack stack = en.getValue();
       int removed = Math.min(count, stack.getAmount());
       count -= removed;
       if (stack.getAmount() == removed) {
-        player.getInventory().setItem(index, null);
+        player.getInventory().setItem(en.getKey(), null);
       } else {
         stack.setAmount(stack.getAmount() - removed);
       }
@@ -434,12 +432,16 @@ public class ItemUtils {
           ammount = 0;
           //itemFindResult.remove(mat);
           break;
-        } else if (cloneInv[slot].getAmount() > ammount) { //найдено больше чем надо - дальше не ищем
+        }
+
+        if (cloneInv[slot].getAmount() > ammount) { //найдено больше чем надо - дальше не ищем
           cloneInv[slot].setAmount(cloneInv[slot].getAmount() - ammount);
           ammount = 0;
           //itemFindResult.remove(mat);
           break;
-        } else if (cloneInv[slot].getAmount() < ammount) { //найдено меньше чем надо - убавили требуемое и ищем дальше
+        }
+
+        if (cloneInv[slot].getAmount() < ammount) { //найдено меньше чем надо - убавили требуемое и ищем дальше
           ammount -= cloneInv[slot].getAmount();
           //itemFindResult.put(mat, ammount);
           cloneInv[slot].setType(Material.AIR);
@@ -498,10 +500,11 @@ public class ItemUtils {
     return repaired;
   }
 
+  @Deprecated
   public static boolean damage(final HumanEntity p, final ItemStack it, final int damage, final EntityEffect breackEffect, final boolean checkEnch) {
+//    p.damageItemStack(it, damage);
     //p.sendMessage("1");
-    if (!isBlank(it, false) && it.getItemMeta() instanceof final Damageable dm) {
-      if (!dm.isUnbreakable()) {
+    if (!isBlank(it, false) && it.getItemMeta() instanceof final Damageable dm && !dm.isUnbreakable()) {
         if (it.containsEnchantment(Enchantment.DURABILITY) && checkEnch
           && Ostrov.random.nextInt(it.getEnchantmentLevel(Enchantment.DURABILITY) + 1) == 0) {
           return false;
@@ -527,7 +530,7 @@ public class ItemUtils {
           }
         }
         return true;
-      }
+
     }
     return false;
   }
@@ -575,7 +578,7 @@ public class ItemUtils {
       }
 
       if (im.hasLore()) {
-        res.append(spl).append("lore:").append(im.lore().stream().map(lr -> TCUtils.toString(lr)).collect(Collectors.joining(":")));
+        res.append(spl).append("lore:").append(im.lore().stream().map(TCUtils::toString).collect(Collectors.joining(":")));
                 /*for (final Component lore :im.lore()) {
                     if (lore.isEmpty()) {
                         res=res+paramSplitter+"lore:&7";
@@ -590,7 +593,7 @@ public class ItemUtils {
       }
 
       if (!im.getItemFlags().isEmpty()) {
-        res.append(spl).append("itemflag:").append(im.getItemFlags().stream().map(f -> f.toString()).collect(Collectors.joining(":")));
+        res.append(spl).append("itemflag:").append(im.getItemFlags().stream().map(Enum::toString).collect(Collectors.joining(":")));
                 /*for (ItemFlag itemFlag : im.getItemFlags()) {
                     res=res+paramSplitter+"itemflag:"+itemFlag.toString();
                 }*/
@@ -760,7 +763,7 @@ public class ItemUtils {
 
           case "name":
             if (splittedParam.length == 2) {
-              builder.name(splittedParam[1].replaceAll("&", "§"));
+              builder.name(splittedParam[1].replace('&', '§'));
             } else {
               Ostrov.log_warn("Декодер name : §7строка >§f" + item + "§7<, неверные параметры §f" + splittedParam[1].toUpperCase());
             }
@@ -791,8 +794,7 @@ public class ItemUtils {
             }
             break;
 
-          case "model":
-          case "custommodeldata":
+          case "model", "custommodeldata":
             if (splittedParam.length == 2) {
               if (ApiOstrov.isInteger(splittedParam[1])) {
                 int modelData = Integer.parseInt(splittedParam[1]);
@@ -850,8 +852,7 @@ public class ItemUtils {
               Ostrov.log_warn("Декодер skulltexture : §7строка >§f" + item + "§7<, неверные параметры §f" + splittedParam[1].toUpperCase());
             }
             break;
-          case "skull":
-          case "skullowneruuid": //в итоге высерает java.lang.NullPointerException: Profile name must not be null
+          case "skull", "skullowneruuid": //в итоге высерает java.lang.NullPointerException: Profile name must not be null
             if (splittedParam.length == 2) {
               //builder.setSkullOwnerUuid(splittedParam[1]);
               Ostrov.log_warn("Декодер skullowneruuid : с uuid больше не работает, нужно переделать на skulltexture!");
@@ -861,8 +862,7 @@ public class ItemUtils {
             break;
 
           //enchant:silk_touch:1
-          case "enchant":
-          case "bookenchant":
+          case "enchant", "bookenchant":
             if (splittedParam.length == 3) {
               Enchantment enchant = Registry.ENCHANTMENT.get(NamespacedKey.minecraft(splittedParam[1]));
               if (enchant == null && Config.enchants) { //getBoolean("modules.enchants")) {
@@ -882,8 +882,7 @@ public class ItemUtils {
             }
             break;
 
-          case "basepot":
-          case "basepotiondata":
+          case "basepot", "basepotiondata":
             if (splittedParam.length == 4 || splittedParam.length == 2) {
               switch (builder.getType()) {
                 case TIPPED_ARROW, POTION, LINGERING_POTION, SPLASH_POTION:
@@ -914,8 +913,7 @@ public class ItemUtils {
             }
             break;
 
-          case "effect":
-          case "custompotioneffect":
+          case "effect", "custompotioneffect":
             if (splittedParam.length == 4) {
               switch (builder.getType()) {
                 case TIPPED_ARROW, POTION, LINGERING_POTION, SPLASH_POTION:
@@ -926,7 +924,7 @@ public class ItemUtils {
                     potionEffectType = npe;
                   }
                   if (potionEffectType != null) {
-                    if (ApiOstrov.isInteger(splittedParam[2]) && ApiOstrov.isInteger(splittedParam[2])) {
+                    if (ApiOstrov.isInteger(splittedParam[2]) && ApiOstrov.isInteger(splittedParam[3])) {
                       builder.addCustomPotionEffect(new PotionEffect(potionEffectType, Integer.parseInt(splittedParam[2].toLowerCase()), Integer.parseInt(splittedParam[3].toLowerCase())));
                     } else {
                       Ostrov.log_warn("Декодер effect : §7строка >§f" + item + "§7<, должны быть числа §f" + splittedParam[2] + " " + splittedParam[3]);

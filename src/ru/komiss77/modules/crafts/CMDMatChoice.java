@@ -8,6 +8,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import ru.komiss77.modules.items.CustomItems;
 import ru.komiss77.utils.ItemUtils;
 
+import java.util.Objects;
+
 public class CMDMatChoice extends MaterialChoice {
 	
 	private final Integer cmd;
@@ -52,7 +54,7 @@ public class CMDMatChoice extends MaterialChoice {
 		if (!getChoices().contains(it.getType())) return false;
 		if (!it.hasItemMeta()) return cmd == null;
 		final ItemMeta im = it.getItemMeta();
-		return cmd == (im.hasCustomModelData() ? im.getCustomModelData() : null);
+		return Objects.equals(cmd, im.hasCustomModelData() ? im.getCustomModelData() : null);
 	}
 	
 	@Override
@@ -61,7 +63,7 @@ public class CMDMatChoice extends MaterialChoice {
 			for (final Material mt : ((MaterialChoice) o).getChoices()) {
 				if (!getChoices().contains(mt)) return false;
 			}
-			return o instanceof CMDMatChoice ? ((CMDMatChoice) o).cmd == cmd : cmd == null;
+			return o instanceof CMDMatChoice ? Objects.equals(((CMDMatChoice) o).cmd, cmd) : cmd == null;
 		}
 		return false;
 	}

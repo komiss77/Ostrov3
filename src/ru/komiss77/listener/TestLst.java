@@ -11,7 +11,6 @@ import ru.komiss77.ApiOstrov;
 import ru.komiss77.Ostrov;
 import ru.komiss77.modules.bots.AfkBot;
 import ru.komiss77.modules.world.XYZ;
-import ru.komiss77.utils.TeleportLoc;
 import ru.komiss77.version.Nms;
 
 import java.util.HashSet;
@@ -41,9 +40,6 @@ public class TestLst implements Listener {
           p.sendMessage("§8TestListener - interact cancel!");
           if (e.getClickedBlock() != null) {
             e.setCancelled(true);
-            TeleportLoc.onSafeLocAsync(e.getClickedBlock().getLocation(), (byte) 3, e.getAction().isLeftClick(), (byte) 1, lc -> {
-              p.sendBlockChange(lc, Material.DIRT.createBlockData());
-            });
           }
           /*if (e.getClickedBlock() == null) {
             if (bt != null) {

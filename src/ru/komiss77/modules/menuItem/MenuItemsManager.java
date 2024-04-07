@@ -63,7 +63,7 @@ public final class MenuItemsManager implements Initiable, Listener {
             
             final ItemStack is = new ItemBuilder(mat)
                     .name(Config.getConfig().getString("system.pipboy_name"))
-                    .unsafeEnchantment(Enchantment.LUCK, 1)
+//                    .addEnchant(Enchantment.LUCK, 1)
                     .build();
             
             final MenuItem pipboy = new MenuItem("pipboy", is);
@@ -75,12 +75,12 @@ public final class MenuItemsManager implements Initiable, Listener {
             pipboy.give_on_respavn=true;
             pipboy.anycase=true;
             pipboy.duplicate=false;
-            pipboy.on_left_click = (p) -> {
+            pipboy.on_left_click = p -> {
               final String cmd = Config.getConfig().getString("system.pipboy_left_click_command");
               if (!new PlayerCommandPreprocessEvent(p, cmd).callEvent()) return;
               p.performCommand(cmd);
             };
-            pipboy.on_right_click = (p) -> {
+            pipboy.on_right_click = p -> {
               final String cmd = Config.getConfig().getString("system.pipboy_rigth_click_command");
               if (!new PlayerCommandPreprocessEvent(p, cmd).callEvent()) return;
               p.performCommand(cmd);
@@ -108,7 +108,7 @@ public final class MenuItemsManager implements Initiable, Listener {
                 final MenuItem tparrow = new MenuItem("tparrow", 
                     new ItemBuilder(Material.ARROW)
                         .name("§7Стрела-телепортер")
-                        .unsafeEnchantment(Enchantment.LUCK, 1)
+//                    .addEnchant(Enchantment.LUCK, 1)
                         .build()
                 );
                 tparrow.slot=9;

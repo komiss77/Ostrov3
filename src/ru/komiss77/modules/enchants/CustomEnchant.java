@@ -11,21 +11,21 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.inventory.meta.ItemMeta;
+import ru.komiss77.ApiOstrov;
+import ru.komiss77.Config;
 import ru.komiss77.Ostrov;
 import ru.komiss77.modules.items.ItemClass;
 import ru.komiss77.utils.TCUtils;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
+import java.util.*;
 
-public class CustomEnchant extends Enchantment {
-    
-    public static final Map<NamespacedKey, CustomEnchant> VALUES = new HashMap<>();
+public abstract class CustomEnchant extends Enchantment {
+
+    protected static final Map<NamespacedKey, CustomEnchant> CUSTOM = new HashMap<>();
     
     /*public static final ItemClass RANGED_OTHER = new ItemClass("RANGED_OTHER", 
     	Material.BOW, Material.CROSSBOW, Material.TRIDENT, Material.IRON_HOE, Material.GOLDEN_HOE, 
@@ -126,10 +126,6 @@ public class CustomEnchant extends Enchantment {
 
     public static final CustomEnchant ROTTEN_CURSE = new CustomEnchant("curse_of_rotting", "Проклятие Гниения", (byte) 1,
         ItemClass.ALL, new Enchantment[]{}, EnchantmentRarity.RARE, true, true, true, true);*/
-
-    public static final CustomEnchant GLINT = new CustomEnchant("glint", "", (byte) 1, (byte) 1,
-		ItemClass.ALL, new Enchantment[]{}, new EnchantInfo(null, 0), EnchantmentRarity.COMMON, 
-		false, false, false, false, e -> {}, e -> {}, e -> {}, e -> {}, e -> {});
     
 //    public static final List<Enchantment> css = Arrays.asList(VANISHING_CURSE, BINDING_CURSE,
 //            LAGGING_CURSE, FRAGMENT_CURSE, THE_DEAD_CURSE, ROTTEN_CURSE);
@@ -202,7 +198,7 @@ public class CustomEnchant extends Enchantment {
     	enchInfo.put(WATER_WORKER, new EnchantInfo("Подводник", 6800, "Дает возможность копать блоки", "под водой намного быстрее"));
         */
 
-    private final String nm;
+    private final String name;
     private final NamespacedKey key;
     private final byte mxlvl;
     private final byte chance;
@@ -210,60 +206,47 @@ public class CustomEnchant extends Enchantment {
     private final Enchantment[] cnfls;
     private final EnchantInfo info;
     private final EnchantmentRarity rrt;
-    private final boolean isCrsd;
-    private final boolean isTrsr;
-    private final boolean isTrdbl;
-    private final boolean isDscv;
-    private final Consumer<EntityDamageByEntityEvent> onHit;
-    private final Consumer<EntityDamageEvent> onArm;
-    private final Consumer<ProjectileHitEvent> onPrj;
-    private final Consumer<EntityShootBowEvent> onSht;
-    private final Consumer<BlockBreakEvent> onBrk;
+    private final boolean isCursed;
+    private final boolean isTreasure;
+    private final boolean isTraded;
+    private final boolean isDisc;
     
-    public CustomEnchant(final String nmkey,
-            final String nm,
-            final byte mxlvl,
-            final byte chance,
-            final ItemClass its,
-            final Enchantment[] cnfls,
-            final EnchantInfo info,
-            final EnchantmentRarity rrt,
-            final boolean isCrsd,
-            final boolean isTrsr,
-            final boolean isTrdbl,
-            final boolean isDscv,
-            final Consumer<EntityDamageByEntityEvent> onHit,
-            final Consumer<EntityDamageEvent> onArm,
-            final Consumer<ProjectileHitEvent> onPrj,
-            final Consumer<EntityShootBowEvent> onSht,
-            final Consumer<BlockBreakEvent> onBrk) {
+    protected CustomEnchant(final String name, final byte mxlvl, final byte chance,
+      final ItemClass its, final Enchantment[] cnfls, final EnchantInfo info,
+      final EnchantmentRarity rrt, final boolean isCursed, final boolean isTreasure,
+      final boolean isTraded, final boolean isDisc) {
         super();
-        this.nm = nm;
         this.mxlvl = mxlvl;
         this.chance = chance;
         this.its = its;
         this.cnfls = cnfls;
         this.info = info;
         this.rrt = rrt;
-        this.isCrsd = isCrsd;
-        this.isTrsr = isTrsr;
-        this.isTrdbl = isTrdbl;
-        this.isDscv = isDscv;
-        this.onHit = onHit;
-        this.onArm = onArm;
-        this.onPrj = onPrj;
-        this.onSht = onSht;
-        this.onBrk = onBrk;
+        this.isCursed = isCursed;
+        this.isTreasure = isTreasure;
+        this.isTraded = isTraded;
+        this.isDisc = isDisc;
 
-        this.key = NamespacedKey.minecraft(nmkey);
-        if (VALUES.put(key, this) == null) {
-            Ostrov.log_warn("Enchant " + nmkey + " is already registered!");
+        this.name = ApiOstrov.nrmlzStr(name);
+        this.key = NamespacedKey.minecraft(name.toLowerCase());
+        if (Config.enchants && CUSTOM.put(this.key, this) != null) {
+            Ostrov.log_warn("Enchant " + name + " could not be registered!");
         }
     }
-    
+
+    @Override
+    public NamespacedKey getKey() {
+      return key;
+    }
+
+    @Deprecated(forRemoval = true)
+    public String getTranslationKey() {
+      return key.value();
+    }
+
     @Override
     public String getName() {
-        return nm;
+        return name;
     }
     
     public EnchantInfo getInfo() {
@@ -273,12 +256,12 @@ public class CustomEnchant extends Enchantment {
     public int getChance() {
         return Math.max(chance, 1);
     }
-    
+
     @Override
     public boolean canEnchantItem(final ItemStack it) {
         return it != null && (its.equals(ItemClass.ALL) || its.has(it.getType()));
     }
-    
+
     @Override
     public boolean conflictsWith(final Enchantment en) {
         final NamespacedKey k = en.getKey();
@@ -289,17 +272,17 @@ public class CustomEnchant extends Enchantment {
         }
         return false;
     }
-    
+
     @Override
     public EnchantmentTarget getItemTarget() {
         return EnchantmentTarget.BREAKABLE;
     }
-    
+
     @Override
     public int getMaxLevel() {
         return mxlvl;
     }
-    
+
     @Override
     public int getStartLevel() {
         return 1;
@@ -307,12 +290,12 @@ public class CustomEnchant extends Enchantment {
 
     @Override
     public boolean isCursed() {
-        return isCrsd;
+        return isCursed;
     }
 
     @Override
     public boolean isTreasure() {
-        return isTrsr;
+        return isTreasure;
     }
 
     @Override
@@ -322,7 +305,7 @@ public class CustomEnchant extends Enchantment {
 
     @Override
     public Component displayName(final int lvl) {
-        final StringBuilder sb = new StringBuilder((isCrsd ? "§c" : "§7") + nm + " ");
+        final StringBuilder sb = new StringBuilder((isCursed ? "§c" : "§7") + name + " ");
         switch (lvl) {
             case 1:
                 sb.append(getMaxLevel() == 1 ? "" : "I");
@@ -362,7 +345,7 @@ public class CustomEnchant extends Enchantment {
     }
 
     public static CustomEnchant getByKey(final NamespacedKey key) {
-        return VALUES.get(key);
+        return CUSTOM.get(key);
     }
 
     @Override
@@ -382,7 +365,7 @@ public class CustomEnchant extends Enchantment {
 
     @Override
     public boolean isDiscoverable() {
-        return isDscv;
+        return isDisc;
     }
 
     @Override
@@ -397,11 +380,11 @@ public class CustomEnchant extends Enchantment {
 
     @Override
     public boolean isTradeable() {
-        return isTrdbl;
+        return isTraded;
     }
     
     public static CustomEnchant[] values() {
-        return VALUES.values().toArray(new CustomEnchant[0]);
+        return CUSTOM.values().toArray(new CustomEnchant[0]);
     }
     
     public boolean noCnflcts(final Map<Enchantment, Integer> ens) {
@@ -410,29 +393,138 @@ public class CustomEnchant extends Enchantment {
         }
         return true;
     }
-    
-    public Consumer<EntityDamageByEntityEvent> getOnHit() {
-        return onHit;
-    }
-    
-    public Consumer<EntityDamageEvent> getOnArm() {
-        return onArm;
-    }
-    
-    public Consumer<ProjectileHitEvent> getOnPrj() {
-        return onPrj;
-    }
-    
-    public Consumer<EntityShootBowEvent> getOnSht() {
-        return onSht;
-    }
-    
-    public Consumer<BlockBreakEvent> getOnBrk() {
-        return onBrk;
+
+    private void lore(final ItemMeta im, final int lvl) {
+      final List<Component> lrs = im.lore();
+      if (lrs == null) {
+        im.lore(Arrays.asList(displayName(lvl)));
+        return;
+      }
+      lrs.removeIf(component -> TCUtils.stripColor(component).startsWith(name));
+      if (lvl > 0) {
+        lrs.add(displayName(lvl));
+        im.lore(lrs);
+      } else {
+        im.lore(lrs);
+      }
     }
 
-    @Override
-    public @NotNull NamespacedKey getKey() {
-        return key;
+    public void remove(final ItemStack it) {
+      if (!it.hasItemMeta()) return;
+      final ItemMeta im = it.getItemMeta();
+      final EnchantManager.Data eds = im.getPersistentDataContainer()
+        .get(EnchantManager.key, EnchantManager.data);
+      if (eds == null || eds.enchs.remove(this) == null) return;
+      lore(im, 0);
+      if (eds.enchs.isEmpty()) im.getPersistentDataContainer().remove(EnchantManager.key);
+      else im.getPersistentDataContainer().set(EnchantManager.key, EnchantManager.data, eds);
+      it.setItemMeta(im);
     }
+
+    public boolean level(final ItemStack it, final int lvl, final boolean add) {
+      final ItemMeta im =it.getItemMeta();
+      if (level(im, lvl, add)) {
+        it.setItemMeta(im);
+        return true;
+      }
+      return false;
+    }
+
+    public boolean level(final ItemMeta im, final int lvl, final boolean add) {
+      final EnchantManager.Data eds = im.getPersistentDataContainer()
+        .get(EnchantManager.key, EnchantManager.data);
+      if (eds == null) {
+        if (lvl < 1) return false;
+        lore(im, lvl);
+        final EnchantManager.Data nd = new EnchantManager.Data();
+        nd.enchs.put(this, lvl);
+        im.getPersistentDataContainer()
+          .set(EnchantManager.key, EnchantManager.data, nd);
+        return true;
+      }
+
+      final Integer pl = eds.enchs.get(this);
+      if (pl == null) {
+        if (lvl < 1) return false;
+        lore(im, lvl);
+        eds.enchs.put(this, lvl);
+        im.getPersistentDataContainer()
+          .set(EnchantManager.key, EnchantManager.data, eds);
+        return true;
+      }
+
+      final int nl = add ? pl + lvl : lvl;
+      if (nl < 1) {
+        lore(im, nl);
+        eds.enchs.remove(this);
+        if (eds.enchs.isEmpty()) im.getPersistentDataContainer().remove(EnchantManager.key);
+        else im.getPersistentDataContainer().set(EnchantManager.key, EnchantManager.data, eds);
+        return true;
+      }
+
+      lore(im, nl);
+      eds.enchs.put(this, nl);
+      im.getPersistentDataContainer()
+        .set(EnchantManager.key, EnchantManager.data, eds);
+      return true;
+    }
+
+    public int level(final ItemStack it) {
+      if (!it.hasItemMeta()) return 0;
+      return level(it.getItemMeta());
+    }
+
+    public int level(final ItemMeta im) {
+      final EnchantManager.Data eds = im.getPersistentDataContainer()
+        .get(EnchantManager.key, EnchantManager.data);
+      if (eds == null) return 0;
+      return eds.enchs.getOrDefault(this, 0);
+    }
+    
+    public abstract void getOnHit(final EntityDamageByEntityEvent e);
+
+    public abstract void getOnArm(final EntityDamageEvent e);
+    
+    public abstract void getOnPrj(final ProjectileHitEvent e);
+    
+    public abstract void getOnSht(final EntityShootBowEvent e);
+
+    public abstract void getOnInt(final PlayerInteractEvent e);
+    
+    public abstract void getOnBrk(final BlockBreakEvent e);
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    return o instanceof CustomEnchant
+      && ((CustomEnchant) o).key.equals(key);
+  }
+
+  @Override
+  public int hashCode() {
+    return key.hashCode();
+  }
+
+  public static final CustomEnchant GLINT = new CustomEnchant("Glint", (byte) 1, (byte) 1,
+      ItemClass.ALL, new Enchantment[]{}, new EnchantInfo(null, 0), EnchantmentRarity.COMMON,
+      false, false, false, false) {
+
+      @Override
+      public void getOnHit(EntityDamageByEntityEvent e) {}
+
+      @Override
+      public void getOnArm(EntityDamageEvent e) {}
+
+      @Override
+      public void getOnPrj(ProjectileHitEvent e) {}
+
+      @Override
+      public void getOnSht(EntityShootBowEvent e) {}
+
+      @Override
+      public void getOnInt(PlayerInteractEvent e) {}
+
+      @Override
+      public void getOnBrk(BlockBreakEvent e) {}
+    };
 }

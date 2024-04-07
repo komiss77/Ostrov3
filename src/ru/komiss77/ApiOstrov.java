@@ -45,15 +45,15 @@ import java.sql.Connection;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 
 
 public class ApiOstrov {
     
     private static final String PATTERN_ENG = "[A-Za-z_]";
-    private static final String PATTERN_ENG_NUM = "[A-Za-z0-9_]";
+    private static final String PATTERN_ENG_NUM = "\\w"; //[A-Za-z0-9_]";
     private static final String PATTERN_ENG_RUS = "[A-Za-zА-Яа-я_]";
     private static final String PATTERN_ENG_NUM_RUS = "[A-Za-z0-9А-Яа-я_]";
       
@@ -182,8 +182,8 @@ public class ApiOstrov {
         return op!=null && !op.getPartyMembers().isEmpty();//Ostrov.api_friends!=null && ApiFriends.hasParty(p);
     }
     public static boolean isInParty(final Player p1, final Player p2) {
-        return PM.exists(p1.getUniqueId()) && !PM.getOplayer(p1.getUniqueId()).getPartyMembers().contains(p2.getUniqueId()) ||
-                PM.exists(p2.getUniqueId()) && !PM.getOplayer(p2.getUniqueId()).getPartyMembers().contains(p1.getUniqueId());//Ostrov.api_friends!=null && ApiFriends.isInParty(p1,p2);
+        return PM.exists(p1.getUniqueId()) && !PM.getOplayer(p1.getUniqueId()).getPartyMembers().contains(p2.getName()) ||
+                PM.exists(p2.getUniqueId()) && !PM.getOplayer(p2.getUniqueId()).getPartyMembers().contains(p1.getName());//Ostrov.api_friends!=null && ApiFriends.isInParty(p1,p2);
     }
     public static List<String> getPartyPlayers(final Player p) {
         if (!PM.exists(p.getUniqueId())) return new ArrayList<>();
@@ -732,11 +732,9 @@ public class ApiOstrov {
         .orElse("");
     }
 
-    public static String enumSetToString(final EnumSet<?> enumSet) {
+    public static String enumSetToString(final Set<?> enumSet) {
         StringBuilder sb=new StringBuilder();
-        enumSet.forEach((eNum) -> {
-            sb.append(eNum.toString()).append(",");
-        });
+        enumSet.forEach(eNum -> sb.append(eNum.toString()).append(","));
         return sb.toString();//allowRole;
     }
 
@@ -780,10 +778,10 @@ public class ApiOstrov {
 
 
     public static Block getSignAttachedBlock(final Block b) {
-        if (b.getState() instanceof Sign sign) {
-            if (sign.getBlockData() instanceof WallSign signData) {
-                return b.getRelative(signData.getFacing().getOppositeFace());
-            }
+        if (b.getState() instanceof final Sign sign
+          && sign.getBlockData() instanceof final WallSign signData) {
+              return b.getRelative(signData.getFacing().getOppositeFace());
+
         }
         return b.getRelative(BlockFace.DOWN);
     }
@@ -828,9 +826,7 @@ public class ApiOstrov {
             return false;
         } else if (cs instanceof ConsoleCommandSender) {
             return true;
-        } else if (cs instanceof Player p) {
-            //final Player p = player;
-            if (canBeBuilder(p)) { //p.hasPermission(Bukkit.getServer().getMotd()+".builder") -сервер срезает!!!!
+        } else if (cs instanceof Player p && canBeBuilder(p)) { //p.hasPermission(Bukkit.getServer().getMotd()+".builder") -сервер срезает!!!!
                  //!! фиксить права в CDM case "gm", или не даст перейти в гм1
                 if (p.getGameMode()==GameMode.CREATIVE || p.getGameMode()==GameMode.SPECTATOR) {
                     return true;
@@ -840,7 +836,7 @@ public class ApiOstrov {
                     .hoverEvent(HoverEvent.showText(TCUtils.format(eng ? "§7Click - enable" : "§7Клик - включить")))
                     .clickEvent(ClickEvent.runCommand("/builder")));
                 }
-            }
+
         }
         return false;
     }

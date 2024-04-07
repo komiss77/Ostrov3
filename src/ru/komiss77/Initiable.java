@@ -3,10 +3,10 @@ package ru.komiss77;
 
 public interface Initiable {
     
-    public void postWorld();
+    void postWorld();
     
-    public void reload();
+    void reload();
     
-    public void onDisable();
+    void onDisable();
     
 }

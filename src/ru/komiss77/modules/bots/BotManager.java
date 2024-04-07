@@ -1,17 +1,5 @@
 package ru.komiss77.modules.bots;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -35,17 +23,27 @@ import ru.komiss77.Ostrov;
 import ru.komiss77.objects.CaseInsensitiveMap;
 import ru.komiss77.objects.IntHashMap;
 
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 
 public class BotManager implements Initiable, Listener {
 
-    public static final AtomicBoolean enable;
+    public static boolean enable;
     public static final IntHashMap<BotEntity> botById;
     protected static final CaseInsensitiveMap<BotEntity> botByName;
     protected static final CaseInsensitiveMap<String[]> skin;
     //protected static final HashMap<String, String> skinSignatures;
  
     static {
-        enable = new AtomicBoolean(false);
         botById = new IntHashMap<>();
         botByName = new CaseInsensitiveMap<>();
         skin = new CaseInsensitiveMap<>();
@@ -55,7 +53,7 @@ public class BotManager implements Initiable, Listener {
     
     public BotManager() {
 
-        if (!enable.get()) {
+        if (!enable) {
             Ostrov.log_ok("§6Боты выключены!");
             return;
         }
@@ -97,7 +95,7 @@ public class BotManager implements Initiable, Listener {
     @Override
     public void reload() {
         HandlerList.unregisterAll(this);
-        if (!enable.get()) {
+        if (!enable) {
             Ostrov.log_ok("§6Боты выключены!");
             return;
         }
@@ -109,7 +107,7 @@ public class BotManager implements Initiable, Listener {
 
     @Override
     public void onDisable() {
-        if (enable.get()) {
+        if (enable) {
             clearBots();
         }
         //for (final Player p : Bukkit.getOnlinePlayers()) {
@@ -190,8 +188,8 @@ public class BotManager implements Initiable, Listener {
     
     
     @Nullable
-    public static <Bot extends BotEntity> Bot createBot(final String name, final Class<Bot> botClass, final Function<String, Bot> creator) {
-        if (!enable.get()) {
+    public static <B extends BotEntity> B createBot(final String name, final Class<B> botClass, final Function<String, B> creator) {
+        if (!enable) {
             Ostrov.log_warn("BotManager Tried creating a Bot while the module is off!");
             return null;
         }
@@ -207,7 +205,7 @@ public class BotManager implements Initiable, Listener {
     }
     @Nullable
     @Deprecated
-    public static <Bot extends BotEntity> Bot createBot(final String name, final Class<Bot> botClass, final Supplier<Bot> onCreate) {
+    public static <B extends BotEntity> B createBot(final String name, final Class<B> botClass, final Supplier<B> onCreate) {
         return createBot(name, botClass, nm -> onCreate.get());
     }
     
@@ -223,19 +221,19 @@ public class BotManager implements Initiable, Listener {
     }
 
     @Nullable
-    public static <Bot extends BotEntity> Bot getBot(final int rid, final Class<Bot> cls) {
+    public static <B extends BotEntity> B getBot(final int rid, final Class<B> cls) {
         final BotEntity be = botById.get(rid);
         return be == null ? null : cls.cast(be);
     }
 
     @Nullable
-    public static <Bot extends BotEntity> Bot getBot(final String name, final Class<Bot> cls) {
+    public static <B extends BotEntity> B getBot(final String name, final Class<B> cls) {
         final BotEntity be = botByName.get(name);
         return be == null ? null : cls.cast(be);
     }
 
     public static void regSkin(final String name) {
-        if (!enable.get()) {
+        if (!enable) {
             Ostrov.log_warn("BotManager Tried setting skin while the module is off!");
             return;
         }
@@ -247,11 +245,7 @@ public class BotManager implements Initiable, Listener {
                 final InputStreamReader tsr = new InputStreamReader(new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + id + "?unsigned=false").openStream());
                 final JSONObject ppt = ((JSONObject) ((JSONArray) ((JSONObject) new JSONParser().parse(tsr)).get("properties")).get(0));
                 skin.put(name, new String []{ (String) ppt.get("value"), (String) ppt.get("signature")} );
-            } catch (NullPointerException | IOException | ParseException e) {
-            }
+            } catch (NullPointerException | IOException | ParseException e) {}
         });
     }
-
-
-
 }

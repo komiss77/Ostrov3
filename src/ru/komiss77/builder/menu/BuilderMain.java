@@ -16,7 +16,7 @@ import ru.komiss77.builder.menu.ViewPerm.SelectPlayer;
 import ru.komiss77.enums.Module;
 import ru.komiss77.listener.InteractLst;
 import ru.komiss77.modules.displays.DisplayMenu;
-import ru.komiss77.modules.items.ItemMenu;
+import ru.komiss77.modules.items.menu.ItemMenu;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.player.mission.MissionManager;
 import ru.komiss77.modules.player.profile.StatManager;

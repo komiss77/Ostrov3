@@ -17,6 +17,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
 import ru.komiss77.Ostrov;
+import ru.komiss77.modules.enchants.CustomEnchant;
 import ru.komiss77.utils.ItemUtils.Texture;
 
 import javax.annotation.Nullable;
@@ -77,8 +78,8 @@ public class ItemBuilder {
     }
     
     
-    
-    
+
+    @Deprecated //в будующем тип менять нельзя будет
     public ItemBuilder setType(final Material material) {
         if (material==null) return this;
         item.setType(material);
@@ -131,12 +132,28 @@ public class ItemBuilder {
       return this;
     }
 
-  public ItemBuilder addLore(final List<Component> lc) {
-    if (lc==null || lc.isEmpty()) return this;
-    if (lore == null) lore = new ArrayList<>();
-    lore.addAll(lc);
-    return this;
-  }
+    public ItemBuilder addLore(final List<Component> lc) {
+      if (lc==null || lc.isEmpty()) return this;
+      if (lore == null) lore = new ArrayList<>();
+      lore.addAll(lc);
+      return this;
+    }
+
+    public ItemBuilder addLore(final Component... lores) {
+      if (lores == null) return this;
+      for (final Component c : lores) {
+        addLore(c);
+      }
+      return this;
+    }
+
+    public ItemBuilder addLore(final String... lores) {
+      if (lores == null) return this;
+      for (final String c : lores) {
+        addLore(c);
+      }
+      return this;
+    }
     
     @Deprecated
     public ItemBuilder addLore(Object o) {
@@ -172,8 +189,8 @@ public class ItemBuilder {
     	return this;
     }
 
-    //иногда нужен простой быстрый метод 
-    public ItemBuilder setLore(final List<Component>lore) {
+    //иногда нужен простой быстрый метод
+    public ItemBuilder setLore(final List<Component> lore) {
         this.lore = lore;
         return this;
     }
@@ -277,13 +294,13 @@ public class ItemBuilder {
 
     public ItemBuilder setUnbreakable(final boolean unbreakable) {
       if (meta == null) meta = item.getItemMeta();
-      meta.setUnbreakable(true);
+      meta.setUnbreakable(unbreakable);
       return this;
     }
     
     public ItemBuilder setItemFlag(final ItemFlag flag) {
       if (meta == null) meta = item.getItemMeta();
-      meta.addItemFlags(new ItemFlag[] { flag });
+      meta.addItemFlags(flag);
       return this;
     }
     
@@ -363,7 +380,7 @@ public class ItemBuilder {
     }
     
     public ItemBuilder setCustomHeadTexture(final Texture texture) {
-        return setCustomHeadTexture(texture.texture);
+        return setCustomHeadTexture(texture.value);
     }
     
    // public ItemBuilder setCustomHeadUrl(final String url) {
@@ -396,8 +413,8 @@ public class ItemBuilder {
     }
 
     public ItemBuilder addCustomPotionEffect(final PotionEffect customPotionEffect) {
-        if (customPotionEffect!=null) {
-            if (customPotionEffects==null) customPotionEffects = new ArrayList<>();
+        if (customPotionEffect!=null && (customPotionEffects==null)) {
+          customPotionEffects = new ArrayList<>();
         }
         customPotionEffects.add(customPotionEffect);
         return this;
@@ -469,24 +486,29 @@ public class ItemBuilder {
                 }
                 break;
             
-            case ENCHANTED_BOOK://для книг  чары в storage
+            case ENCHANTED_BOOK://для книг чары в storage
                 if (enchants!=null && !enchants.isEmpty()) {
                   if (meta == null) meta = item.getItemMeta();
                   final EnchantmentStorageMeta enchantedBookMeta = (EnchantmentStorageMeta) meta;
-                  for (Enchantment enchant : enchants.keySet()) {    //ignoreLevelRestriction
-                      enchantedBookMeta.addStoredEnchant(enchant, enchants.get(enchant), false);
+                  for (final Map.Entry<Enchantment, Integer> en : enchants.entrySet()) {//ignoreLevelRestriction
+                      enchantedBookMeta.addStoredEnchant(en.getKey(), en.getValue(), false);
                   }
                 }
                 return item;
-            
+
             default: break; //для обычных предметов просто кидаем чары - а для дригих не кидаем????? не заслужили тип????
         }
 
         if (enchants!=null && !enchants.isEmpty()) {
           if (meta == null) meta = item.getItemMeta();
-          for (final Enchantment en : enchants.keySet()) {
+          for (final Map.Entry<Enchantment, Integer> en : enchants.entrySet()) {
+            final Enchantment e = en.getKey();
               try {
-                  meta.addEnchant(en, enchants.get(en), true);
+                  if (e instanceof final CustomEnchant ce) {
+                    ce.level(meta, en.getValue(), false);
+                    continue;
+                  }
+                  meta.addEnchant(e, enchants.get(e), true);
               } catch (IllegalArgumentException ex) {
                   Ostrov.log_err("ItemBuilder: невозможно добавить чары "+en.getKey().getKey()+" к предмету "+item.getType().toString()+" : "+ex.getMessage());
               }
