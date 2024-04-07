@@ -19,6 +19,7 @@ import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.quests.Quest;
 import ru.komiss77.modules.quests.progs.IProgress;
 import ru.komiss77.modules.world.LocFinder;
+import ru.komiss77.modules.world.WXYZ;
 import ru.komiss77.utils.LocationUtil;
 
 import java.sql.*;
@@ -550,8 +551,8 @@ public class LocalDB {
                 final LocalDataLoadEvent e = new LocalDataLoadEvent(p, op, logout);
                 Bukkit.getPluginManager().callEvent(e); //нормальный вызов с данными
                 if (e.getLogoutLocation()!=null) { //плагины могут изменять
-                  final Location loc = new LocFinder(e.getLogoutLocation(), LocFinder.DEFAULT_CHECKS).find(false, 5, 1);
-                  if (loc != null) p.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND);
+                  final WXYZ loc = new LocFinder(new WXYZ(e.getLogoutLocation()), LocFinder.DEFAULT_CHECKS).find(false, 5, 1);
+                  if (loc != null) p.teleport(loc.getCenterLoc(), PlayerTeleportEvent.TeleportCause.COMMAND);
 //                    ApiOstrov.teleportSave(p, e.getLogoutLocation(), true);
                 }
                 

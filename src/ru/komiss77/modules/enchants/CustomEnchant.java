@@ -238,7 +238,12 @@ public abstract class CustomEnchant extends Enchantment {
     public NamespacedKey getKey() {
       return key;
     }
-    
+
+    @Deprecated(forRemoval = true)
+    public String getTranslationKey() {
+      return key.value();
+    }
+
     @Override
     public String getName() {
         return name;
@@ -251,12 +256,12 @@ public abstract class CustomEnchant extends Enchantment {
     public int getChance() {
         return Math.max(chance, 1);
     }
-    
+
     @Override
     public boolean canEnchantItem(final ItemStack it) {
         return it != null && (its.equals(ItemClass.ALL) || its.has(it.getType()));
     }
-    
+
     @Override
     public boolean conflictsWith(final Enchantment en) {
         final NamespacedKey k = en.getKey();
@@ -267,17 +272,17 @@ public abstract class CustomEnchant extends Enchantment {
         }
         return false;
     }
-    
+
     @Override
     public EnchantmentTarget getItemTarget() {
         return EnchantmentTarget.BREAKABLE;
     }
-    
+
     @Override
     public int getMaxLevel() {
         return mxlvl;
     }
-    
+
     @Override
     public int getStartLevel() {
         return 1;

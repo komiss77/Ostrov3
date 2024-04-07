@@ -24,38 +24,42 @@ public final class LocFinder {
 
     private final int minY;
     private final int maxY;
-    private final Location loc;
     private final MatCheck[] checks;
     private Material[] mats = new Material[0];
     private WXYZ bloc;
 
-    public static void onSafeLocAsync(final Location loc, final MatCheck[] checks,
-      final boolean down, final int near, final int offsetY, final Consumer<Location> onFind) {
+    public static WXYZ findInArea(final WXYZ from, final int radius, final int near,
+      final LocFinder.MatCheck[] checks, final int offset) {
+      final int space = radius >> 2, sp2 = space << 1;
+      final WXYZ in = new WXYZ(from.w, FastMath.rndCircPos(from, radius)).add(Ostrov.random.nextInt(sp2) - space,
+      Ostrov.random.nextInt(sp2) - space, Ostrov.random.nextInt(sp2) - space);
+      return new LocFinder(in, checks).find(false, near, offset);
+    }
+
+    public static void onAsyncFind(final WXYZ loc, final MatCheck[] checks,
+      final boolean down, final int near, final int offsetY, final Consumer<WXYZ> onFind) {
       Ostrov.async(() -> {
-        final Location fin = new LocFinder(loc, checks).find(down, near, offsetY);
+        final WXYZ fin = new LocFinder(loc, checks).find(down, near, offsetY);
         if (fin != null) Ostrov.sync(() -> onFind.accept(fin));
       });
     }
 
-    public LocFinder(final Location loc, final MatCheck[] checks) {
-        this.loc = loc;
+    public LocFinder(final WXYZ loc, final MatCheck[] checks) {
         this.checks = checks;
-        this.minY = loc.getWorld().getMinHeight();
-        this.maxY = loc.getWorld().getMaxHeight();
-        this.bloc = new WXYZ(loc);
+        this.minY = loc.w.getMinHeight();
+        this.maxY = loc.w.getMaxHeight();
+        this.bloc = loc;
     }
 
     @ThreadSafe
-    public Location find(final boolean down, final int near, final int offsetY) {
-        if (loc == null)
-            return null;
-        final WXYZ lc = bloc;
+    public WXYZ find(final boolean down, final int near, final int offsetY) {
         if (checks.length == 0)
-            return loc;
+          return bloc;
+        final WXYZ lc = bloc;
         WXYZ fin = testLoc(down);
         if (fin != null) {
           fin.y += offsetY;
-          return fin.getCenterLoc();
+          return fin;
         }
         for (int d = 1; d <= near; d++) {
             int fd = -d - 1;
@@ -67,7 +71,7 @@ public final class LocFinder {
                 fin = testLoc(down);
                 if (fin != null) {
                   fin.y += offsetY;
-                  return fin.getCenterLoc();
+                  return fin;
                 }
               }
             }
