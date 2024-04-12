@@ -5,9 +5,11 @@ https://www.curseforge.com/minecraft/mc-mods/cmdcam?__cf_chl_jschl_tk__=pmd_r0uG
 
 !!!аркаимл - что лагает?? + читерские предметы
 https://www.dmosk.ru/miniinstruktions.php?mini=redis-ubuntu
+https://github.com/ForestTechMC/ForestRedisAPI
 
 не загрузить незер (нет папки регион, там dim-1)
 https://multipaper.io/#pricing сохранение данных до перехода с сервера (по команде server??)
+
 
 Подвисает соединение с островом
 §с MissionManager onCustomStatAdd : No operations allowed after connection closed.

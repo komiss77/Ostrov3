@@ -25,6 +25,7 @@ import ru.komiss77.listener.PlayerLst;
 import ru.komiss77.listener.SpigotChanellMsg;
 import ru.komiss77.modules.Informator;
 import ru.komiss77.modules.player.mission.MissionManager;
+import ru.komiss77.modules.redis.RDS;
 import ru.komiss77.utils.ntptime.NTPUDPClient;
 import ru.komiss77.utils.ntptime.TimeInfo;
 import ru.komiss77.modules.player.PM;
@@ -47,7 +48,7 @@ public class Timer {
 
     private static final ConcurrentHashMap <Integer, Integer> cd;
 
-    private static int time_delta = 0;
+   // private static int time_delta = 0;
     private static int currentTime = (int) (System.currentTimeMillis()/1000);
     private static final int MIDNIGHT_STAMP;
     //private static final TextComponent errorMsg;
@@ -85,7 +86,7 @@ public class Timer {
         if (reloadPermIntervalSec<10 || reloadPermIntervalSec > 10800) reloadPermIntervalSec = 600;
         if (perms_autoupdate) Ostrov.log_ok ("§5Автообновление прав с интервалом "+ApiOstrov.secondToTime(reloadPermIntervalSec));
         
-        Ostrov.async( ()-> {
+       /* Ostrov.async( ()-> {
             try {
                 final NTPUDPClient timeClient = new NTPUDPClient();
                 final InetAddress inetAddress = InetAddress.getByName("ntp.ubuntu.com");
@@ -97,7 +98,7 @@ public class Timer {
             } catch (IOException ex) {
                 Ostrov.log_err("Не удалось получить NTP time "+ex.getMessage());
             }
-        }, 0);        
+        }, 0);     */
         
         if (timer != null) timer.cancel();
         if (playerTimer != null) playerTimer.cancel();
@@ -119,9 +120,10 @@ public class Timer {
                 @Override
                 public void run() {
 
-                    currentTime =  (int) ((System.currentTimeMillis()-time_delta)/1000);
-                    Ostrov.calendar.setTimeInMillis(System.currentTimeMillis()-time_delta);
-                    
+                    //currentTime =  (int) ((System.currentTimeMillis()-time_delta)/1000);
+                  //Ostrov.calendar.setTimeInMillis(System.currentTimeMillis()-time_delta);
+                  Ostrov.calendar.setTimeInMillis(System.currentTimeMillis());
+
                     if (auto_restart && syncSecondCounter%60==0 ) {
                         if (rstHour == Ostrov.calendar.get(Calendar.HOUR_OF_DAY) && rstMin == Ostrov.calendar.get(Calendar.MINUTE)) {
                             to_restart=true;
@@ -242,6 +244,7 @@ public class Timer {
                 Informator.tickAsync();
             }
 
+            RDS.heartbeats();
 
             if (OstrovDB.useOstrovData ) {//if (OstrovDB.useOstrovData && OstrovDB.connection!=null) {-не поставт флаг ostrovDbErrors!
 
@@ -485,7 +488,8 @@ public class Timer {
     }
 
     public static long getTimeStamp() {
-        return System.currentTimeMillis() - time_delta;
+      //return System.currentTimeMillis() - time_delta;
+      return System.currentTimeMillis();
     }
 
 

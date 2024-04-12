@@ -10,6 +10,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Ostrov;
 import ru.komiss77.modules.bots.AfkBot;
+import ru.komiss77.modules.redis.RDS;
 import ru.komiss77.modules.world.XYZ;
 import ru.komiss77.version.Nms;
 
@@ -23,16 +24,16 @@ public class TestLst implements Listener {
  XYZ xyz;
  Set<XYZ> set = new HashSet<>();
 
-  //@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void test(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
       if (e.getItem()==null) return;
 
-    if (e.getItem().getType()==Material.WOODEN_PICKAXE) {
-      ApiOstrov.teleportSave(p, p.getLocation().clone().add(0,200,0), false);
-      p.sendMessage("teleportSave");
-      return;
-    }
+   // if (e.getItem().getType()==Material.WOODEN_PICKAXE) {
+    //  ApiOstrov.teleportSave(p, p.getLocation().clone().add(0,200,0), false);
+   //   p.sendMessage("teleportSave");
+   //   return;
+  //  }
 
       if (!ApiOstrov.isLocalBuilder(p)) return;
 //Ostrov.log("PlayerInteractEvent "+e.getMaterial());
@@ -66,31 +67,10 @@ public class TestLst implements Listener {
            p.sendMessage("§8TestListener - interact cancel!");
             
             if (e.getAction()==Action.RIGHT_CLICK_AIR ) {
-              for (XYZ xyz : set) {
-                Ostrov.log("fakeBlock "+xyz+" : "+xyz.hashCode());
-                Nms.fakeBlock(p, xyz, Material.GOLD_BLOCK.createBlockData());
-              }
-              //Nms.colorGlow(p, NamedTextColor.DARK_AQUA, false);
-                //final String name = "РоботДолбоёб";//+ApiOstrov.randInt(0, 10);
-               // if (bot==null) {
-                    //bot = BotManager.createBot(name, AfkBot.class, () -> new AfkBot(name, new WXYZ(p.getLocation())));
-                    //p.sendMessage("spawn bot "+name);
-               // } else {
-                    //p.sendMessage("bot exist!");
-               // }
-               // return;
+              RDS.sendMessage("ostrov", "ostrov");
+              RDS.sendMessage("arenadata", "arenadata");
             }
             if (e.getAction()==Action.RIGHT_CLICK_BLOCK ) {
-                if (p.isSneaking()) {
-                  p.sendMessage("fakeBlock set");
-                  Nms.fakeBlock(p, e.getClickedBlock().getLocation(), Material.EMERALD_BLOCK.createBlockData());
-                  xyz = new XYZ(e.getClickedBlock().getLocation());
-                } else {
-                  Nms.fakeBlock(p, e.getClickedBlock().getLocation());
-                  XYZ x2 = new XYZ(e.getClickedBlock().getLocation());;
-                  p.sendMessage("==?"+(xyz==x2)+" equals?"+xyz.equals(x2)+" contains?"+set.contains(x2)+" size="+set.size());
-                  set.add(x2);
-                }
 
             }
             if (e.getAction()==Action.LEFT_CLICK_BLOCK ) {

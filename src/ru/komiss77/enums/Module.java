@@ -16,6 +16,7 @@ import ru.komiss77.modules.items.ItemManager;
 import ru.komiss77.modules.kits.KitManager;
 import ru.komiss77.modules.menuItem.MenuItemsManager;
 import ru.komiss77.modules.quests.QuestManager;
+import ru.komiss77.modules.redis.RDS;
 import ru.komiss77.modules.scores.ScoreManager;
 import ru.komiss77.modules.signProtect.SignProtectLst;
 import ru.komiss77.modules.warp.WarpManager;
@@ -45,6 +46,7 @@ public enum Module {
   entities (EntityManager.class),
   rolls (RollManager.class),
   items (ItemManager.class),
+  redis (RDS.class),
   ;
 
   public final Class<? extends Initiable> clazz;

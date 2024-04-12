@@ -1,7 +1,9 @@
 plugins {
   `java-library`
+  //`maven-publish`
   id("io.papermc.paperweight.userdev") version "1.5.11"
   id("xyz.jpenilla.run-paper") version "2.2.3"
+  id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "ru.ostrov77"
@@ -10,9 +12,11 @@ description = "ostrov77"
 
 dependencies {
   paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
-  implementation(fileTree("libs"))
+  compileOnly(fileTree("libs"))// api(fileTree("libs"))
   compileOnly("com.velocitypowered:velocity-api:3.1.1")
   annotationProcessor("com.velocitypowered:velocity-api:3.1.1")
+  //implementation("redis.clients:jedis:4.3.1")
+  api("redis.clients:jedis:4.3.1")
 }
 
 repositories {
@@ -20,6 +24,7 @@ repositories {
     name = "papermc"
     url = uri("https://repo.papermc.io/repository/maven-public/")
   }
+  mavenCentral()
 }
 
 sourceSets {
@@ -56,12 +61,29 @@ tasks {
     options.encoding = Charsets.UTF_8.name() // We want UTF-8 for everything
   }
 
-
-
   reobfJar {
     // This is an example of how you might change the output location for reobfJar. It's recommended not to do this
     // for a variety of reasons, however it's asked frequently enough that an example of how to do it is included here.
     outputJar.set(layout.buildDirectory.file("Ostrov.jar"))
+  }
+
+
+  //https://imperceptiblethoughts.com/shadow/configuration/dependencies/#embedding-jar-files-inside-your-shadow-jar
+  shadowJar {
+    dependencies {
+      //exclude(dependency("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT"))
+      //exclude(dependency("org.apache.commons:commons-pool2:2.11.1"))
+      //exclude(dependency("org.apache.commons:commons-pool2:.*"))
+      //exclude(dependency("org.json:json:20220320"))
+      exclude(dependency("org.json:json:.*"))
+      //exclude(dependency("org.slf4j:slf4j-api:1.7.36"))
+      //exclude(dependency("org.slf4j:slf4j-api:2.0.9"))
+      exclude(dependency("org.slf4j:slf4j-api:.*"))
+      exclude(dependency("com.google.code.gson:gson:.*"))
+    }
+    relocate("redis.clients.jedis", "ru.komiss77.modules.redis.jedis")
+    relocate("redis.clients.util", "ru.komiss77.modules.redis.jedisutil")
+    //minimize()
   }
 }
 

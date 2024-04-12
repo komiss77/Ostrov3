@@ -23,6 +23,7 @@ import ru.komiss77.listener.*;
 import ru.komiss77.modules.figures.FigureManager;
 import ru.komiss77.modules.games.GM;
 import ru.komiss77.modules.player.PM;
+import ru.komiss77.modules.redis.RDS;
 import ru.komiss77.modules.world.EmptyChunkGenerator;
 import ru.komiss77.modules.world.WorldManager;
 import ru.komiss77.utils.TCUtils;
@@ -96,14 +97,15 @@ public class Ostrov extends JavaPlugin {
         registerListeners();
         
         Bukkit.getOnlinePlayers().stream().forEach(p -> PM.createOplayer(p));
-        
+
+        LocalDB.init();// выполнится синхронно, если нет коннекта-подвиснет! выше есть для auth
+
         initModules();
         
         RegisterCommands.register(this); //после модулей!!
         
         log_ok ("§2Остров готов к работе!");
 
-       // Nms.addPacketSpy();
     }
  
     
@@ -134,7 +136,6 @@ public class Ostrov extends JavaPlugin {
         modules.values().stream().forEach( 
             (module) ->  (module).onDisable()
         );
-        
         log_ok("§4Остров выгружен!");
     }  
 
@@ -205,7 +206,6 @@ public class Ostrov extends JavaPlugin {
     
     public static void initModules() {
         log_ok ("§5===== Инициализация модулей =====");
-        LocalDB.init();// выполнится синхронно, если нет коннекта-подвиснет! выше есть для auth
         for (final Module module : Module.values()) {
             try {
                 modules.put(module.name(), module.clazz.getDeclaredConstructor().newInstance());
