@@ -8,9 +8,12 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import ru.komiss77.LocalDB;
+import ru.komiss77.Ostrov;
 import ru.komiss77.enums.GameState;
 import ru.komiss77.enums.Stat;
 import ru.komiss77.modules.player.Oplayer;
+import ru.komiss77.modules.redis.RDS;
 import ru.komiss77.modules.translate.Lang;
 
 public final class ArenaInfo {
@@ -43,7 +46,19 @@ public final class ArenaInfo {
     }
 
     
-    
+    public void sendData() {
+      final StringBuffer sb = new StringBuffer(gameInfo.game.name()).append(LocalDB.W_SPLIT)
+        .append(Ostrov.MOT_D).append(LocalDB.W_SPLIT)
+        .append(arenaName).append(LocalDB.W_SPLIT)
+        .append(state.name()).append(LocalDB.W_SPLIT)
+        .append(players).append(LocalDB.W_SPLIT)
+        .append(line0).append(" ").append(LocalDB.W_SPLIT)
+        .append(line1).append(" ").append(LocalDB.W_SPLIT)
+        .append(line2).append(" ").append(LocalDB.W_SPLIT)
+        .append(line3).append(" ").append(LocalDB.W_SPLIT)
+        ;
+      RDS.sendMessage("arenadata", sb.toString());
+    }
     
     
     public ItemStack getIcon (final Oplayer op) {

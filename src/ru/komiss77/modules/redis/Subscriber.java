@@ -6,9 +6,15 @@ import java.util.Set;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
+import ru.komiss77.LocalDB;
 import ru.komiss77.Ostrov;
+import ru.komiss77.enums.Game;
+import ru.komiss77.enums.GameState;
+import ru.komiss77.listener.SpigotChanellMsg;
+import ru.komiss77.modules.games.GM;
+import ru.komiss77.modules.games.GameInfo;
 
-  public class Subscriber implements Runnable {
+public class Subscriber implements Runnable {
 
   //private final ReentrantLock lock = new ReentrantLock();
     private static final JedisPubSubHandler jpsh;
@@ -78,12 +84,41 @@ class JedisPubSubHandler  extends JedisPubSub {//BinaryJedisPubSub {
     //String channelName = new String(channel, StandardCharsets.UTF_8);
     //String msg = new String(message, StandardCharsets.UTF_8);
     try {
-      Ostrov.log_warn("RedisLst : onMessage s="+channelName+" s2="+msg);
+//Ostrov.log_warn("RedisLst : onMessage channel="+channelName+" msg="+msg);
       if (msg.isBlank()) return;
+      switch (channelName) {
+        case "ostrov":
+          break;
+        case "arenadata":
+          final String[]s = msg.split(LocalDB.WORD_SPLIT);
+          if (s.length == 9) {
+            final Game game = Game.fromServerName(s[0]);
+//Ostrov.log("GAME_INFO_TO_OSTROV s6="+s6+" game="+game+" arena="+s1);
+            if (game != null) {
+              final GameInfo gi = GM.getGameInfo(game);
+              if (gi != null) {
+                gi.update(s[1], s[2], GameState.valueOf(s[3]), Integer.parseInt(s[4]), s[5], s[6], s[7], s[8]);
+              } else {
+                Ostrov.log_err("RedisLst arenadata GameInfo==null : " + msg);
+              }
+            }
+          } else {
+            Ostrov.log_err("RedisLst arenadata msg.length != 9 : " + msg);
+          }
+          break;
+      }
+
+
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
+
+  @Override
+  public void onPong(String s) {
+    Ostrov.log_warn("===============RedisLst PONG : "+s);
+  }
+
 }
 
 

@@ -3,6 +3,8 @@ package ru.komiss77.modules.games;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -21,7 +23,7 @@ public class GameInfo {
     public final Game game;
     
     private int gameOnline; //для одиночек, либо общий онлайн на аренах
-    public final HashMap<Integer,ArenaInfo>arenas=new HashMap<>(); //position в меню, арена. String,Arena нельзя - могут быть одинаковые арены на разных серверах!!
+    public final ConcurrentHashMap<Integer,ArenaInfo> arenas=new ConcurrentHashMap<>(); //position в меню, арена. String,Arena нельзя - могут быть одинаковые арены на разных серверах!!
     public Material mat;
 
     public GameInfo( final Game game ) {

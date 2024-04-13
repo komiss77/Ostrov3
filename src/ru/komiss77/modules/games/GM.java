@@ -28,6 +28,7 @@ import ru.komiss77.enums.ServerType;
 import ru.komiss77.enums.Table;
 import ru.komiss77.events.BsignLocalArenaClick;
 import ru.komiss77.listener.SpigotChanellMsg;
+import ru.komiss77.modules.redis.RDS;
 import ru.komiss77.modules.translate.Lang;
 import ru.komiss77.utils.LocationUtil;
 import ru.komiss77.utils.OstrovConfig;
@@ -48,12 +49,9 @@ public final class GM {
     //динамические
     public static final Set<String> allBungeeServersName;
     public static int bungee_online=0;
-  public static long tsServer = 0; //new Timestamp(0);
-  public static long tsArena = 0; //new Timestamp(0);
-  public static long tsLang = 0; //new Timestamp(0);
+  public static long tsServer, tsArena, tsLang = 0;
+
   public static State state = State.STARTUP;
-    //public static long fromStamp; //при первом чтении вычитает все арены, дальше только обновы статусов
-    //public static boolean reload;
 
 
     static {
@@ -62,13 +60,17 @@ public final class GM {
         GAME = Game.fromServerName(Ostrov.MOT_D);//Game.GLOBAL
         setLogo(GAME.defaultlogo);
         games=new EnumMap<>(Game.class);
+        for (Game g : Game.values()) {
+          if (g==Game.GLOBAL) continue;
+          games.put(g, new GameInfo(g));
+        }
         signs=new HashMap<>();
         allBungeeServersName=new HashSet<>();
         
         switch (GAME.type) {
-            case ARENAS -> LOAD_INTERVAL=30; //на аренах раз в минуту прогрузить требования уровня и репутации!
-            case LOBBY -> LOAD_INTERVAL=1;
-            case ONE_GAME -> LOAD_INTERVAL=10;
+            case ARENAS -> LOAD_INTERVAL=60; //на аренах раз в минуту прогрузить требования уровня и репутации!
+            case LOBBY -> LOAD_INTERVAL=10;
+            case ONE_GAME -> LOAD_INTERVAL=30;
             default -> LOAD_INTERVAL=60;
         }
     }
@@ -90,10 +92,13 @@ public final class GM {
     //-OreloadCmd
     //Вызывать async!!!
     public static void load(final State st) {
-        games.clear();
-        for (Game g : Game.values()) {
-          if (g==Game.GLOBAL) continue;
-          games.put(g, new GameInfo(g));
+        //games.clear();
+        //for (Game g : Game.values()) {
+        //  if (g==Game.GLOBAL) continue;
+        //  games.put(g, new GameInfo(g));
+        //}
+        for (GameInfo gi : games.values()) {
+          gi.arenas.clear();
         }
         signs.clear();
         tsServer = 0;//.setTime(0);
@@ -172,7 +177,7 @@ public final class GM {
           //прогрузка по аренам
 
           //pst = OstrovDB.getConnection().prepareStatement(" SELECT *  FROM `arenaData`");
-          pst = OstrovDB.getConnection().prepareStatement(" SELECT *  FROM `arenaData` WHERE  `ts` > '"+tsArena+"';");
+       /*   pst = OstrovDB.getConnection().prepareStatement(" SELECT *  FROM `arenaData` WHERE  `ts` > '"+tsArena+"';");
          // pst.setLong(1, tsArena);
 
           rs = pst.executeQuery(); //stmt.executeQuery( " SELECT *  FROM `arenaData` WHERE  `stamp` > " );
@@ -223,7 +228,7 @@ public final class GM {
           }
 
 
-          rs.close();
+          rs.close();*/
 //Ostrov.log_warn("..........................");
 
 
@@ -287,7 +292,7 @@ CREATE TABLE `arenaData` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
  */
   private static void writeArenaStateToMySql (final Game game, final String arenaName, final GameState state, final int players, final String line0, final String line1, final String line2, final String line3) {
-Ostrov.log("==writeArenaStateToMySql useOstrovData?"+OstrovDB.useOstrovData);
+//Ostrov.log("==writeArenaStateToMySql useOstrovData?"+OstrovDB.useOstrovData);
     if (!OstrovDB.useOstrovData) return;
     final Connection conn = OstrovDB.getConnection();
     if (conn==null) {
@@ -366,9 +371,9 @@ Ostrov.log("==writeArenaStateToMySql useOstrovData?"+OstrovDB.useOstrovData);
     final String line2,
     final String line3
   ) {
-    if (!Bukkit.isPrimaryThread()) {
-      Ostrov.log_warn("sendArenaData должен быть SYNC : §f"+arenaName+" : "+state);
-    }
+    //if (!Bukkit.isPrimaryThread()) {
+   //   Ostrov.log_warn("sendArenaData должен быть SYNC : §f"+arenaName+" : "+state);
+   // }
 //Ostrov.log("==sendArenaData "+arenaName+" : "+state+" SHUT_DOWN?"+Ostrov.SHUT_DOWN+" STARTUP?"+Ostrov.STARTUP);
     if (game.type==ServerType.ARENAS) {  //на миниигре вызываем локальные эвент для табличек этого сервера! (с банжи не получит)
       //если игры с острова не прогрузились, но локальные арены уже шлют данные -
@@ -381,57 +386,41 @@ Ostrov.log("==writeArenaStateToMySql useOstrovData?"+OstrovDB.useOstrovData);
       gi.update(Ostrov.MOT_D, arenaName, state, players, line0, line1, line2, line3);
     }
 
+    final StringBuffer sb = new StringBuffer(game.name()).append(LocalDB.W_SPLIT)
+      .append(Ostrov.MOT_D).append(LocalDB.W_SPLIT)
+      .append(arenaName).append(LocalDB.W_SPLIT)
+      .append(state.name()).append(LocalDB.W_SPLIT)
+      .append(players).append(LocalDB.W_SPLIT)
+      .append(line0).append(LocalDB.W_SPLIT)
+      .append(line1).append(LocalDB.W_SPLIT)
+      .append(line2).append(LocalDB.W_SPLIT)
+      .append(line3).append(" ").append(LocalDB.W_SPLIT)
+      ;
+    RDS.sendMessage("arenadata", sb.toString());
+
     if (Ostrov.SHUT_DOWN) {
 
       writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
 
     } else if (Ostrov.STARTUP) {
-      //writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
-      Ostrov.async( () -> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 20);
+      writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
+      //Ostrov.async( () -> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 20);
 
     } else if (Bukkit.getOnlinePlayers().isEmpty()) {
-      //writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
-      Ostrov.async( () -> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 0);
+      writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
+      //Ostrov.async( () -> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 0);
 
     } else {
 //Ostrov.log("SpigotChanellMsg.sendMessage");
-      SpigotChanellMsg.sendMessage(Bukkit.getOnlinePlayers().stream().findAny().get(),
-        Operation.GAME_INFO_TO_BUNGEE,
-        Ostrov.MOT_D,
-        state.tag, players, 0,
-        arenaName, line0, line1, line2, line3, game.name() );
+     // SpigotChanellMsg.sendMessage(Bukkit.getOnlinePlayers().stream().findAny().get(),
+     //   Operation.GAME_INFO_TO_BUNGEE,
+     //   Ostrov.MOT_D,
+     //   state.tag, players, 0,
+    //    arenaName, line0, line1, line2, line3, game.name() );
 
     }
 
 
-   /* if (Bukkit.getOnlinePlayers().isEmpty()) { //async
-
-      if (Ostrov.SHUT_DOWN || Ostrov.STARTUP) { //state==GameState.ВЫКЛЮЧЕНА || state==GameState.ПЕРЕЗАПУСК) { //sync!!
-
-        if (Bukkit.isPrimaryThread()) {
-          writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
-        } else {
-         // Ostrov.sync( ()-> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 0);
-        }
-
-      } else {
-
-        if (Bukkit.isPrimaryThread()) {
-          Ostrov.async(() -> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 0);
-        } else {
-          writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
-        }
-      }
-
-    } else {
-
-      SpigotChanellMsg.sendMessage(Bukkit.getOnlinePlayers().stream().findAny().get(),
-        Operation.GAME_INFO_TO_BUNGEE,
-        Ostrov.MOT_D,
-        state.tag, players, 0,
-        arenaName, line0, line1, line2, line3, game.name() );
-
-    }*/
   }
 
 
@@ -693,6 +682,37 @@ Ostrov.log("==writeArenaStateToMySql useOstrovData?"+OstrovDB.useOstrovData);
 
 }
 
+
+
+
+   /* if (Bukkit.getOnlinePlayers().isEmpty()) { //async
+
+      if (Ostrov.SHUT_DOWN || Ostrov.STARTUP) { //state==GameState.ВЫКЛЮЧЕНА || state==GameState.ПЕРЕЗАПУСК) { //sync!!
+
+        if (Bukkit.isPrimaryThread()) {
+          writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
+        } else {
+         // Ostrov.sync( ()-> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 0);
+        }
+
+      } else {
+
+        if (Bukkit.isPrimaryThread()) {
+          Ostrov.async(() -> writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3), 0);
+        } else {
+          writeArenaStateToMySql(game, arenaName, state, players, line0, line1, line2, line3);
+        }
+      }
+
+    } else {
+
+      SpigotChanellMsg.sendMessage(Bukkit.getOnlinePlayers().stream().findAny().get(),
+        Operation.GAME_INFO_TO_BUNGEE,
+        Ostrov.MOT_D,
+        state.tag, players, 0,
+        arenaName, line0, line1, line2, line3, game.name() );
+
+    }*/
 
 
 

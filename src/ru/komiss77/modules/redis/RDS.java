@@ -1,6 +1,8 @@
 package ru.komiss77.modules.redis;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,9 +25,17 @@ public class RDS implements Initiable {
   public static JedisPoolProvider poolProvider;
   //protected static PubSubListener pubSubListener;
   protected static Subscriber subscriber;
-  private static final String ip = "37.59.46.87";
+  private static String ip = "37.59.46.87";
 
   static {
+    try {
+      if (ip.equals(InetAddress.getLocalHost().getHostAddress())) {
+        ip = "127.0.0.1";
+      };
+    } catch (UnknownHostException ex) {
+      Ostrov.log_err("RDS detect ip : "+ex.getMessage());
+    }
+
     init();
   }
 
@@ -158,6 +168,7 @@ public class RDS implements Initiable {
         try {
           long redisTime = getRedisTime(unifiedJedis);
           unifiedJedis.hset("heartbeats", Ostrov.MOT_D, String.valueOf(redisTime));
+//poolProvider.testConnection();
           if (subscriber==null) {
             subscribe();
           }
@@ -220,7 +231,7 @@ public class RDS implements Initiable {
       public Void unifiedJedisTask(UnifiedJedis unifiedJedis) {
         try {
           unifiedJedis.publish(channel, message);
-Ostrov.log_warn("PDS sendChannelMessage channel="+channel+" message="+message);
+//Ostrov.log_warn("PDS sendChannelMessage channel="+channel+" message="+message);
         } catch (JedisConnectionException ex) {
           // Redis server has disappeared!
           Ostrov.log_err("RDS sendMessage : "+ex.getMessage());

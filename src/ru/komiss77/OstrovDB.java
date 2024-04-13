@@ -68,7 +68,6 @@ public class OstrovDB {
                 }
             } else {
                 Ostrov.async( ()->  {
-//Ostrov.log("22222");
                     connect();
                     getBungeeServerInfo();
                 }, 0);
@@ -224,7 +223,8 @@ public class OstrovDB {
          +Bukkit.getMaxPlayers()+"', `tps`='"+ Nms.getTps()+"', `memory`='"
          +(int)(Runtime.getRuntime().totalMemory()/1024/1024 )+"', `memoryLimit`='"
          +(int)(Runtime.getRuntime().maxMemory()/1024/1024)+"', `freeMemory`='"
-         +(int)(Runtime.getRuntime().freeMemory()/1024/1024)+"',`ts`= NOW()+0 WHERE `serverId`='"+Ostrov.server_id+"'; ";
+         +(int)(Runtime.getRuntime().freeMemory()/1024/1024)
+         +"',`stamp`='"+ApiOstrov.currentTimeSec()+"',`ts`= NOW()+0 WHERE `serverId`='"+Ostrov.server_id+"'; ";
         executePstAsync(Bukkit.getConsoleSender(), querry);
        
       /*  PreparedStatement pst = null;

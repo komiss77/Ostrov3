@@ -120,7 +120,8 @@ public class Timer {
                 @Override
                 public void run() {
 
-                    //currentTime =  (int) ((System.currentTimeMillis()-time_delta)/1000);
+                  //currentTime =  (int) ((System.currentTimeMillis()-time_delta)/1000);
+                  currentTime =  (int) ((System.currentTimeMillis())/1000);
                   //Ostrov.calendar.setTimeInMillis(System.currentTimeMillis()-time_delta);
                   Ostrov.calendar.setTimeInMillis(System.currentTimeMillis());
 
@@ -245,6 +246,11 @@ public class Timer {
             }
 
             RDS.heartbeats();
+            if (second%43==0) {
+              GM.getGames().stream().forEach( (gi -> {
+                gi.arenas.values().stream().filter( ai-> ai.server == Ostrov.MOT_D).forEach(ai -> ai.sendData());
+              }));
+            }
 
             if (OstrovDB.useOstrovData ) {//if (OstrovDB.useOstrovData && OstrovDB.connection!=null) {-не поставт флаг ostrovDbErrors!
 

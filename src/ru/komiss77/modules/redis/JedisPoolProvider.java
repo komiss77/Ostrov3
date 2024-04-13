@@ -21,12 +21,15 @@ public class JedisPoolProvider implements Summoner<JedisPooled> {
   public JedisPoolProvider(final PooledConnectionProvider connectionProvider, final JedisPool jedisPool) {
     this.connectionProvider = connectionProvider;
     this.jedisPool = jedisPool;
+    testConnection();
+  }
 
+  public void testConnection() {
     // test connections
     if (jedisPool != null) {
       try (Jedis jedis = jedisPool.getResource()) {
         // Test the connection to make sure configuration is right
-        jedis.ping();
+        jedis.ping(String.valueOf(System.currentTimeMillis()));
 
         final JedisPooled jedisPooled = obtainResource();
         jedisPooled.set("random_data", "0");
@@ -37,9 +40,6 @@ public class JedisPoolProvider implements Summoner<JedisPooled> {
         Ostrov.log_err("JedisPoolProvider : "+ex.getMessage());
       }
     }
-
-
-
   }
 
   @Override

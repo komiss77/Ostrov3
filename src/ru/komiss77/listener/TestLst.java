@@ -20,11 +20,9 @@ import java.util.Set;
 
 public class TestLst implements Listener {
 
-    private AfkBot bt;
- XYZ xyz;
- Set<XYZ> set = new HashSet<>();
 
-  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+
+ // @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void test(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
       if (e.getItem()==null) return;
@@ -67,8 +65,8 @@ public class TestLst implements Listener {
            p.sendMessage("§8TestListener - interact cancel!");
             
             if (e.getAction()==Action.RIGHT_CLICK_AIR ) {
-              RDS.sendMessage("ostrov", "ostrov");
-              RDS.sendMessage("arenadata", "arenadata");
+              //RDS.sendMessage("ostrov", "ostrov");
+              //RDS.sendMessage("arenadata", "arenadata");
             }
             if (e.getAction()==Action.RIGHT_CLICK_BLOCK ) {
 

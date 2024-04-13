@@ -12,17 +12,19 @@ public class test {
     
     public static void main(String[] args) {
 
-String data = "12345∫abcde∬ttt";
-      final int idx1 = data.indexOf("∫");
-      final int idx2 = data.indexOf(LocalDB.L_SPLIT);
-      final int valid = Integer.parseInt(data.substring(0, idx1));
-      final String owner = data.substring(idx1+1, idx2);
+String msg = "SK∫mg01∫∫РАБОТАЕТ∫0∫Острова∫SkyWorld∫РАБОТАЕТ∫∫";
+
+      final String[]s = msg.split("∫");
+
+      for (int i = 0; i < msg.length(); i++) {
+        log("i="+i+" s="+s[i]);
+      }
      /* StringBuilder sb=new StringBuilder();
       l.forEach( (s) -> {
         sb.append(s).append(",");
       });
       log (sb.toString());*/
-log("valid="+valid+" owner="+owner);
+//log("valid="+valid+" owner="+owner);
     }
     
 
