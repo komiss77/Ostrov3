@@ -79,7 +79,7 @@ public class GameSignEditor implements InventoryProvider {
                 return;
             }
             
-            for (ArenaInfo ai : gi.arenas.values()) {
+            for (ArenaInfo ai : gi.arenas()) {
                 final ItemStack is = new ItemBuilder(ai.mat)
                     .name(game.displayName)
                     .addLore("")

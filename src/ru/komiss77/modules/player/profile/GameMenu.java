@@ -99,7 +99,7 @@ public class GameMenu implements InventoryProvider {
 
                 if (game.menuSlot>0) {
                     content.set(game.menuSlot, ClickableItem.of( gi.getIcon(op), e-> {
-                        final ArenaInfo ai = gi.arenas.get(0);
+                        final ArenaInfo ai = gi.arenas().stream().findAny().get();//gi.arenas.get(0);
                         if (ai!=null) {
                             if (ai.server.equals(Ostrov.MOT_D)) {//(game == GM.GAME) {
                                 p.sendMessage("§6Вы и так уже на этом сервере!");

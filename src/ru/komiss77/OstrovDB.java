@@ -19,7 +19,9 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import ru.komiss77.enums.Table;
+import ru.komiss77.modules.games.ArenaInfo;
 import ru.komiss77.modules.games.GM;
+import ru.komiss77.modules.games.GameInfo;
 import ru.komiss77.version.Nms;
 
 
@@ -226,7 +228,18 @@ public class OstrovDB {
          +(int)(Runtime.getRuntime().freeMemory()/1024/1024)
          +"',`stamp`='"+ApiOstrov.currentTimeSec()+"',`ts`= NOW()+0 WHERE `serverId`='"+Ostrov.server_id+"'; ";
         executePstAsync(Bukkit.getConsoleSender(), querry);
-       
+
+
+      GameInfo gi = GM.getGameInfo(GM.GAME);
+      if (gi!=null) {
+          ArenaInfo ai = gi.arenas().stream().findAny().get();//gi.getArena(Ostrov.MOT_D);
+        if (ai!=null) {
+          ai.players = Bukkit.getOnlinePlayers().size();
+          ai.sendData();
+        }
+      }
+
+
       /*  PreparedStatement pst = null;
         try {
 //System.out.println("query="+"UPDATE  SET `online`='"+Bukkit.getOnlinePlayers().size()+"',`tps`='"+(int) MinecraftServer.getServer().recentTps[0]+"',`memory`='"+(int)(Runtime.getRuntime().maxMemory()/1024/1024 )+"',`memory_max`='"+(int)(Runtime.getRuntime().totalMemory()/1024/1024)+"',`stamp`='"+Main.Единое_время()+"' WHERE UPPER `id`='"+Main.id+"' ");                

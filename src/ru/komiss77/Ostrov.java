@@ -73,7 +73,7 @@ public class Ostrov extends JavaPlugin {
     @Override
     public void onEnable() {
         //первый инит синхронно, или плагины пишут состояние, когда еще нет соединения!!
-        OstrovDB.init(MOT_D.length()>3, false); //pay, авторизация - права не грузим. если ставить в onLoad то не может запустить async task!
+        OstrovDB.init(MOT_D.length()>3 && !MOT_D.startsWith("nb"), false); //pay, авторизация - права не грузим. если ставить в onLoad то не может запустить async task!
         Timer.init();
         
         if (MOT_D.equals("pay")) { // для режима обработки донатиков

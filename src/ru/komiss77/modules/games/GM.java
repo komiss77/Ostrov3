@@ -98,7 +98,7 @@ public final class GM {
         //  games.put(g, new GameInfo(g));
         //}
         for (GameInfo gi : games.values()) {
-          gi.arenas.clear();
+          gi.clear();
         }
         signs.clear();
         tsServer = 0;//.setTime(0);
@@ -140,17 +140,17 @@ public final class GM {
 
                 //if (gi!=null) {
 
-                    if (gi.game.type==ServerType.ONE_GAME) {
+                 //   if (gi.game.type==ServerType.ONE_GAME) {
                         
                         gi.update(
                           rs.getString("name"),
                           rs.getString("motd"),
                           rs.getInt("online")>=0 ? GameState.РАБОТАЕТ : GameState.ВЫКЛЮЧЕНА,
                           rs.getInt("online"),
-                          null, null, null, null
+                          "", "", "", ""
                         );
                     
-                    } else if (gi.game.type==ServerType.LOBBY) {
+                  /*  } else if (gi.game.type==ServerType.LOBBY) {
                         
                         ArenaInfo ai = gi.getArena(rs.getString("name"), rs.getString("motd"));
                         if (ai==null) {
@@ -162,10 +162,10 @@ public final class GM {
                           rs.getString("motd"),
                           rs.getInt("online")>=0 ? GameState.РАБОТАЕТ : GameState.ВЫКЛЮЧЕНА,
                           rs.getInt("online"),
-                          null, null, null, null
+                          "", "", "", ""
                         );
 
-                    }
+                    }*/
                 //}
               if (rs.getLong("ts") > tsServer) {//if (ts.compareTo( rs.getTimestamp("stamp") )<0) {//if (fromStamp < curr) { //запоминаем наибольший последний апдейт - в след.раз прогрузим с него
                 tsServer = rs.getLong("ts");
@@ -244,7 +244,7 @@ public final class GM {
             if (state == State.STARTUP || state == State.RELOAD) {//if (fromStamp==0) {
                 int a=0;
                 for (final GameInfo gi_ : games.values()) {
-                    a+=gi_.arenas.size();
+                    a+=gi_.count();
                 }
                 Ostrov.log_ok("§2GM - Загружены данные игр: "+games.size()+", арен: "+a);
               if (state == State.RELOAD) {//if (reload) {
@@ -353,7 +353,6 @@ CREATE TABLE `arenaData` (
       //e.printStackTrace();
     }
 
-
   }
 
 
@@ -450,12 +449,12 @@ CREATE TABLE `arenaData` (
       p.sendMessage("§cНет данных для игры "+game.displayName+"§r§c, пробуем подключиться наугад...");
       serv = game.defaultServer;
     } else {
-      if (gi.arenas.isEmpty()) {
+      if (gi.count()==0) {
         p.sendMessage("§cНе найдено арен для игры " + game.displayName + "§r§c, пробуем подключиться наугад...");
       } else {
         ArenaInfo arenaInfo = null;
         int max = -1;
-        for (ArenaInfo ai : gi.arenas.values()) {
+        for (ArenaInfo ai : gi.arenas()) {
           if (serverName != null && !ai.server.equalsIgnoreCase(serverName)) continue;
           if (ai.state == GameState.СТАРТ) {
             arenaInfo = ai;
@@ -470,7 +469,7 @@ CREATE TABLE `arenaData` (
         }
         if (arenaInfo == null) {
           //p.sendMessage("§cНе найдено арены, подходящей для быстрой игры, попробуйте найти на табличке!");
-          arenaInfo = gi.arenas.get(0);
+          arenaInfo = gi.arenas().stream().findAny().get();
           arena = arenaInfo.arenaName;
         }
       }
@@ -578,7 +577,7 @@ CREATE TABLE `arenaData` (
 
                 if ( gi.game.type==ServerType.ONE_GAME ) {
 
-                    ai = gi.arenas.get(0);
+                  ai = gi.getArena(serverName, arenaName);//ai = gi.arenas.get(gi.game);
                     if (ai==null) { //по идее, для больших создаётся нулевая арена автоматом в new GameInfo. Но для перестраховки проверяем.
                         Ostrov.log_err("loadGameSign -> Нет ArenaInfo для игры "+game+", табличка "+ loc_string);
                     }
@@ -615,7 +614,7 @@ CREATE TABLE `arenaData` (
         if (gi!=null) {
             ArenaInfo ai = null;
             if ( gi.game.type==ServerType.ONE_GAME ) {
-                ai = gi.arenas.get(0);
+              ai = gi.getArena(gameSign.server, gameSign.arena);//ai = gi.arenas.get(0);
                 //gi.arenas.get(0).signs.remove(locAsString);
             } else if ( gi.game.type==ServerType.ARENAS || gi.game.type==ServerType.LOBBY ) {
                 ai = gi.getArena(gameSign.server, gameSign.arena);
@@ -663,7 +662,7 @@ CREATE TABLE `arenaData` (
 
     public static ArenaInfo lookup(final String serverName, final String arenaMane) {
       for (GameInfo gi : games.values()) {
-        for (ArenaInfo ai : gi.arenas.values()) {
+        for (ArenaInfo ai : gi.arenas()) {
           if (serverName.isEmpty()) {
             if (ai.arenaName.equalsIgnoreCase(arenaMane)) {
               return ai;

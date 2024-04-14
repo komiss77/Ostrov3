@@ -60,10 +60,10 @@ public class ArenaSection implements InventoryProvider {
         if (gi == null) return;
         
         final Pagination pagination = content.pagination();
-        final ClickableItem[] ci = new ClickableItem[gi.arenas.size()];
+        final ClickableItem[] ci = new ClickableItem[gi.count()];
         
         
-        for (final ArenaInfo ai : gi.arenas.values()) {
+        for (final ArenaInfo ai : gi.arenas()) {
             
             ci[ai.slot] = ClickableItem.of( ai.getIcon(op)
                     , e-> {

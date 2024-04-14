@@ -877,12 +877,12 @@ public class ProfileManager {
 
                 } else {
                     GameInfo gi = GM.getGameInfo(game);
-                    if (gi == null || arenaPage * 36 > gi.arenas.size()) {
+                    if (gi == null || arenaPage * 36 > gi.count()) {
                         return;
                     }
                     ArenaInfo ai;
-                    for (int slot = arenaPage * 36; slot < gi.arenas.size(); slot++) {
-                        ai = gi.arenas.get(slot);
+                    for (int slot = arenaPage * 36; slot < gi.count(); slot++) {
+                        ai = gi.getArena(slot);
                         if (current.getContents().length <= slot) {
                             break;
                         }

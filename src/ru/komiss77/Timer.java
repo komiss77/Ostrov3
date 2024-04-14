@@ -1,10 +1,7 @@
 package ru.komiss77;
 
-import java.io.IOException;
-import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.BatchUpdateException;
 import java.util.Calendar;
 import java.util.concurrent.ConcurrentHashMap;
 import java.sql.Statement;
@@ -26,8 +23,6 @@ import ru.komiss77.listener.SpigotChanellMsg;
 import ru.komiss77.modules.Informator;
 import ru.komiss77.modules.player.mission.MissionManager;
 import ru.komiss77.modules.redis.RDS;
-import ru.komiss77.utils.ntptime.NTPUDPClient;
-import ru.komiss77.utils.ntptime.TimeInfo;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.games.GM;
 import ru.komiss77.utils.TCUtils;
@@ -248,7 +243,7 @@ public class Timer {
             RDS.heartbeats();
             if (second%43==0) {
               GM.getGames().stream().forEach( (gi -> {
-                gi.arenas.values().stream().filter( ai-> ai.server == Ostrov.MOT_D).forEach(ai -> ai.sendData());
+                gi.arenas().stream().filter( ai-> ai.server == Ostrov.MOT_D).forEach(ai -> ai.sendData());
               }));
             }
 

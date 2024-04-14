@@ -134,7 +134,7 @@ public class FigureListener implements Listener{
                     }   
                     if (gi.game.type==ServerType.ONE_GAME) {
                         p.closeInventory();
-                        p.performCommand("server "+gi.getServername());
+                        p.performCommand("server "+gi.game.defaultServer);
                     } else {
                         PM.getOplayer(p).menu.openArenaMenu(p, figure.game);
                     }
@@ -246,7 +246,7 @@ public class FigureListener implements Listener{
                         p.sendMessage(Ostrov.PREFIX+" §cИгра недоступна!");
                         return;
                     }   
-                    p.performCommand("server "+gi.getServername());
+                    p.performCommand("server "+gi.game.defaultServer);
                     break;
             }
             

@@ -198,12 +198,12 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
                 p.sendMessage("§5Нет данных для игры "+game.name()+" - пробуем подключиться к §e"+game.defaultServer);
                 serverName = game.defaultServer;
                 //return true;
-              } else if (gi.arenas.isEmpty()) {
+              } else if (gi.count()==0) {
                 p.sendMessage("§5Для игры §6"+game.name()+" §5не найдено арен - пробуем подключиться к §e"+game.defaultServer);
                 serverName = game.defaultServer;
                 //return true;
               } else {
-                serverName = gi.arenas.get(0).server;
+                serverName = gi.arenas().stream().findAny().get().server;//arenas.get(0).server;
               }
             }
 

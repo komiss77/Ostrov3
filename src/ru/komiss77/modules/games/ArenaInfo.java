@@ -34,8 +34,8 @@ public final class ArenaInfo {
     
     
     //создаётся при загрузке из мускул
-    public ArenaInfo(final GameInfo gameInfo, final String server, final String arenaName, final int level, final int reputation, final Material mat) {
-        this.slot=gameInfo.arenas.size();
+    public ArenaInfo(final GameInfo gameInfo, final String server, final String arenaName, final int level, final int reputation, final Material mat, final int slot) {
+        this.slot=slot;//gameInfo.arenas.size();
         this.mat = mat==null ? Material.BEDROCK : mat;
         this.gameInfo=gameInfo;
         this.server=server;
@@ -52,9 +52,9 @@ public final class ArenaInfo {
         .append(arenaName).append(LocalDB.W_SPLIT)
         .append(state.name()).append(LocalDB.W_SPLIT)
         .append(players).append(LocalDB.W_SPLIT)
-        .append(line0).append(" ").append(LocalDB.W_SPLIT)
-        .append(line1).append(" ").append(LocalDB.W_SPLIT)
-        .append(line2).append(" ").append(LocalDB.W_SPLIT)
+        .append(line0).append(LocalDB.W_SPLIT)
+        .append(line1).append(LocalDB.W_SPLIT)
+        .append(line2).append(LocalDB.W_SPLIT)
         .append(line3).append(" ").append(LocalDB.W_SPLIT)
         ;
       RDS.sendMessage("arenadata", sb.toString());
@@ -120,6 +120,8 @@ public final class ArenaInfo {
         if (!signs.isEmpty()) {
             GM.updateSigns(this);
         }
+
+        //sendData(); сеть уходит в зацикливание!Ё!!!
     }
 
 
