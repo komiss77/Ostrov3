@@ -7,12 +7,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import ru.komiss77.ApiOstrov;
-import ru.komiss77.Ostrov;
 import ru.komiss77.modules.bots.AfkBot;
+import ru.komiss77.modules.enchants.CustomEnchant;
 import ru.komiss77.modules.redis.RDS;
 import ru.komiss77.modules.world.XYZ;
-import ru.komiss77.version.Nms;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -25,17 +25,19 @@ public class TestLst implements Listener {
  // @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void test(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
-      if (e.getItem()==null) return;
+        final ItemStack it = e.getItem();
+        if (it == null) return;
 
-   // if (e.getItem().getType()==Material.WOODEN_PICKAXE) {
-    //  ApiOstrov.teleportSave(p, p.getLocation().clone().add(0,200,0), false);
-   //   p.sendMessage("teleportSave");
-   //   return;
-  //  }
-
-      if (!ApiOstrov.isLocalBuilder(p)) return;
+        if (!ApiOstrov.isLocalBuilder(p)) return;
 //Ostrov.log("PlayerInteractEvent "+e.getMaterial());
-        if (e.getItem().getType() == Material.DRAGON_BREATH) {
+
+        if (it.getType() == Material.ENCHANTED_BOOK) {
+          CustomEnchant.CHANNELING.level(it, 1, false);
+          p.getInventory().setItemInMainHand(it);
+          return;
+        }
+
+        if (it.getType() == Material.DRAGON_BREATH) {
           p.sendMessage("§8TestListener - interact cancel!");
           if (e.getClickedBlock() != null) {
             e.setCancelled(true);
@@ -60,7 +62,7 @@ public class TestLst implements Listener {
           });*/
         }
         
-        if (e.getItem().getType()==Material.WOODEN_PICKAXE) {
+        if (it.getType()==Material.WOODEN_PICKAXE) {
 //            e.setCancelled(true);
            p.sendMessage("§8TestListener - interact cancel!");
             

@@ -366,7 +366,7 @@ class EntityGroupView implements InventoryProvider {
         p.sendMessage("§cДолжно быть число!");
         return;
       }
-      final int r = Integer.valueOf(imput);
+      final int r = Integer.parseInt(imput);
       if (r<0 || r>100000) {
         p.sendMessage("§cот 0 до 100000!");
         return;
@@ -385,7 +385,7 @@ class EntityGroupView implements InventoryProvider {
         .open(p)
     ));
 
-    pagination.setItems(menuEntry.toArray(new ClickableItem[menuEntry.size()]));
+    pagination.setItems(menuEntry.toArray(new ClickableItem[0]));
     pagination.setItemsPerPage(36);
 
     if (!pagination.isLast()) {
@@ -435,7 +435,7 @@ class EntityTypeView implements InventoryProvider {
     final ArrayList<ClickableItem> menuEntry = new ArrayList<>();
 
 
-    final Map <Entity, Integer> entitys = new HashMap<>() ;
+    final Map <Entity, Integer> entitys = new HashMap<>();
     double d;
 
     if (radius>0) {
@@ -484,16 +484,14 @@ class EntityTypeView implements InventoryProvider {
             if (!ApiOstrov.isLocalBuilder(p, true)) return;
             switch (e.getClick()) {
               case LEFT -> p.teleport(entity);
-              case RIGHT -> {
-                SmartInventory.builder()
-                  . provider(new EntitySetup(entity))
-                  . size(6, 9)
-                  . title("§2Характеристики сущности").build()
-                  .open(p);
-              }
+              case RIGHT -> SmartInventory.builder()
+                .provider(new EntitySetup(entity))
+                .size(6, 9)
+                .title("§2Характеристики сущности").build()
+                .open(p);
               case SHIFT_LEFT -> entity.teleport(p);
               case SHIFT_RIGHT -> entity.remove();
-
+              default -> {}
             }
 
             if (e.getClick()!=ClickType.RIGHT) reopen(p, contents);

@@ -2,7 +2,6 @@ package ru.komiss77.modules.world;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.data.BlockData;
 import ru.komiss77.Ostrov;
 import ru.komiss77.notes.ThreadSafe;
 import ru.komiss77.utils.FastMath;
@@ -18,9 +17,6 @@ public final class LocFinder {
       (mat, y) -> LocationUtil.isPassable(mat),
       (mat, y) -> LocationUtil.isPassable(mat)
     };
-
-    private static final BlockData nt = Material.TORCH.createBlockData();
-    private static final BlockData st = Material.SOUL_TORCH.createBlockData();
 
     private final int minY;
     private final int maxY;

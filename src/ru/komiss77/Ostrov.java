@@ -96,7 +96,7 @@ public class Ostrov extends JavaPlugin {
 
         registerListeners();
         
-        Bukkit.getOnlinePlayers().stream().forEach(p -> PM.createOplayer(p));
+        Bukkit.getOnlinePlayers().stream().forEach(PM::createOplayer);
 
         LocalDB.init();// выполнится синхронно, если нет коннекта-подвиснет! выше есть для auth
 
