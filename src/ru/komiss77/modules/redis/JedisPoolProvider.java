@@ -31,9 +31,10 @@ public class JedisPoolProvider implements Summoner<JedisPooled> {
         // Test the connection to make sure configuration is right
         jedis.ping(String.valueOf(System.currentTimeMillis()));
 
-        final JedisPooled jedisPooled = obtainResource();
-        jedisPooled.set("random_data", "0");
-        jedisPooled.del("random_data");
+        try (final JedisPooled jedisPooled = obtainResource()) {
+          jedisPooled.set("random_data", "0");
+          jedisPooled.del("random_data");
+        }
         //Ostrov.log_ok("JedisPoolProvider ping responce : "+jedis.ping());
       } catch ( Exception ex) {//JedisConnectionException
         //ex.printStackTrace();

@@ -71,13 +71,7 @@ tasks {
   //https://imperceptiblethoughts.com/shadow/configuration/dependencies/#embedding-jar-files-inside-your-shadow-jar
   shadowJar {
     dependencies {
-      //exclude(dependency("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT"))
-      //exclude(dependency("org.apache.commons:commons-pool2:2.11.1"))
-      //exclude(dependency("org.apache.commons:commons-pool2:.*"))
-      //exclude(dependency("org.json:json:20220320"))
       exclude(dependency("org.json:json:.*"))
-      //exclude(dependency("org.slf4j:slf4j-api:1.7.36"))
-      //exclude(dependency("org.slf4j:slf4j-api:2.0.9"))
       exclude(dependency("org.slf4j:slf4j-api:.*"))
       exclude(dependency("com.google.code.gson:gson:.*"))
     }
@@ -86,59 +80,3 @@ tasks {
     //minimize()
   }
 }
-
-
-
-
-
-
-/*
-dependencies {
-    compileOnly("io.papermc.paper", "paper-api", "1.20.1-R0.1-SNAPSHOT")
-
-    implementation("io.papermc", "paperlib", "1.0.8")
-    implementation("xyz.jpenilla", "legacy-plugin-base", "0.0.1+98-SNAPSHOT")
-    implementation("org.bstats", "bstats-bukkit", "3.0.2")
-
-    implementation(platform("cloud.commandframework:cloud-bom:1.8.4"))
-    implementation("cloud.commandframework", "cloud-paper")
-    implementation("cloud.commandframework", "cloud-minecraft-extras")
-
-    implementation("org.incendo.interfaces", "interfaces-paper", "1.0.0-SNAPSHOT")
-
-    compileOnly("com.github.MilkBowl", "VaultAPI", "1.7.1")
-    compileOnly("net.essentialsx", "EssentialsX", "2.20.1") {
-        isTransitive = false
-    }
-    compileOnly("org.checkerframework", "checker-qual", "3.40.0")
-    compileOnly("com.sk89q.worldguard", "worldguard-bukkit", "7.0.9") {
-        exclude("org.bukkit")
-    }
-    compileOnly("com.sk89q.worldedit", "worldedit-bukkit", "7.2.17")
-}
- */
-
-
-
-
-/*processResources {
-    filteringCharset = Charsets.UTF_8.name() // We want UTF-8 for everything
-    val props = mapOf(
-      "name" to project.name,
-      "version" to project.version,
-      "description" to project.description,
-      "apiVersion" to "1.20"
-    )
-    inputs.properties(props)
-    filesMatching("plugin.yml") {
-      expand(props)
-    }
-}*/
-
-/*
-reobfJar {
-  // This is an example of how you might change the output location for reobfJar. It's recommended not to do this
-  // for a variety of reasons, however it's asked frequently enough that an example of how to do it is included here.
-  outputJar.set(layout.buildDirectory.file("libs/PaperweightTestPlugin-${project.version}.jar"))
-}
- */

@@ -1,12 +1,5 @@
 package ru.komiss77.modules.redis;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.bukkit.Bukkit;
@@ -16,12 +9,20 @@ import redis.clients.jedis.providers.PooledConnectionProvider;
 import ru.komiss77.Initiable;
 import ru.komiss77.Ostrov;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 //Redis Database, база данных Redis) для организации постоянного хранения снепшотов (снимков) данных
 // Установка, настройка и работа с Redis https://www.dmosk.ru/miniinstruktions.php?mini=redis-ubuntu
 // https://github.com/redis/jedis
 
 public class RDS implements Initiable {
-  public final static int PROXY_TIMEOUT = 30;
+  public static final int PROXY_TIMEOUT = 30;
   public static JedisPoolProvider poolProvider;
   //protected static PubSubListener pubSubListener;
   protected static Subscriber subscriber;
@@ -31,7 +32,7 @@ public class RDS implements Initiable {
     try {
       if (ip.equals(InetAddress.getLocalHost().getHostAddress())) {
         ip = "127.0.0.1";
-      };
+      }
     } catch (UnknownHostException ex) {
       Ostrov.log_err("RDS detect ip : "+ex.getMessage());
     }
@@ -85,58 +86,57 @@ public class RDS implements Initiable {
     //poolConfig.setNumTestsPerEvictionRun(3);
     //poolConfig.setBlockWhenExhausted(true);
 
-    final JedisPool jedisPool = new JedisPool(poolConfig, ip, 6379, 5000, "default", "redis", false);
-    final GenericObjectPoolConfig<Connection> connectionGenericObjectPoolConfig = new GenericObjectPoolConfig<>();
-    poolConfig.setMaxTotal(10);
-    poolConfig.setBlockWhenExhausted(true);
+    try (final JedisPool jedisPool = new JedisPool(poolConfig, ip, 6379, 5000, "default", "redis", false)) {
 
-    final HostAndPort hostAndPort = new HostAndPort(ip, 6379);
-    final DefaultJedisClientConfig jedisClientConfig = DefaultJedisClientConfig.builder()
-      .user("default")
-      .password("redis")
-      .timeoutMillis(5000)
-      .ssl(false)
-      .build();
-    final ConnectionFactory connectionFactory = new ConnectionFactory(hostAndPort, jedisClientConfig);
-    final PooledConnectionProvider pooledConnectionProvider = new PooledConnectionProvider(connectionFactory, connectionGenericObjectPoolConfig);
+      final GenericObjectPoolConfig<Connection> connectionGenericObjectPoolConfig = new GenericObjectPoolConfig<>();
+      poolConfig.setMaxTotal(10);
+      poolConfig.setBlockWhenExhausted(true);
 
-    poolProvider = new JedisPoolProvider(pooledConnectionProvider, jedisPool);
+      final HostAndPort hostAndPort = new HostAndPort(ip, 6379);
+      final DefaultJedisClientConfig jedisClientConfig = DefaultJedisClientConfig.builder()
+        .user("default")
+        .password("redis")
+        .timeoutMillis(5000)
+        .ssl(false)
+        .build();
+      final ConnectionFactory connectionFactory = new ConnectionFactory(hostAndPort, jedisClientConfig);
+      final PooledConnectionProvider pooledConnectionProvider = new PooledConnectionProvider(connectionFactory, connectionGenericObjectPoolConfig);
 
-    new RedisTask<Void>() {
-      @Override
-      public Void unifiedJedisTask(UnifiedJedis unifiedJedis) {
+      poolProvider = new JedisPoolProvider(pooledConnectionProvider, jedisPool);
 
-        String info = new String((byte[]) unifiedJedis.sendCommand(Protocol.Command.INFO));
-        for (String s : info.split("\r\n")) {
-          if (s.startsWith("redis_version:")) {
-            String version = s.split(":")[1];
-            Ostrov.log("§aRedis server version: §b" + version);
-            long uuidCacheSize = unifiedJedis.hlen("uuid-cache");
-            if (uuidCacheSize > 750000) {
-              Ostrov.log("Looks like you have a really big UUID cache! Run https://github.com/ProxioDev/Brains");
+      new RedisTask<Void>() {
+        @Override
+        public Void unifiedJedisTask(final UnifiedJedis unifiedJedis) {
+          final String info = new String((byte[]) unifiedJedis.sendCommand(Protocol.Command.INFO));
+          for (final String s : info.split("\r\n")) {
+            if (s.startsWith("redis_version:")) {
+              final String version = s.split(":")[1];
+              Ostrov.log("§aRedis server version: §b" + version);
+              final long uuidCacheSize = unifiedJedis.hlen("uuid-cache");
+              if (uuidCacheSize > 750000) {
+                Ostrov.log("Looks like you have a really big UUID cache! Run https://github.com/ProxioDev/Brains");
+              }
+              subscribe();
+              break;
             }
-            subscribe();
-            break;
           }
-        }
 
-        if (unifiedJedis.hexists("heartbeats", Ostrov.MOT_D)) {
-          try {
-            long value = Long.parseLong(unifiedJedis.hget("heartbeats", Ostrov.MOT_D));
-            long redisTime = getRedisTime(unifiedJedis);
-            if (redisTime < value + PROXY_TIMEOUT) {
-              Ostrov.log_err("You have launched a possible impostor Velocity / Bungeecord instance. Another instance is already running.");
-              Ostrov.log_err("For data consistency reasons, RedisBungee will now disable itself.");
-              Ostrov.log_err("If this instance is coming up from a crash, create a file in your RedisBungee plugins directory with the name 'restarted_from_crash.txt' and RedisBungee will not perform this check.");
+          if (unifiedJedis.hexists("heartbeats", Ostrov.MOT_D)) {
+            try {
+              final long value = Long.parseLong(unifiedJedis.hget("heartbeats", Ostrov.MOT_D));
+              final long redisTime = getRedisTime(unifiedJedis);
+              if (redisTime < value + PROXY_TIMEOUT) {
+                Ostrov.log_err("You have launched a possible impostor Velocity / Bungeecord instance. Another instance is already running.");
+                Ostrov.log_err("For data consistency reasons, RedisBungee will now disable itself.");
+                Ostrov.log_err("If this instance is coming up from a crash, create a file in your RedisBungee plugins directory with the name 'restarted_from_crash.txt' and RedisBungee will not perform this check.");
+              }
+            } catch (NumberFormatException ignored) {
             }
-          } catch (NumberFormatException ignored) {
           }
+          return null;
         }
-
-        return null;
-      }
-    }.execute();
-
+      }.execute();
+    }
   }
 
   protected static void subscribe () {
@@ -245,8 +245,9 @@ public class RDS implements Initiable {
 
 
   private static Long getRedisTime(UnifiedJedis unifiedJedis) {
-    List<Object> data = (List<Object>) unifiedJedis.sendCommand(Protocol.Command.TIME);
-    List<String> times = new ArrayList<>();
+    @SuppressWarnings("unchecked")
+    final List<Object> data = (List<Object>) unifiedJedis.sendCommand(Protocol.Command.TIME);
+    final List<String> times = new ArrayList<>();
     data.forEach((o) -> times.add(new String((byte[])o)));
     return Long.parseLong(times.get(0));//getRedisTime(times);
   }

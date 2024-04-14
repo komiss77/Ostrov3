@@ -1,8 +1,5 @@
 package ru.komiss77.modules.redis;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
@@ -10,9 +7,12 @@ import ru.komiss77.LocalDB;
 import ru.komiss77.Ostrov;
 import ru.komiss77.enums.Game;
 import ru.komiss77.enums.GameState;
-import ru.komiss77.listener.SpigotChanellMsg;
 import ru.komiss77.modules.games.GM;
 import ru.komiss77.modules.games.GameInfo;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Subscriber implements Runnable {
 
@@ -21,7 +21,7 @@ public class Subscriber implements Runnable {
     private static final Set<String> addedChannels;
 
     static {
-      addedChannels = new HashSet<String>();
+      addedChannels = new HashSet<>();
       jpsh = new JedisPubSubHandler();
     }
 
@@ -77,7 +77,7 @@ public class Subscriber implements Runnable {
 
 }
 
-class JedisPubSubHandler  extends JedisPubSub {//BinaryJedisPubSub {
+class JedisPubSubHandler extends JedisPubSub {//BinaryJedisPubSub {
   @Override
   //public void onMessage(byte[] channel, byte[] message) {
   public void onMessage(final String channelName, final String msg) {
@@ -105,6 +105,8 @@ class JedisPubSubHandler  extends JedisPubSub {//BinaryJedisPubSub {
           } else {
             Ostrov.log_err("RedisLst arenadata msg.length != 9 : " + msg);
           }
+          break;
+        default:
           break;
       }
 

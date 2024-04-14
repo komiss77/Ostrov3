@@ -491,7 +491,11 @@ public class ItemBuilder {
                   if (meta == null) meta = item.getItemMeta();
                   final EnchantmentStorageMeta enchantedBookMeta = (EnchantmentStorageMeta) meta;
                   for (final Map.Entry<Enchantment, Integer> en : enchants.entrySet()) {//ignoreLevelRestriction
-                      enchantedBookMeta.addStoredEnchant(en.getKey(), en.getValue(), false);
+                    if (en.getKey() instanceof final CustomEnchant ce) {
+                      ce.level(meta, en.getValue(), false);
+                      continue;
+                    }
+                    enchantedBookMeta.addStoredEnchant(en.getKey(), en.getValue(), false);
                   }
                 }
                 return item;
@@ -502,16 +506,15 @@ public class ItemBuilder {
         if (enchants!=null && !enchants.isEmpty()) {
           if (meta == null) meta = item.getItemMeta();
           for (final Map.Entry<Enchantment, Integer> en : enchants.entrySet()) {
-            final Enchantment e = en.getKey();
-              try {
-                  if (e instanceof final CustomEnchant ce) {
-                    ce.level(meta, en.getValue(), false);
-                    continue;
-                  }
-                  meta.addEnchant(e, enchants.get(e), true);
-              } catch (IllegalArgumentException ex) {
-                  Ostrov.log_err("ItemBuilder: невозможно добавить чары "+en.getKey().getKey()+" к предмету "+item.getType().toString()+" : "+ex.getMessage());
-              }
+            if (en.getKey() instanceof final CustomEnchant ce) {
+              ce.level(meta, en.getValue(), false);
+              continue;
+            }
+            meta.addEnchant(en.getKey(), en.getValue(), true);
+            /*try {
+            } catch (IllegalArgumentException ex) {
+                Ostrov.log_err("ItemBuilder: невозможно добавить чары "+en.getKey().getKey()+" к предмету "+item.getType().toString()+" : "+ex.getMessage());
+            }*/
           }
         }
 
