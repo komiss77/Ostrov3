@@ -131,6 +131,8 @@ public class ItemUtils {
   }
 
 
+
+
   public enum Texture {
     nextPage("c2f910c47da042e4aa28af6cc81cf48ac6caf37dab35f88db993accb9dfe516"),
     previosPage("f2599bd986659b8ce2c4988525c94e19ddd39fad08a38284a197f1b70675acc"),
@@ -1323,6 +1325,21 @@ public class ItemUtils {
 
   public static boolean isItemA(final ItemStack is, final ItemClass cls) {
     return cls.has(is == null ? Material.AIR : is.getType());
+  }
+
+  public static boolean isMineCart(final Material type) {
+    switch (type) {
+      case MINECART, CHEST_MINECART, FURNACE_MINECART, TNT_MINECART, HOPPER_MINECART, COMMAND_BLOCK_MINECART : return true;
+      default: return false;
+    }
+  }
+
+  public static boolean isSpawnEgg(final Material type) {
+    //switch (type) { пока лень забивать енумы
+   //   case EGG, : return true;
+    //  default: return false;
+    //}
+    return type.name().endsWith("_EGG");
   }
 
 }

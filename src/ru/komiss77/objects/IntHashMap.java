@@ -200,24 +200,33 @@ public class IntHashMap<V> implements Cloneable, Serializable
    *         contains no mapping for this key.
    * @see #put(int, Object)
    */
-  public V get(int key)
-  {
+  public V get(int key) {
     int i = indexFor(key, table.length);
     Entry<V> e = table[i];
-    while (true)
-    {
-      if (e == null)
-      {
+    while (true) {
+      if (e == null) {
         return null;
       }
-      if (key == e.key)
-      {
+      if (key == e.key) {
         return e.value;
       }
       e = e.next;
     }
   }
 
+  public V getOrDefault(int key, V defaultValue) {
+    int i = indexFor(key, table.length);
+    Entry<V> e = table[i];
+    while (true) {
+      if (e == null) {
+        return defaultValue;
+      }
+      if (key == e.key) {
+        return e.value;
+      }
+      e = e.next;
+    }
+  }
   /**
    * Returns <tt>true</tt> if this map contains a mapping for the specified key.
    * 

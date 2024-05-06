@@ -50,8 +50,8 @@ public class NbtfindCmd implements CommandExecutor {
             }
 
 
-                    Bukkit.getOnlinePlayers().stream().forEach((p) -> {
-                        NbtLst.rebuildInventoryContrnt(p);
+                    Bukkit.getOnlinePlayers().stream().forEach( (p) -> {
+                        //NbtLst.rebuildInventoryContrnt(p);
                         
                       /*  for (int i=0; i<p.getInventory().getContents().length; i++) {
                             ItemStack item = p.getInventory().getContents()[i];

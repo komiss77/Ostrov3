@@ -1,29 +1,28 @@
 package ru.komiss77.listener;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
 import com.destroystokyo.paper.entity.ai.GoalType;
 import com.google.common.collect.ArrayListMultimap;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import net.kyori.adventure.text.Component;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Sign;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Levelled;
+import org.bukkit.block.sign.Side;
+import org.bukkit.block.sign.SignSide;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -34,7 +33,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 import ru.komiss77.ApiOstrov;
@@ -44,16 +46,20 @@ import ru.komiss77.hook.WGhook;
 import ru.komiss77.modules.bots.BotEntity;
 import ru.komiss77.modules.bots.BotManager;
 import ru.komiss77.modules.games.GM;
+import ru.komiss77.modules.menuItem.MenuItemsManager;
 import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.player.PM;
+import ru.komiss77.objects.IntHashMap;
 import ru.komiss77.utils.EntityUtil;
 import ru.komiss77.utils.EntityUtil.EntityGroup;
 import ru.komiss77.utils.ItemUtils;
+import ru.komiss77.utils.LocationUtil;
 import ru.komiss77.utils.TCUtils;
 import ru.komiss77.version.Nms;
 
-
+//https://github.com/ds58/Panilla
 //просто скинул сюда всё из двух мелких плагинов
+
 public class ArcaimLst implements Listener {
 
     private static final String admin = "komiss77";
@@ -61,11 +67,130 @@ public class ArcaimLst implements Listener {
     public ArcaimLst() {
         BotManager.regSkin(admin);
     }
+    public static final NamespacedKey key;
+    public static final int MAX_CHUNK_PULSES_PER_SEC = 50;
+    private static final IntHashMap<RC> redstoneChunkClocks;
+    private static final BukkitTask task;
+
+    static {
+      key = new NamespacedKey(Ostrov.instance, "redstoneclock");
+      redstoneChunkClocks = new IntHashMap<>();
+      task =  new BukkitRunnable() {
+        @Override
+        public void run() {
+          if (!redstoneChunkClocks.isEmpty()) {
+            redstoneChunkClocks.values().stream().forEach( rc -> {
+              rc.second++; //надо считать внутренние секунды, илил если серв в лагах то таймштампы дают меньше секунд
+              if (rc.second==6) { //каждые 5 сек. обновление счётчика для нового подсчёта
+                rc.second = 0;
+                rc.count = 0;
+              }
+            });
+            redstoneChunkClocks.entrySet().removeIf(entry -> entry.getValue().second > 6);
+          }
+        }}.runTaskTimer(Ostrov.instance, 7, 20);
+    }
+
+
+
+
+  // *************** RedstoneClockController END ***************
+  @EventHandler(priority = EventPriority.LOWEST)
+  public void redstone(BlockRedstoneEvent e) {
+    if ( e.getOldCurrent() == 0 ) { //CheckTPS.isTpsOK() &&
+      check(e.getBlock());
+    }
+  }
+
+  @EventHandler
+  public void pistonExtend(BlockPistonExtendEvent e) {
+    check(e.getBlock());
+  }
+  // @EventHandler
+  // public void ObserverCuller(BlockPhysicsEvent e) {
+  //  check(e.getBlock());
+//  }
+
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  public void blockBreak(BlockBreakEvent e) {
+    if (e.getBlock().getType() == Material.WARPED_SIGN ) {
+      Sign s = (Sign) e.getBlock().getState();
+//Ostrov.log_warn("breack "+e.getBlock().getType()+" has key?"+s.getPersistentDataContainer().has(key));
+      if (s.getPersistentDataContainer().has(key)) {
+        final Material mat = Material.matchMaterial(s.getPersistentDataContainer().get(key, PersistentDataType.STRING));
+//Ostrov.log_warn("mat="+mat);
+        if (mat!=null) {
+          e.getBlock().setType(mat);
+          e.setCancelled(true);
+          //e.setDropItems(false);
+         // e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), new ItemStack(mat));
+        }
+      }
+    }
+  }
+
+  private void check (final Block b) {
+    int cLoc = LocationUtil.cLoc(b.getLocation());
+    RC chunkRc = redstoneChunkClocks.get(cLoc);;
+    if (chunkRc==null) {
+      redstoneChunkClocks.put(cLoc, new RC());
+    } else {
+      chunkRc.count++;
+      //int sec = Timer.getTime() - chunkRc.stamp;
+      if (chunkRc.second ==5) { //один раз в 5 секунд подсчитываем среднюю импульсность
+//Ostrov.log_warn("CHUNK ARC cLoc="+cLoc+" count="+chunkRc.count+" avg="+(chunkRc.count/sec));
+        if (chunkRc.count / 5 > MAX_CHUNK_PULSES_PER_SEC) { //в секунду в среднем импульсов больше лимита
+          chunkRc.count = 0;//Timer.redstoneChunkClocks.remove(cLoc); не удалять rc, только перезапуск счётчика!
+          Ostrov.log_warn("CHUNK RC REMOVE "+b.getType().name()+" at "+LocationUtil.toString(b.getLocation()));
+          remove(b); //на 5-й секунде проредит механизмы
+        }// else { //сброс для пересчёта в след. 5 сек.
+        //  chunkRc.stamp = Timer.getTime();
+        //  chunkRc.count = 0;
+        //}
+      } //else if (sec>5) {
+       // chunkRc.second = 0;//stamp = Timer.getTime();
+      //  chunkRc.count = 0;
+      //}
+    }
+  }
+  private static void remove (final Block b) {
+    if (Tag.ALL_SIGNS.isTagged(b.getType())) return; //уже могла поставиться в этом тике
+    final String oldMat = b.getType().name();
+    b.setType(Material.AIR);
+    Ostrov.sync( () -> {
+      b.setType(Material.WARPED_SIGN);
+      final Sign sign = (Sign) b.getState();
+      SignSide side = sign.getSide(Side.FRONT);
+      side.line(0, Component.text("§4Чанк перегружен"));
+      side.line(1, Component.text("§4механизмами."));
+      side.line(2, Component.text("§6(Сломай табличку-"));
+      side.line(3, Component.text("§6вернём предмет)"));
+      side = sign.getSide(Side.BACK);
+      side.line(0, Component.text("§4Чанк перегружен"));
+      side.line(1, Component.text("§4механизмами."));
+      side.line(2, Component.text("§6(Сломай табличку-"));
+      side.line(3, Component.text("§6вернём предмет)"));
+      sign.getPersistentDataContainer().set(key, PersistentDataType.STRING, oldMat );
+//Ostrov.log_warn("setdata "+oldMat);
+      sign.update(false, false);
+    },1);
+
+  }
+
+  public class RC {
+    public int second, count;//, numberOfClock, status;
+    //public RC() {
+     // stamp = Timer.getTime();
+    //}
+  }
+// *************** RedstoneClockController END ***************
+
+
+
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
     public static void onInteract(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
-
         if (p.getGameMode() == GameMode.SPECTATOR && (e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK)) {
             if (p.getOpenInventory().getType() != InventoryType.CHEST) {
               if (PM.getOplayer(p.getUniqueId()).setup==null) {
@@ -77,9 +202,9 @@ public class ArcaimLst implements Listener {
 
 
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+   // @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlace(final PlayerBucketEmptyEvent e) {
-        if (ApiOstrov.isLocalBuilder(e.getPlayer(), false)) {
+        if (ApiOstrov.isLocalBuilder(e.getPlayer(), false) || !Ostrov.wg) {
             return;
         }
         //if (nobuild.wg.getRegionManager(e.getPlayer().getWorld()).getApplicableRegions(e.getBlock().getLocation()).size()==0 ) {
@@ -94,13 +219,24 @@ public class ArcaimLst implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockFromTo(final BlockFromToEvent e) {
         if (e.getBlock().getType() == Material.LAVA || e.getBlock().getType() == Material.WATER) {
+//Ostrov.log_warn("BlockFromToEvent "+e.getBlock().getType()+" to "+e.getToBlock().getType());
+          BlockData bd = e.getBlock().getBlockData();
+          if (bd instanceof Levelled lv) { //разливаться только с уменьшением (не давать столбы) и не расползаться в стороны по воздуху
+//Ostrov.log_warn("lvl="+lv.getLevel()+" min="+lv.getMinimumLevel()+" max="+lv.getMaximumLevel());
+            if ( (lv.getLevel()==0 &&  e.getToBlock().getRelative(BlockFace.DOWN).getType()==Material.AIR) ||
+              (lv.getLevel()!=0 &&  e.getToBlock().getRelative(BlockFace.DOWN).getType()!=Material.AIR) ) {
+              e.setCancelled(true);
+            }
+            return;
+          }
+          /*if (!Ostrov.wg) return;
             final ApplicableRegionSet fromRegionSet = WGhook.getRegionsOnLocation(e.getBlock().getLocation());
             final ApplicableRegionSet toRegionSet = WGhook.getRegionsOnLocation(e.getToBlock().getLocation());
             if (fromRegionSet.size() == 1 && toRegionSet.size() == 1) { //из привата в приват, обычная ситуация
                 e.setCancelled(!fromRegionSet.getRegions().contains(toRegionSet.getRegions().iterator().next()));
             } else {
                 e.setCancelled(e.getFace() != BlockFace.DOWN && e.getToBlock().getRelative(BlockFace.DOWN).getType().isAir());
-            }
+            }*/
         }
     }
 
@@ -127,7 +263,7 @@ public class ArcaimLst implements Listener {
 
             default -> {
                  if (e.getSpawnReason()==CreatureSpawnEvent.SpawnReason.DISPENSE_EGG || e.getSpawnReason()==CreatureSpawnEvent.SpawnReason.EGG) {
-                     e.setCancelled(WGhook.getRegionsOnLocation(e.getEntity().getLocation()).size() == 0);
+                   if (Ostrov.wg)  e.setCancelled(WGhook.getRegionsOnLocation(e.getEntity().getLocation()).size() == 0);
                 }
             }
                 
@@ -144,46 +280,78 @@ public class ArcaimLst implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onExplode(final EntityExplodeEvent e) {
-        e.blockList().removeIf(block -> WGhook.getRegionsOnLocation(block.getLocation()).size() == 0);
+        if (Ostrov.wg) e.blockList().removeIf(block -> WGhook.getRegionsOnLocation(block.getLocation()).size() == 0);
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onCreative(final InventoryCreativeEvent e) {
-        final ItemStack cr = e.getCursor();
-        if (ItemUtils.isBlank(cr, true) || ApiOstrov.isLocalBuilder(e.getWhoClicked(), true)) return;
-        final ItemMeta met = cr.getItemMeta();
-        switch (cr.getType()) {
+        final ItemStack cursor = e.getCursor();
+
+        if (ItemUtils.isBlank(cursor, true)
+          || ApiOstrov.isLocalBuilder(e.getWhoClicked(), false)
+        || MenuItemsManager.isSpecItem(cursor) ) return;
+
+        final ItemMeta meta = cursor.getItemMeta();
+        boolean modify = false;
+
+        switch (cursor.getType()) {
+
             case POTION, SPLASH_POTION, LINGERING_POTION, TIPPED_ARROW:
-                if (met instanceof final PotionMeta pm) {
-                    final List<PotionEffect> bad_effects = new ArrayList<>();
+                if (meta instanceof final PotionMeta pm) {
+                    final List<PotionEffect> bad = new ArrayList<>();
+                    int i = 0;
                     for (PotionEffect effect : pm.getCustomEffects()) {
-                        if (effect.getAmplifier() > 10) {
-                            bad_effects.add(effect);
+//Ostrov.log_warn("effect="+effect+" : "+effect.getAmplifier()+" : "+effect.getDuration());
+                        if (effect.getAmplifier() > 10 || effect.getDuration()>9600 || i>=8) { // 8мин*60*20 + лимит 8 эффектов
+                          bad.add(effect.withAmplifier(10).withDuration(9600));
+                          i++;
+                          modify = true;
                         }
                     }
-                    for (PotionEffect potionEffect : pm.getCustomEffects()) {
-                        if (bad_effects.contains(potionEffect)) {
-                            pm.removeCustomEffect(potionEffect.getType());
-                            PotionEffect pf = new PotionEffect(potionEffect.getType(), potionEffect.getDuration(), 10, potionEffect.isAmbient(), potionEffect.hasParticles(), potionEffect.hasIcon());
-                            pm.addCustomEffect(pf, true);
-                        }
+                    i = 0;
+                    for (PotionEffect pe : bad) {
+//Ostrov.log_warn("bad="+bad);
+                      if (i<8) { //
+                        pm.addCustomEffect(pe, true); //overwrite перекрывает плохой
+                      } else {
+                        pm.removeCustomEffect(pe.getType());
+                      }
+                      i++;
                     }
+                   // for (PotionEffect potionEffect : pm.getCustomEffects()) {
+                   //     if (bad_effects.contains(potionEffect)) {
+                   //         pm.removeCustomEffect(potionEffect.getType());
+                    //        PotionEffect pf = new PotionEffect(potionEffect.getType(), potionEffect.getDuration(), 10, potionEffect.isAmbient(), potionEffect.hasParticles(), potionEffect.hasIcon());
+                    //        pm.addCustomEffect(pf, true);
+                   //     }
+                    //}
                 }
-                met.setAttributeModifiers(ArrayListMultimap.create());
-                cr.setItemMeta(met);
+                if (modify) {
+                  meta.setAttributeModifiers(ArrayListMultimap.create());
+                  cursor.setItemMeta(meta);
+                }
                 break;
+
             case ENCHANTED_BOOK:
-                if (met instanceof EnchantmentStorageMeta) {
+                if (meta instanceof EnchantmentStorageMeta) {
                     for (Map.Entry<Enchantment, Integer> en :
-                        ((EnchantmentStorageMeta) met).getStoredEnchants().entrySet()) {
-                        if (en.getValue() > 10) en.setValue(10);
+                        ((EnchantmentStorageMeta) meta).getStoredEnchants().entrySet()) {
+                        if (en.getValue() > en.getKey().getMaxLevel()) {
+                          en.setValue(10);
+                          modify = true;
+                        }
                     }
                 }
+                if (modify) {
+                  cursor.setItemMeta(meta);
+                }
                 break;
+
             default:
-                e.setCursor(new ItemStack(cr.getType(), cr.getAmount()));
-                e.getWhoClicked().sendMessage(Ostrov.PREFIX + "§cДанные предмета были очищены!");
-                break;
+              //e.setCursor(new ItemStack(cursor.getType(), cursor.getAmount()));
+              e.setCursor(NbtLst.rebuild(cursor));
+              //e.getWhoClicked().sendMessage(Ostrov.PREFIX + "§cДанные предмета были очищены!");
+              break;
         }
     }
 
@@ -324,6 +492,65 @@ public class ArcaimLst implements Listener {
       return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
     }
   }
+
+
+  // if (e.getBlock().getType() == Material.COMPARATOR
+  //   || e.getBlock().getType() == Material.REDSTONE_WIRE
+  //   || e.getBlock().getType() == Material.REPEATER
+  //   || e.getBlock().getType() == Material.OBSERVER) {
+
+       /* long coord = LocationUtil.asLong(e.getBlock().getLocation());
+        RC rc = Timer.redstoneClocks.get(coord);
+        if (rc==null) {
+          Timer.redstoneClocks.put(coord, new RC());
+        } else {
+          rc.count++;
+          int sec = Timer.getTime() - rc.stamp;
+          if (sec >5) { //один раз в 5 секунд подсчитываем среднюю импульсность
+Ostrov.log_warn("ARC l="+coord+" count="+rc.count+" avg="+(rc.count/sec));
+            if (rc.count / 5 > MAX_PULSES_PER_SEC) { //в секунду в среднем импульсов больше лимита
+              Timer.redstoneClocks.remove(coord);
+Ostrov.log_err("REMOVE!!!! "+e.getBlock().getType());
+            } else { //сброс для пересчёта в след. 5 сек.
+              rc.stamp = Timer.getTime();
+              rc.count = 0;
+            }
+          }
+        }*/
+
+        /*int cLoc = LocationUtil.cLoc(e.getBlock().getLocation());
+        RC chunkRc = Timer.redstoneChunkClocks.get(cLoc);;
+        if (chunkRc==null) {
+          Timer.redstoneChunkClocks.put(cLoc, new RC());
+        } else {
+          chunkRc.count++;
+          int sec = Timer.getTime() - chunkRc.stamp;
+          if (sec >5) { //один раз в 5 секунд подсчитываем среднюю импульсность
+Ostrov.log_warn("CHUNK ARC cLoc="+cLoc+" count="+chunkRc.count+" avg="+(chunkRc.count/sec));
+            if (chunkRc.count / 5 > MAX_PULSES_PER_SEC) { //в секунду в среднем импульсов больше лимита
+              Timer.redstoneChunkClocks.remove(cLoc);
+              remove(e.getBlock());
+Ostrov.log_err("CHUNK RC REMOVE!!!! "+e.getBlock().getType());
+            } else { //сброс для пересчёта в след. 5 сек.
+              chunkRc.stamp = Timer.getTime();
+              chunkRc.count = 0;
+            }
+          }
+        }*/
+         /* RC rc = Land.getRedstone(e.getBlock());
+          if (rc == null) {
+            clocks.put(l, new RC());
+            return;
+          } else {
+            if (e.getBlock().getType() == Material.OBSERVER) {
+              check(redstoneClock, e.getBlock(), false);
+            } else {
+              check(redstoneClock, e.getBlock(), true);
+            }
+          }*/
+  //}
+
+
 
 
 

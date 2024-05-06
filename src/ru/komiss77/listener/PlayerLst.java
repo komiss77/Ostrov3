@@ -67,11 +67,13 @@ public class PlayerLst implements Listener {
         //final String[] args = e.getMessage().replaceFirst("/", "").split(" ");
        // final String cmd = args[0].toLowerCase();
         final Player p = e.getPlayer();
-        if (ApiOstrov.isLocalBuilder(p)) {
-            final String cmd = e.getMessage().replaceFirst("/", "");
+        if (ApiOstrov.canBeBuilder(p)) {
 //            if (cmd.startsWith("builder") || cmd.startsWith("gm")) return;
             final Oplayer op = PM.getOplayer(p);
-            op.lastCommand = cmd;
+            if (op.setup==null) { //запоминаем только если не активен билдер!
+              final String cmd = e.getMessage().replaceFirst("/", "");
+              op.lastCommand = cmd;
+            }
         }
     }
 

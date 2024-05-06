@@ -19,10 +19,7 @@
  import org.bukkit.event.server.PluginDisableEvent;
  import org.bukkit.event.server.PluginEnableEvent;
  import org.bukkit.event.server.ServerLoadEvent;
- import org.bukkit.event.world.EntitiesLoadEvent;
- import org.bukkit.event.world.EntitiesUnloadEvent;
- import org.bukkit.event.world.PortalCreateEvent;
- import org.bukkit.event.world.WorldLoadEvent;
+ import org.bukkit.event.world.*;
  import ru.komiss77.ApiOstrov;
  import ru.komiss77.Config;
  import ru.komiss77.Ostrov;
@@ -34,6 +31,7 @@
  import ru.komiss77.hook.TradeSystemHook;
  import ru.komiss77.hook.WGhook;
  import ru.komiss77.modules.games.GM;
+ import ru.komiss77.modules.world.Land;
  import ru.komiss77.modules.world.WorldManager;
  import ru.komiss77.utils.TCUtils;
  import ru.komiss77.version.Nms;
@@ -42,7 +40,7 @@
  public class ServerLst implements Listener {
 
 
-   @EventHandler(priority = EventPriority.HIGHEST)
+   @EventHandler(priority = EventPriority.LOWEST)
    public void onDisable(PluginDisableEvent e) { //надо отловить SHUT_DOWN, т.к. зависимые плагины отгружаются первыми!!
 //Ostrov.log_warn("PluginDisableEvent isServerStopped?"+Nms.isServerStopped()+" SHUT_DOWN="+Ostrov.SHUT_DOWN);
      if (!Ostrov.SHUT_DOWN && Nms.isServerStopped()) {
@@ -102,7 +100,10 @@
                 Ostrov.log_ok ("§5Используем Matrix!");
             }
 
-            case "WorldGuard" -> WGhook.hook(e.getPlugin());
+            case "WorldGuard" -> {
+              WGhook.hook(e.getPlugin());
+
+            }
             
             case "CrazyAdvancementsAPI" -> Ostrov.advance = true;
                 
@@ -121,37 +122,28 @@
 
     
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
-    public void onPostWorld(final ServerLoadEvent e) { //прилетает 1: после загрузки всех миров server.enablePlugins(PluginLoadOrder.POSTWORLD); либо после перезагрузки командой
+    public void onServerLoad(final ServerLoadEvent e) { //прилетает 1: после загрузки всех миров server.enablePlugins(PluginLoadOrder.POSTWORLD); либо после перезагрузки командой
         if (Ostrov.STARTUP && e.getType() == ServerLoadEvent.LoadType.STARTUP) {
             Ostrov.sync( () -> Ostrov.postWorld(), 60);
         }
     }
     
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onWorldLoaded(final WorldLoadEvent e) {
-        
         final World w = e.getWorld();
-    
         WorldManager.tryRestoreFill(w.getName());
 
-        
         if (GM.GAME.type==ServerType.LOBBY) {
           Nms.pathWorld(w);
         }
         
         w.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false);
-        //bukkitWorld.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);  
-        
-        if (Ostrov.MOT_D.length()<=4) { //(GM.thisServerGame.type!=ServerType.ONE_GAME) {
-        
-            w.setKeepSpawnInMemory(true);
 
-            //if (!SpigotConfig.disabledAdvancements.contains("*")) SpigotConfig.disabledAdvancements.add("*");
-            //bukkitWorld.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);                                                                    
-            w.setGameRule(GameRule.DISABLE_ELYTRA_MOVEMENT_CHECK, true);                                                                    
+        if (Ostrov.MOT_D.length()<=4) {
+            w.setKeepSpawnInMemory(true);
+            w.setGameRule(GameRule.DISABLE_ELYTRA_MOVEMENT_CHECK, true);
             w.setGameRule(GameRule.DISABLE_RAIDS, true);                                                                    
             w.setGameRule(GameRule.KEEP_INVENTORY, false);
-            //bukkitWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
             w.setGameRule(GameRule.DO_ENTITY_DROPS, false);
             w.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true); //- сразу респавн, возможен косяк с spigot.respawn?
             w.setGameRule(GameRule.DO_INSOMNIA, false);
@@ -163,17 +155,21 @@
             w.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
             w.setGameRule(GameRule.SPAWN_RADIUS, 0);                                                                    
             w.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);                                                                    
-            
-            
             Ostrov.log_ok("Настройки мира "+ w.getName() +" инициализированы для лобби или миниигры");
         }
 
-
+        Land.load(w);
     }
 
+   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+   public void onWorldUnload(final WorldUnloadEvent e) {
+     Land.unload(e.getWorld());
+   }
 
-
-
+   @EventHandler
+   public void onChunkUnloadEvent(ChunkUnloadEvent e) {
+     Land.unload(e.getChunk());
+   }
 
      @EventHandler(priority = EventPriority.LOWEST)
      public void onEntitySpawn(final EntitySpawnEvent e) {

@@ -15,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.builder.menu.EntitySetup;
+import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.translate.Lang;
 import ru.komiss77.objects.ValueSortedMap;
 import ru.komiss77.utils.EntityUtil;
@@ -34,6 +35,14 @@ public class EntityCmd implements Listener, CommandExecutor {
         }
         final Player p = (Player) cs;
 
+      if (ApiOstrov.canBeBuilder(cs)) {
+        if (PM.getOplayer(p).setup != null) {
+          PM.getOplayer(p).setup.openEntityWorldMenu(p, p.getWorld(), -1);
+        } else {
+          p.performCommand("builder");
+        }
+        return true;
+      }
      /* if (ApiOstrov.isLocalBuilder(cs, false)) { только через билдера!
         SmartInventory
           .builder()
@@ -247,6 +256,7 @@ class EntityWorldView implements InventoryProvider {
 
     int worldLimit;
     for (EntityUtil.EntityGroup g : EntityUtil.EntityGroup.values()) {
+      if (g == EntityUtil.EntityGroup.TILE || g== EntityUtil.EntityGroup.TICKABLE_TILE) continue;
       worldLimit = g.getWorldSpawnLimit(world, g);
       contents.add(ClickableItem.of(new ItemBuilder(g.displayMat)
         .name(g.displayName)
@@ -341,7 +351,7 @@ class EntityGroupView implements InventoryProvider {
         .addLore("§7")
         .addLore("§7ЛКМ - подробно по типу")
         .addLore("§7")
-        .addLore(ApiOstrov.isLocalBuilder(p, false) ? "§7Шифт+ПКМ - удалить всех мобов этого типа" : "")
+        //.addLore(ApiOstrov.isLocalBuilder(p, false) ? "§7Шифт+ПКМ - удалить всех мобов этого типа" : "")
         .build(), e -> {
         if (e.isLeftClick()) {
           SmartInventory.builder()

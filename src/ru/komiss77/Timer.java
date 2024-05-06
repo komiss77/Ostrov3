@@ -28,8 +28,6 @@ import ru.komiss77.modules.games.GM;
 import ru.komiss77.utils.TCUtils;
 
 
-
-
 public class Timer {
     
     private static BukkitTask timer, playerTimer, timerAsync;
@@ -42,16 +40,10 @@ public class Timer {
     private static int reloadPermIntervalSec;
 
     private static final ConcurrentHashMap <Integer, Integer> cd;
-
-   // private static int time_delta = 0;
     private static int currentTime = (int) (System.currentTimeMillis()/1000);
     private static final int MIDNIGHT_STAMP;
-    //private static final TextComponent errorMsg;
-  //  private static final Title load0, load1, load2, load3, load4, load5, load6;
-
     private static final AtomicBoolean lockQuery = new AtomicBoolean(false);
     private static final AtomicBoolean lockSecond = new AtomicBoolean(false);
-    //private static OstrovDB.Qinfo qInfo;
     private static final Map <Integer, OstrovDB.Qinfo> map;
     private static int count;
     
@@ -106,10 +98,8 @@ public class Timer {
         } else {
             mission_tick = true;
         }
-        start();
-        
-        timer =  new BukkitRunnable() {
 
+        timer =  new BukkitRunnable() {
             int time_left = 300;
 
                 @Override
@@ -156,25 +146,17 @@ public class Timer {
                             }
                         }.runTaskAsynchronously(Ostrov.instance);
                     }
-                    
-                    syncSecondCounter++;
+
+                  if (!cd.isEmpty()) {
+                    cd.entrySet().removeIf(entry -> entry.getValue() <= currentTime);//чтобы точнее ловить если надо меньше секунды
+                  }
+
+                  syncSecondCounter++;
 
 
                 }}.runTaskTimer(Ostrov.instance, 20, 20);        
         
-        
-    }
 
-  
-
-
-
-
-
-    
-    
-    
-    private static void start () {
 
         //обход игроков каждую секунду с разбросом по тикам для распределения нагрузки
         playerTimer = new BukkitRunnable() {
@@ -184,8 +166,6 @@ public class Timer {
             @Override
             public void run() {
 
-                cd.entrySet().removeIf(entry -> entry.getValue() <= currentTime);//чтобы точнее ловить если надо меньше секунды
-                
                 //отправить запросы в БД острова
                 if (OstrovDB.useOstrovData && OstrovDB.ready && !OstrovDB.QUERY.isEmpty()) {
                     if (lockQuery.compareAndSet(false, true)) { //асинхронная задача не начиналась или выполнена

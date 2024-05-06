@@ -134,10 +134,6 @@ public class WGhook {
 
 
 
-
-
-
-
     public static Location regionCenterByID ( final Player p, final String rg_id) {
         if (worldguard_platform==null) return null;
             RegionManager rm = getRegionManager(p.getWorld()); 

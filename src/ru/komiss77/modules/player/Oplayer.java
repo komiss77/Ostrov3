@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
@@ -21,6 +22,7 @@ import ru.komiss77.builder.SetupMode;
 import ru.komiss77.commands.PvpCmd;
 import ru.komiss77.enums.*;
 import ru.komiss77.listener.ChatLst;
+import ru.komiss77.listener.LimiterLst;
 import ru.komiss77.listener.SpigotChanellMsg;
 import ru.komiss77.modules.games.GM;
 import ru.komiss77.modules.player.PM.Gender;
@@ -39,6 +41,7 @@ import ru.komiss77.version.CustomTag;
 import ru.komiss77.version.Nms;
 
 import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -67,7 +70,8 @@ public class Oplayer {
     protected final EnumMap<Stat,Integer> stat = new EnumMap<>(Stat.class);  //локальные снимки,сохранятьне надо. сохраняются в банжи
     protected final EnumMap<Stat,Integer> dailyStat = new EnumMap<>(Stat.class);  //локальные снимки,сохранятьне надо. сохраняются в банжи
     public final Set <Integer> missionIds=new HashSet<>();
-    public boolean hasFakeBlock; public final HashMap <Long, BlockData> fakeBlock=new HashMap<>();
+    public boolean hasFakeBlock;
+    public final HashMap <Long, BlockData> fakeBlock=new HashMap<>();
     public final CustomScore score;
     public final CustomTag tag;
     
@@ -111,13 +115,14 @@ public class Oplayer {
     public Gender gender = Gender.NEUTRAL;
     public String lastCommand; //последняя команда введёная билдером
     
-    //Боссбар, титны, экшэнбар с задержками
+    //Боссбар, титры, экшэнбар с задержками
     public final List<String>delayActionbars = new ArrayList<>();
     public final BossBar bossbar = BossBar.bossBar(Component.text(""), 0, BossBar.Color.WHITE, BossBar.Overlay.NOTCHED_12, Collections.emptySet());
     public int barTime, barMaxTime, nextTitle, nextAb;
     public boolean timeBar; public float progress;
     public final List<DelayBossBar>delayBossBars = new ArrayList<>();
     public final List<Title>delayTitles = new ArrayList<>();
+  public WeakReference<Entity> minecart; public WeakReference<Entity> boat; //для лимитера
 
     public Oplayer(final HumanEntity p) {
         nik = p.getName();

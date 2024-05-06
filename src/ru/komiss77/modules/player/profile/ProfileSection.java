@@ -184,7 +184,7 @@ public class ProfileSection implements InventoryProvider {
             .addLore(op.eng ? "§6Show permissions" : "§6Показать права (пермишены)")
             .addLore(op.eng ? "§7loaded for" : "§7загруженные для")
             .addLore(op.eng ? "§7this server" : "§7этого сервера")
-            .addLore(op.eng ? "§7LMB - details" : "§7ЛКМ - подробно")
+            .addLore(op.eng ? "§7RMB - details" : "§7ПКМ - подробно")
             .addLore("")
             .build(), e-> {
               if (e.isLeftClick()) {

@@ -2,6 +2,7 @@ package ru.komiss77.modules.player.profile;
 
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import ru.komiss77.Ostrov;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.enums.Game;
 import ru.komiss77.enums.Stat;
@@ -72,6 +73,7 @@ public class ArenaSection implements InventoryProvider {
                         final boolean hasReputation =  op.reputationCalc>=ai.reputation;
                         if (hasLevel && hasReputation) {
                             p.performCommand("server "+ai.server+" "+ai.arenaName);
+//Ostrov.log_warn("server "+ai.server+" "+ai.arenaName);
                         } else {
                             PM.soundDeny(p);
                         }

@@ -45,6 +45,7 @@ import ru.komiss77.modules.world.WXYZ;
 import ru.komiss77.modules.world.XYZ;
 import ru.komiss77.scoreboard.SubTeam;
 import ru.komiss77.utils.FastMath;
+import ru.komiss77.utils.LocationUtil;
 import ru.komiss77.utils.TCUtils;
 
 import java.io.File;
@@ -74,7 +75,7 @@ public class Nms {
 
   //ЛКМ и ПКМ на фейковый блок будут игнорироваться! Еще можно будет добавить подмену блока при получении чанка
   public static void fakeBlock (final Player p, final Location loc, final BlockData bd) {
-    final long l = XYZ.asLong(loc);
+    final long l = LocationUtil.asLong(loc);
     fakeBlock(p, l, bd);
   }
 
@@ -93,7 +94,7 @@ public class Nms {
   public static void fakeBlock (final Player p, final Location loc) {
     final Oplayer op = PM.getOplayer(p);
     //mutableBlockPosition.set(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-    final long l = XYZ.asLong(loc);
+    final long l = LocationUtil.asLong(loc);
     if ( op.hasFakeBlock && op.fakeBlock.remove(l)!=null ) {
       final ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(BlockPos.of(l), ((CraftBlockData) loc.getBlock().getBlockData()).getState());
       sendPacket(p, packet);//p.sendBlockChange(loc, loc.getBlock().getBlockData());
@@ -192,7 +193,11 @@ public class Nms {
     return iBlockData.getBukkitMaterial();
   }
 
-
+  public static @NotNull Material getFastMat(final Location loc) {
+    final ServerLevel sl = Craft.toNMS(loc.getWorld());
+    final BlockState iBlockData = sl.getBlockState(mutableBlockPosition.set(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
+    return iBlockData.getBukkitMaterial();
+  }
 
 
   public static void pathServer() {
@@ -359,9 +364,10 @@ public class Nms {
       if (fakeGlow) {
         final ClientboundSetEntityDataPacket packet = new ClientboundSetEntityDataPacket(e.getEntityId(), Craft.toNMS(e).getEntityData().getNonDefaultValues());
         packet.packedItems().add(new SynchedEntityData.DataValue<>(0, BotEntity.flags.getSerializer(), (byte) 64));
-
         Nms.sendWorldPackets(e.getWorld(), packet);
-      } else e.setGlowing(true);
+      } else {
+        e.setGlowing(true);
+      }
     }
   }
 

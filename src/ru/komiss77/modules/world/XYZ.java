@@ -170,10 +170,7 @@ public class XYZ implements Cloneable {
         return  y>>31<<30 ^ x>>31<<29 ^ z>>31<<28 ^ y<<20 ^ x<<10 ^ z;
     }
 
-    public long  asLong () {
-      return (((long) x & (long) 67108863) << 38) | (((long) y & (long) 4095)) | (((long) z & (long) 67108863) << 12);
-    }
-    public static long  asLong (final Location loc) {
-      return (((long) loc.getBlockX() & (long) 67108863) << 38) | (((long) loc.getBlockY() & (long) 4095)) | (((long) loc.getBlockZ() & (long) 67108863) << 12);
-    }
+  public long  asLong () {
+    return (((long) x & (long) 67108863) << 38) | (((long) y & (long) 4095)) | (((long) z & (long) 67108863) << 12);
+  }
 }

@@ -1,5 +1,14 @@
 package ru.komiss77.modules.world;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.minecraft.core.BlockPos;
@@ -22,15 +31,6 @@ import ru.komiss77.notes.ThreadSafe;
 import ru.komiss77.utils.ItemUtils;
 import ru.komiss77.version.Craft;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 public class Schematic {

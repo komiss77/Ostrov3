@@ -21,9 +21,7 @@ import ru.komiss77.builder.SetupMode;
 import ru.komiss77.modules.world.Schematic.Rotate;
 
 
-
 //не перемещать!! использует регионГуи
-
 public class WE implements Initiable {
     
     

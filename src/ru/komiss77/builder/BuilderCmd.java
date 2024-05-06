@@ -14,6 +14,8 @@ import org.bukkit.inventory.ItemStack;
 import ru.komiss77.ApiOstrov;
 import ru.komiss77.Ostrov;
 import ru.komiss77.Perm;
+import ru.komiss77.modules.menuItem.MenuItem;
+import ru.komiss77.modules.menuItem.MenuItemBuilder;
 import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.utils.ItemBuilder;
@@ -28,9 +30,20 @@ import java.util.List;
 public class BuilderCmd implements CommandExecutor, TabCompleter {
     
     public static List<String> subCommands = Arrays.asList( "end");
-    public static ItemStack openBuildMenu = new ItemBuilder(Material.MAP).name("§aМеню билдера").build();
+    public static MenuItem bmi;
     public static final ItemStack fill = new ItemBuilder(Material.GREEN_STAINED_GLASS_PANE).build();
-    
+
+    static {
+      final ItemStack buildMenu = new ItemBuilder(Material.DUNE_ARMOR_TRIM_SMITHING_TEMPLATE).name("§aМеню билдера").build();
+      bmi = new MenuItemBuilder("bmi", buildMenu)
+        .slot(0)
+        .rightClickCmd("builder")
+        .leftClickCmd("builder")
+        .giveOnJoin(false)
+        .giveOnWorld_change(false)
+        .giveOnRespavn(false)
+        .create();
+    }
     @Override
     public List<String> onTabComplete(CommandSender cs, Command cmnd, String command, String[] args) {
         
@@ -82,11 +95,11 @@ public class BuilderCmd implements CommandExecutor, TabCompleter {
                         p.setAllowFlight(true);
                         p.setFlying(true);
                     }
-                    ItemUtils.giveItemTo(p, openBuildMenu.clone(), p.getInventory().getHeldItemSlot(), false);
                     if (op.setup==null) {
                         final SetupMode sm = new SetupMode(p);
                         op.setup = sm;
                         Bukkit.getPluginManager().registerEvents(sm, Ostrov.getInstance());
+                        bmi.giveForce(p);//ItemUtils.giveItemTo(p, openBuildMenu.clone(), p.getInventory().getHeldItemSlot(), false);
                     }
 
                     if (op.lastCommand!=null) {
@@ -173,7 +186,7 @@ public class BuilderCmd implements CommandExecutor, TabCompleter {
         if (p!=null && p.isOnline()) {
             p.setGameMode(before);
             p.closeInventory();
-            ItemUtils.substractAllItems(p, openBuildMenu.getType());
+            bmi.remove(p);//ItemUtils.substractAllItems(p, openBuildMenu.getType());
             Perm.calculatePerms(p, PM.getOplayer(name), false);
         }
         //PlayerLst.signCache.remove(name);

@@ -27,9 +27,10 @@ public abstract class RedisTask<V> implements Runnable, Callable<V> {
    // JedisPoolProvider jedisSummoner = (JedisPoolProvider) RDS.summoner;
      // return this.unifiedJedisTask(jedisSummoner.obtainResource());
 
-    try {return unifiedJedisTask(RDS.poolProvider.obtainResource());}
-    catch (JedisConnectionException e) {
-      Ostrov.log("L Connection to Redis D: " + e.getMessage());
+    try {
+      return unifiedJedisTask(RDS.poolProvider.obtainResource());
+    } catch (JedisConnectionException e) {
+      Ostrov.log("Connection to Redis : " + e.getMessage());
       return null;
     }
 

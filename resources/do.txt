@@ -2,28 +2,18 @@ https://www.curseforge.com/minecraft/mc-mods/cmdcam?__cf_chl_jschl_tk__=pmd_r0uG
 
 кастомные биомы тема https://www.spigotmc.org/threads/how-to-create-custom-biomes.512105/page-2
 генератор биомов https://github.com/VolmitSoftware/Iris https://www.spigotmc.org/resources/iris-world-gen-custom-biome-colors.84586/
-
-!!!аркаимл - что лагает?? + читерские предметы
-https://www.dmosk.ru/miniinstruktions.php?mini=redis-ubuntu
-https://github.com/ForestTechMC/ForestRedisAPI
+https://github.com/erikzimmermann/discord-verification-bot
 
 не загрузить незер (нет папки регион, там dim-1)
-https://multipaper.io/#pricing сохранение данных до перехода с сервера (по команде server??)
+сохранение данных до перехода с сервера (по команде server??)
+в гм3 тэпешнулся - остался ник
 
-rds - ошибки при старте без коннекта
-статусы серверов убрать из прокси
-автоудаление аренадата если не было обнов 5 минут?
-резервный канал на сокетах?
+******** REDIS ********
+- ошибки при старте без коннекта
+- отчёты серверов, данные арен на редис
+- статусы серверов убрать из прокси
+- автоудаление аренадата если не было обнов 5 минут?
 
-Подвисает соединение с островом
-§с MissionManager onCustomStatAdd : No operations allowed after connection closed.
-[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
-[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
-[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
-[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
-[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
-[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
-[18:12:40 INFO]: [Остров] §с MissionManager onCustomStatAdd : No operations allowed after connection closed.
 
 в миссиях переделать [Остров] Timer querry executePstAsync INSERT INTO missionsProgress (recordId,name,missionId,taken)
 VALUES ('657673442', '_fruti_tuti_', '619', '1710085989');  : Duplicate entry '657673442' for key 'PRIMARY'
@@ -32,12 +22,9 @@ saveLocalData error Danillisimo -> Duplicate entry 'Danillisimo' for key 'name'
 
 
 макгазин на WanderingTrades inventory
-
-
+дописать PlayerPacketHandler - чистка хакнутых предметов
 нет эвента PlayerCommandPreprocessEvent при performCommand
 менюитем can_interact на работает
-отчёты серверов, данные арен  - на хттп или редис
-
 
 
 
@@ -62,13 +49,11 @@ if (!ApiOstrov.checkString(strip, true, true, true)) {
 буфер запросов БД для локалки как для островной!
 
 
-
 лимит сундуков - подробности в книгу
 лава, вода - только в привате + не давать вытекать + при удалении привата убирать воду
 карта - поменять чёрный фон и рожицы подгружать из файла
 
 удобная интеграция ачивок и сделать ачивки на всех серверах!
-аркаим - можно разлить за приватом при пкм на существо
 динмап не сохранять Faces
 home sethome переделать на гуи
 лимит сундуков - проверить, даёт ставить сундук!

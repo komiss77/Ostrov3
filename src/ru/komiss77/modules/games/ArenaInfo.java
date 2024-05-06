@@ -106,10 +106,10 @@ public final class ArenaInfo {
     protected void update(final GameState state, final int players, final String line0, final String line1, final String line2, final String line3) {
         this.players=players;
         this.state=state==null? GameState.НЕОПРЕДЕЛЕНО : state;
-        this.line0 = line0;
-        this.line1 = line1;
-        this.line2 = line2;
-        this.line3 = line3;
+        this.line0 = line0.trim();
+        this.line1 = line1.trim();
+        this.line2 = line2.trim();
+        this.line3 = line3.trim();
 
         if (state == GameState.ОЖИДАНИЕ && players > 0) {
           mat = Material.AXOLOTL_BUCKET;

@@ -401,14 +401,14 @@ public class SetupMode implements Listener{
         }
     }
     
-    @EventHandler(priority = EventPriority.LOWEST)
+     /* @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerKick(final PlayerKickEvent e) {
         if(e.getPlayer().getName().equals(builderName))  {
             BuilderCmd.end(builderName);
         }
     }
 
-    
+
     @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = false)
     public void onPlayerInteract(final PlayerInteractEvent e) {
         if(!e.getPlayer().getName().equals(builderName)) return;
@@ -429,7 +429,7 @@ public class SetupMode implements Listener{
             //e.setCancelled(true);
             e.getItemDrop().remove();
         }
-    }
+    }*/
     
 
         

@@ -31,13 +31,16 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 
 public class BotManager implements Initiable, Listener {
 
-    public static boolean enable;
+    @Deprecated
+    public static boolean enable; //переделать на AtomicBoolean!!
+    //public static AtomicBoolean enable;
     public static final IntHashMap<BotEntity> botById;
     protected static final CaseInsensitiveMap<BotEntity> botByName;
     protected static final CaseInsensitiveMap<String[]> skin;

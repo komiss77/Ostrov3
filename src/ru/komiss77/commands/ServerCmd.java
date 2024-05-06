@@ -225,6 +225,7 @@ public class ServerCmd implements CommandExecutor, TabCompleter {
           //определяем арену, если указана как аргумент
           //одиночки сюда уже не дойдут
           final String arenaMane = arg[1];
+//Ostrov.log_warn("CMD arenaMane="+arenaMane);
           ArenaInfo ai = null;
           if (game == Game.GLOBAL) {
             ai = GM.lookup("", arenaMane);//пытаться найти арену по названию

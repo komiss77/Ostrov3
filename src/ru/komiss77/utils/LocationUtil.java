@@ -170,6 +170,18 @@ public class LocationUtil {
       return find;
     }
 
+  public static Player getNearestPlayer(final Location loc, final int maxDist) {
+    Player find = null;
+    int minDistance = Integer.MAX_VALUE;
+    for (final Player pl : loc.getWorld().getPlayers()) {
+      final int dst = getDistance(loc, pl.getLocation());
+      if (dst < minDistance && dst<maxDist) {
+        find = pl;
+        minDistance = dst;
+      }
+    }
+    return find;
+  }
     public static Biome biomeFromString(final String biomename) {
         for (Biome b : Biome.values()) {
             if (b.name().equalsIgnoreCase(biomename)) {
@@ -519,7 +531,23 @@ public class LocationUtil {
     }
 
 
+  //координата в long взято из BlockPosition
+  public static long  asLong (final Location loc) {
+    return (((long) loc.getBlockX() & (long) 67108863) << 38) | (((long) loc.getBlockY() & (long) 4095)) | (((long) loc.getBlockZ() & (long) 67108863) << 12);
+  }
+  public static int getX(long packedPos) {
+    return (int) (packedPos >> 38); // Paper - simplify/inline
+  }
+  public static int getY(long packedPos) {
+    return (int) ((packedPos << 52) >> 52); // Paper - simplify/inline
+  }
+  public static int getZ(long packedPos) {
+    return (int) ((packedPos << 26) >> 38);  // Paper - simplify/inline
+  }
 
+
+
+  //координата чанка запакованная в int
   public static int cLoc(final Chunk chunk) {
     return cLoc(chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
   }
@@ -529,7 +557,7 @@ public class LocationUtil {
   }
 
   public static int cLoc(final Location loc) {
-    return cLoc(loc.getWorld().getName(), loc.getChunk().getX(), loc.getChunk().getZ());
+    return cLoc(loc.getWorld().getName(), loc.getBlockX()>>4, loc.getBlockZ()>>4);
   }
 
   public static int cLoc(final String worldName, final int cX, final int cZ) {

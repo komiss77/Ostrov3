@@ -13,8 +13,10 @@ import org.bukkit.util.Transformation;
 import ru.komiss77.Config;
 import ru.komiss77.Ostrov;
 import ru.komiss77.builder.menu.ViewPerm.SelectPlayer;
+import ru.komiss77.commands.PvpCmd;
 import ru.komiss77.enums.Module;
 import ru.komiss77.listener.InteractLst;
+import ru.komiss77.listener.LimiterLst;
 import ru.komiss77.modules.displays.DisplayMenu;
 import ru.komiss77.modules.items.menu.ItemMenu;
 import ru.komiss77.modules.player.PM;
@@ -268,37 +270,19 @@ public class BuilderMain implements InventoryProvider {
                     p.performCommand("figure");
                 }));
 
-        content.set(2, 6, ClickableItem.of(new ItemBuilder(Material.LEATHER_HORSE_ARMOR)
-                .name("§7Просмотр Model Data")
-                .addLore("§7Перетащи сюда предмет,")
-                .addLore("§7будут показаны все его")
-                .addLore("§7вариации,")
-                .addLore("§7или ЛКМ - показать для")
-                .addLore("§7кожаной конской брони.")
-                .build(), e -> {
-                    if (e.getCursor() != null && e.getCursor().getType() != Material.AIR) {
-                        p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1);
-                        SmartInventory.builder()
-                                .id("CustomModelData" + p.getName())
-                                .provider(new CustomModelData(0, e.getCursor().getType()))
-                                .size(6, 9)
-                                .title("§6" + e.getCursor().getType().name())
-                                .build()
-                                .open(p);
-                        e.getView().setCursor(new ItemStack(Material.AIR));
-                    } else {
-                        SmartInventory.builder()
-                                .id("CustomModelData" + p.getName())
-                                .provider(new CustomModelData(0, Material.LEATHER_HORSE_ARMOR))
-                                .size(6, 9)
-                                .title("§6" + Material.LEATHER_HORSE_ARMOR.name())
-                                .build()
-                                .open(p);
-                    }
-                }));
+      content.set(2, 6, ClickableItem.of(new ItemBuilder(Material.COMPARATOR)
+        .name("§fЛимитер")
+        .addLore(LimiterLst.enabled() ? "§aАктивен" : "§cВыключен")
+        .addLore("")
+        .addLore("§7ЛКМ - настроить")
+        .addLore("")
+        .build(), e -> {
+        LimiterLst.openMenu(p);
+      }));
 
-        
-        
+
+
+
         
         
         
@@ -401,6 +385,36 @@ public class BuilderMain implements InventoryProvider {
                 .build(), e -> {
                     LangEditor.edit(p, 0);
                 }));
+
+
+      content.set(3, 7, ClickableItem.of(new ItemBuilder(Material.LEATHER_HORSE_ARMOR)
+        .name("§7Просмотр Model Data")
+        .addLore("§7Перетащи сюда предмет,")
+        .addLore("§7будут показаны все его")
+        .addLore("§7вариации,")
+        .addLore("§7или ЛКМ - показать для")
+        .addLore("§7кожаной конской брони.")
+        .build(), e -> {
+        if (e.getCursor() != null && e.getCursor().getType() != Material.AIR) {
+          p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1);
+          SmartInventory.builder()
+            .id("CustomModelData" + p.getName())
+            .provider(new CustomModelData(0, e.getCursor().getType()))
+            .size(6, 9)
+            .title("§6" + e.getCursor().getType().name())
+            .build()
+            .open(p);
+          e.getView().setCursor(new ItemStack(Material.AIR));
+        } else {
+          SmartInventory.builder()
+            .id("CustomModelData" + p.getName())
+            .provider(new CustomModelData(0, Material.LEATHER_HORSE_ARMOR))
+            .size(6, 9)
+            .title("§6" + Material.LEATHER_HORSE_ARMOR.name())
+            .build()
+            .open(p);
+        }
+      }));
 
 
 

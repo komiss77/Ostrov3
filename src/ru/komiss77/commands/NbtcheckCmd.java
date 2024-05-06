@@ -5,7 +5,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import ru.komiss77.Ostrov;
-import ru.komiss77.listener.NbtLst;
 import ru.komiss77.modules.player.PM;
 
 public class NbtcheckCmd implements CommandExecutor {
@@ -37,10 +36,10 @@ public class NbtcheckCmd implements CommandExecutor {
                 return true;
             }
             p.sendMessage("§eПроверяем предмет: "+p.getInventory().getItemInMainHand().getType());
-            if (!NbtLst.invalidStackSize(p, p.getInventory().getItemInMainHand())) p.sendMessage("§2stack_size в порядке!");
-            if (!NbtLst.Invalid_name_lenght(p, p.getInventory().getItemInMainHand())) p.sendMessage("§2name_lenght в порядке!");
-            if (!NbtLst.Invalid_anvill(p, p.getInventory().getItemInMainHand())) p.sendMessage("§2anvill в порядке!");
-            if (!NbtLst.Invalid_enchant(p, p.getInventory().getItemInMainHand())) p.sendMessage("§2enchant в порядке!");
+            //if (!NbtLst.invalidStackSize(p, p.getInventory().getItemInMainHand())) p.sendMessage("§2stack_size в порядке!");
+            //if (!NbtLst.Invalid_name_lenght(p, p.getInventory().getItemInMainHand())) p.sendMessage("§2name_lenght в порядке!");
+            //if (!NbtLst.Invalid_anvill(p, p.getInventory().getItemInMainHand())) p.sendMessage("§2anvill в порядке!");
+            //if (!NbtLst.Invalid_enchant(p, p.getInventory().getItemInMainHand())) p.sendMessage("§2enchant в порядке!");
 
             
          /*   HashMap <String,String> nbtMap = VM.getNmsNbtUtil().getTagMap(p.getInventory().getItemInMainHand());

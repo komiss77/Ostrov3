@@ -28,6 +28,7 @@ import ru.komiss77.modules.world.EmptyChunkGenerator;
 import ru.komiss77.modules.world.WorldManager;
 import ru.komiss77.utils.TCUtils;
 import ru.komiss77.version.Nms;
+import ru.komiss77.version.PlayerPacketHandler;
 
 
 public class Ostrov extends JavaPlugin {
@@ -197,9 +198,16 @@ public class Ostrov extends JavaPlugin {
         switch (GM.GAME) {
             case AR -> {
                 Bukkit.getServer().getPluginManager().registerEvents(new ArcaimLst(), instance);
+                //PlayerPacketHandler.nbtCheck.set(true);
                 log_ok("§eПодключены ивенты для сервера Аркаим");
             }
-            default -> {}
+            default -> {
+              if (Ostrov.MOT_D.equals("home1")) {
+                Bukkit.getServer().getPluginManager().registerEvents(new ArcaimLst(), instance);
+                //PlayerPacketHandler.nbtCheck.set(true);
+                log_warn("§eПодключен nbtCheck для home1");
+              }
+            }
         }
     }
     

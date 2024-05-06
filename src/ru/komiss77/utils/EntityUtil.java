@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.SpawnCategory;
+import ru.komiss77.Ostrov;
 
 
 public class EntityUtil {
@@ -173,10 +174,17 @@ public class EntityUtil {
         return EntityGroup.UNDEFINED;
     }
 
+  public static EntityType typeFromEgg(final Material mat) {
+      try {
+        return EntityType.valueOf(mat.name().replaceFirst("_SPAWN_EGG", ""));
+      } catch (IllegalArgumentException ex) {
+        Ostrov.log_warn("EntityUtil typeFromEgg : "+mat+" не конвертируется в EntityType!");
+      }
+      return null;
+  }
 
-    
-    
-    public enum EntityGroup {
+
+  public enum EntityGroup {
     	/**Монстры, могут агрится на игрока*/
         MONSTER ("§4Монстры", Material.ZOMBIE_HEAD), //не переименовывать! или придётся переделывать конфиги лимитера!!
     	/**Животные, могут быть скрещеными*/

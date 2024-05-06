@@ -29,9 +29,9 @@ import java.util.function.Consumer;
 
 
 public class ItemBuilder {
-    
-    
-    private final ItemStack item;
+
+    private Material mat;//private final ItemStack item;
+    private int ammount;
     private @Nullable ItemMeta meta;
     private Color color;
     private List<Component> lore;
@@ -43,69 +43,71 @@ public class ItemBuilder {
 
    
     public ItemBuilder(final Material material) {
-       item = new ItemStack(material);
+       mat = material;//item = new ItemStack(material);
        meta = null;
        lore = new ArrayList<>();
     }
    
 
     public ItemBuilder(final ItemStack from) {
-        item = from==null ? new ItemStack(Material.AIR) : new ItemStack(from.getType(), from.getAmount());
+      //item = from==null ? new ItemStack(Material.AIR) : new ItemStack(from.getType(), from.getAmount());
+      mat = from==null ?Material.AIR : from.getType();
+      ammount = from==null ? 1 : from.getAmount();
         meta = from != null && from.hasItemMeta() ? from.getItemMeta() : null;
         lore = meta != null && meta.hasLore() ? meta.lore() : new ArrayList<>();
     }
    
     
     public ItemBuilder persistentData(final String key, final String data) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//meta = item.getItemMeta();
       meta.getPersistentDataContainer().set(new NamespacedKey(Ostrov.instance, key), PersistentDataType.STRING, data);
       return this;
     }   
     public ItemBuilder persistentData(final String key, final int data) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//meta = item.getItemMeta();
       meta.getPersistentDataContainer().set(new NamespacedKey(Ostrov.instance, key), PersistentDataType.INTEGER, data);
       return this;
     }
     public ItemBuilder persistentData(final String data) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//meta = item.getItemMeta();
       meta.getPersistentDataContainer().set(ItemUtils.key, PersistentDataType.STRING, data);
       return this;
     }   
     public ItemBuilder persistentData(final int data) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//meta = item.getItemMeta();
       meta.getPersistentDataContainer().set(ItemUtils.key, PersistentDataType.INTEGER, data);
       return this;
     }
     
     
 
-    @Deprecated //в будующем тип менять нельзя будет
+    //ну тип переделал билдер на материал @Deprecated //в будующем тип менять нельзя будет
     public ItemBuilder setType(final Material material) {
         if (material==null) return this;
-        item.setType(material);
+        mat = material;//item.setType(material);
         if (meta == null) return this;
         meta = Bukkit.getItemFactory().asMetaFor(meta, material);
         return this;
     }
 
     public Material getType() {
-        return item.getType();
+        return mat;//item.getType();
     }
     
     public ItemBuilder setAmount(final int amount) {
-    	item.setAmount(amount);
+    	this.ammount = ammount;//item.setAmount(amount);
     	return this;
     }
     
     public ItemBuilder name(@Nullable final String name) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//meta = item.getItemMeta();
       if (name == null) meta.displayName(null);
       else meta.displayName(TCUtils.format(name));
     	return this;
     }
     
     public ItemBuilder name(@Nullable final Component name) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//meta = item.getItemMeta();
       meta.displayName(name);
     	return this;
     }
@@ -248,14 +250,16 @@ public class ItemBuilder {
 
 
    public ItemBuilder addFlags(final ItemFlag... flags) {
-     if (meta == null) meta = item.getItemMeta();
+     if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);// mat.item.getItemMeta();
      meta.addItemFlags(flags);
      return this;
    }
 
 
     public void setTrim(final TrimMaterial mat, final TrimPattern pat) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) {
+        meta = Bukkit.getItemFactory().getItemMeta(this.mat);//meta = item.getItemMeta();
+      }
       if (meta instanceof ArmorMeta) {
           ((ArmorMeta) meta).setTrim(new ArmorTrim(mat, pat));
       }
@@ -293,55 +297,55 @@ public class ItemBuilder {
     
 
     public ItemBuilder setUnbreakable(final boolean unbreakable) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//meta = item.getItemMeta();
       meta.setUnbreakable(unbreakable);
       return this;
     }
     
     public ItemBuilder setItemFlag(final ItemFlag flag) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//meta = item.getItemMeta();
       meta.addItemFlags(flag);
       return this;
     }
     
     public ItemBuilder setAttribute(final Attribute attribute, final double amount, final Operation op) {
-    	setAttribute(attribute, amount, op, item.getType().getEquipmentSlot());
+      setAttribute(attribute, amount, op, mat.getEquipmentSlot());//setAttribute(attribute, amount, op, item.getType().getEquipmentSlot());
       return this;
     }
     
     public ItemBuilder setAttribute(final Attribute attribute, final double amount, final Operation op, @Nullable final EquipmentSlot slot) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//item.getItemMeta();
       meta.addAttributeModifier(attribute, new AttributeModifier(UUID.randomUUID(), "atbuilder", amount, op, slot));
       return this;
     }
     
     public ItemBuilder removeAttribute(final Attribute attribute) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//item.getItemMeta();
       meta.removeAttributeModifier(attribute);
       return this;
     }
     
     public ItemBuilder removeSlotAttribute() {
-      if (meta == null) meta = item.getItemMeta();
-      meta.removeAttributeModifier(item.getType().getEquipmentSlot());
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//item.getItemMeta();//meta.removeAttributeModifier(item.getType().getEquipmentSlot());
+      meta.removeAttributeModifier(mat.getEquipmentSlot());
       return this;
     }
     
     public ItemBuilder setModelData(final int data) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//item.getItemMeta();
       meta.setCustomModelData(data);
       return this;
     }
     
     public ItemBuilder setDurability(final int dur) {
-    	final int mdr = item.getType().getMaxDurability();
-      if (meta == null) meta = item.getItemMeta();
+      final int mdr = mat.getMaxDurability(); //final int mdr = item.getType().getMaxDurability();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//item.getItemMeta();
     	if (meta instanceof Damageable) ((Damageable) meta).setDamage(dur < mdr ? mdr - dur : 0);
       return this;
     }
 
     public <M extends ItemMeta> ItemBuilder applyCustomMeta(final Class<M> metaType, final Consumer<M> metaApplier) {
-      if (meta == null) meta = item.getItemMeta();
+      if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(mat);//item.getItemMeta();
       if (metaType.isInstance(meta)) {
         metaApplier.accept(metaType.cast(meta));
       }
@@ -438,8 +442,13 @@ public class ItemBuilder {
     
     
     public ItemStack build() {
-
-        if (!lore.isEmpty()) {
+      if (ammount<1) {
+        ammount = 1;
+      } else if (ammount > mat.getMaxStackSize()) {
+        ammount = mat.getMaxStackSize();
+      }
+      final ItemStack item = new ItemStack(mat, ammount);
+      if (!lore.isEmpty()) {
           if (meta == null) meta = item.getItemMeta();
           meta.lore(lore);
         }

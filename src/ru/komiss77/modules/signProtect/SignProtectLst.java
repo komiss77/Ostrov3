@@ -1,5 +1,7 @@
 package ru.komiss77.modules.signProtect;
 
+import java.util.Collection;
+import java.util.function.Predicate;
 import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -32,9 +34,6 @@ import ru.komiss77.modules.player.Oplayer;
 import ru.komiss77.modules.player.PM;
 import ru.komiss77.modules.translate.Lang;
 import ru.komiss77.utils.inventory.SmartInventory;
-
-import java.util.Collection;
-import java.util.function.Predicate;
 
 
 public class SignProtectLst implements Initiable, Listener {

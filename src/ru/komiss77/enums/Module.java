@@ -27,7 +27,7 @@ import ru.komiss77.modules.world.WorldManager;
 public enum Module {
 
   resourcePacks (ResourcePacksLst.class),
-  limiterListener (LimiterLst.class),
+  limiter (LimiterLst.class),
   menuItems (MenuItemsManager.class),
   kitManager (KitManager.class),
   pandora (Pandora.class),
